@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32228.430
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaceEvolve", "MaceEvolve\MaceEvolve.csproj", "{FF603C39-F895-45CA-991E-A17D49F418B8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF603C39-F895-45CA-991E-A17D49F418B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF603C39-F895-45CA-991E-A17D49F418B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF603C39-F895-45CA-991E-A17D49F418B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF603C39-F895-45CA-991E-A17D49F418B8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AE619C55-11F2-4C2F-95B4-306C64515E04}
+	EndGlobalSection
+EndGlobal
