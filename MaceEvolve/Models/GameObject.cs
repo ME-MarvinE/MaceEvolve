@@ -11,13 +11,13 @@ namespace MaceEvolve.Models
     {
         #region Fields
         protected static Random _Random = new Random();
-        private Rectangle _Rectangle = new Rectangle();
+        private Rectangle _Rectangle = new Rectangle(0,0,0,0);
         public Color _Color = Color.Black;
         #endregion
 
         #region Properties
         public GameHost GameHost { get; set; }
-        public int X
+        public double X
         {
             get
             {
@@ -25,10 +25,10 @@ namespace MaceEvolve.Models
             }
             set
             {
-                Rectangle = new Rectangle(value, Y, Size, Size);
+                Rectangle.X = value;
             }
         }
-        public int Y
+        public double Y
         {
             get
             {
@@ -36,10 +36,10 @@ namespace MaceEvolve.Models
             }
             set
             {
-                Rectangle = new Rectangle(X, value, Size, Size);
+                Rectangle.Y = value;
             }
         }
-        public int Size
+        public double Size
         {
             get
             {
@@ -47,7 +47,8 @@ namespace MaceEvolve.Models
             }
             set
             {
-                Rectangle = new Rectangle(X, Y, value, value);
+                Rectangle.Width = value;
+                Rectangle.Height = value;
             }
         }
         public Color Color
@@ -70,7 +71,6 @@ namespace MaceEvolve.Models
             set
             {
                 _Rectangle = value;
-
             }
         }
 
@@ -87,7 +87,7 @@ namespace MaceEvolve.Models
         {
             using (SolidBrush Brush = new SolidBrush(Color))
             {
-                e.Graphics.FillEllipse(Brush, Rectangle);
+                e.Graphics.FillEllipse(Brush, (int)X, (int)Y, (int)Size, (int)Size);
             }
         }
         public virtual void Update()

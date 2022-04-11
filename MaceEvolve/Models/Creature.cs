@@ -15,7 +15,7 @@ namespace MaceEvolve.Models
 
         #region Properties
         public double Energy { get; set; } = 150;
-        public int Speed { get; set; } = 1;
+        public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
         #endregion
@@ -61,7 +61,11 @@ namespace MaceEvolve.Models
         }
         public int GetDistanceFrom(int TargetX, int TargetY)
         {
-            return (int)Math.Sqrt(Math.Pow((double)X - TargetX, 2) + Math.Pow((double)Y - TargetY, 2));
+            return (int)Math.Sqrt(Math.Pow(X - TargetX, 2) + Math.Pow(Y - TargetY, 2));
+        }
+        public double GetDistanceFrom(double TargetX, double TargetY)
+        {
+            return Math.Sqrt(Math.Pow(X - TargetX, 2) + Math.Pow(Y - TargetY, 2));
         }
         public int GetDistanceFrom(Point TargetLocation)
         {
@@ -88,22 +92,41 @@ namespace MaceEvolve.Models
         public void Move()
         {
             Apple ClosestApple = GetClosestFood(FoodList).FirstOrDefault();
-            int NewX;
-            int NewY;
+            double NewX = X;
+            double NewY = Y;
 
-            if (ClosestApple != null && GetDistanceFrom(ClosestApple.X, ClosestApple.Y) <= SightRange)
+            if (ClosestApple != null)
             {
-                NewX = X - ClosestApple.X > 0 ? X - Speed : X + Speed;
-                NewY = Y - ClosestApple.Y > 0 ? Y - Speed : Y + Speed;
-            }
-            else
-            {
-                NewX = _Random.Next(0, 2) == 1 ? X + Speed : X - Speed;
-                NewY = _Random.Next(0, 2) == 1 ? Y + Speed : Y - Speed;
+                double XDifference = X - ClosestApple.X;
+                double YDifference = Y - ClosestApple.Y;
+
+                if (XDifference + YDifference <= SightRange)
+                {
+                    if (XDifference > 0)
+                    {
+                        NewX = XDifference >= Speed ? X - Speed : NewX;
+                    }
+                    else if (XDifference < 0)
+                    {
+                        NewX = XDifference <= -Speed ? X + Speed : NewX;
+                    }
+
+                    if (YDifference > 0)
+                    {
+                        NewY = YDifference >= Speed ? Y - Speed : NewY;
+                    }
+                    else if (YDifference < 0)
+                    {
+                        NewY = YDifference <= -Speed ? Y + Speed : NewY;
+                    }
+                }
             }
 
-            Rectangle = new Rectangle(NewX, NewY, Size, Size);
-            Energy -= 0.3;
+            if (NewX != X || NewY != Y)
+            {
+                Rectangle = new Rectangle(NewX, NewY, Size, Size);
+                Energy -= 0.3;
+            }
         }
         public void Die()
         {

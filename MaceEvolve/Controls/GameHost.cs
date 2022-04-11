@@ -25,6 +25,7 @@ namespace MaceEvolve.Controls
         public List<Creature> Creatures { get; set; } = new List<Creature>();
         public List<Apple> Food { get; set; } = new List<Apple>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
+        public int MaxFoodAmount { get; set; } = 200;
         public int TargetFPS
         {
             get
@@ -65,7 +66,7 @@ namespace MaceEvolve.Controls
             Creatures.Clear();
             Food.Clear();
 
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 300; i++)
             {
                 Creatures.Add(new Creature()
                 {
@@ -98,19 +99,22 @@ namespace MaceEvolve.Controls
                 Creature.Update();
             }
 
-            if (_Random.Next(0, 1001) <= 800) //5%
+            if (_Random.Next(0, 1001) <= 800) //80%
             {
-                Food.Add(new Apple()
+                if (FoodList.Count < MaxFoodAmount)
                 {
-                    GameHost = this,
-                    X = _Random.Next(Bounds.Left + Width),
-                    Y = _Random.Next(Bounds.Top + Height),
-                    Servings = 1,
-                    EnergyPerServing = 30,
-                    ServingDigestionCost = 0.05,
-                    Size = 7,
-                    Color = Color.Green
-                });
+                    Food.Add(new Apple()
+                    {
+                        GameHost = this,
+                        X = _Random.Next(Bounds.Left + Width),
+                        Y = _Random.Next(Bounds.Top + Height),
+                        Servings = 1,
+                        EnergyPerServing = 30,
+                        ServingDigestionCost = 0.05,
+                        Size = 7,
+                        Color = Color.Green
+                    });
+                }
             }
 
         }
