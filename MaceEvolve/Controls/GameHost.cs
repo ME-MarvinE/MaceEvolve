@@ -68,17 +68,17 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < 300; i++)
             {
-                Creatures.Add(new Creature()
+                Creatures.Add(new Creature(new Genome(Genome.GetRandomizedGenes()))
                 {
                     GameHost = this,
                     X = _Random.Next(Bounds.Left + Width),
                     Y = _Random.Next(Bounds.Top + Height),
                     Size = 10,
-                    Color = Color.Red,
+                    Color = Color.FromArgb(255, 64, 64, 255),
                     Speed = 1.3,
                     Metabolism = 0.1,
                     Energy = 150,
-                    SightRange = 200
+                    SightRange = 100
                 });
             }
         }
@@ -118,8 +118,6 @@ namespace MaceEvolve.Controls
             }
 
         }
-        #endregion
-
         private void GameHost_Paint(object sender, PaintEventArgs e)
         {
             List<Apple> FoodList = new List<Apple>(Food);
@@ -149,5 +147,6 @@ namespace MaceEvolve.Controls
         {
             Invalidate();
         }
+        #endregion
     }
 }

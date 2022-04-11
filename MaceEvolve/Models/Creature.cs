@@ -15,6 +15,7 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Properties
+        public Genome Genome;
         public double Energy { get; set; } = 150;
         public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
@@ -23,7 +24,12 @@ namespace MaceEvolve.Models
 
         #region Constructors
         public Creature()
+            :this(new Genome())
         {
+        }
+        public Creature(Genome Genome)
+        {
+            this.Genome = Genome;
         }
         #endregion
 
@@ -56,21 +62,21 @@ namespace MaceEvolve.Models
                 Move();
             }
         }
-        public IEnumerable<Apple> GetClosestFood(IEnumerable<Apple> Food)
+        public IEnumerable<Apple> GetVisibleFood(IEnumerable<Apple> Food)
         {
-            return Food?.OrderBy(Apple => GetDistanceFrom(Apple.X, Apple.Y));
+            return Food.Where(Apple => GetDistanceFrom(Apple.X, Apple.Y) <= SightRange).OrderBy(Apple => GetDistanceFrom(Apple.X, Apple.Y));
         }
         public int GetDistanceFrom(int TargetX, int TargetY)
         {
-            return (int)Math.Sqrt(Math.Pow(X - TargetX, 2) + Math.Pow(Y - TargetY, 2));
+            return (int)GetDistanceFrom((double)TargetX, (double)TargetY);
         }
         public double GetDistanceFrom(double TargetX, double TargetY)
         {
-            return Math.Sqrt(Math.Pow(X - TargetX, 2) + Math.Pow(Y - TargetY, 2));
+            return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
         }
         public bool TryEatFoodInRange()
         {
-            Apple ClosestApple = GetClosestFood(FoodList).FirstOrDefault();
+            Apple ClosestApple = GetVisibleFood(FoodList).FirstOrDefault();
 
             if (ClosestApple != null && GetDistanceFrom(ClosestApple.X, ClosestApple.Y) <= Size / 2)
             {
@@ -88,9 +94,7 @@ namespace MaceEvolve.Models
         }
         public void Move()
         {
-            Apple ClosestApple = GetClosestFood(FoodList).FirstOrDefault();
-            double NewX = X;
-            double NewY = Y;
+            Apple ClosestApple = GetVisibleFood(FoodList).FirstOrDefault();
 
             if (ClosestApple != null)
             {
@@ -99,35 +103,61 @@ namespace MaceEvolve.Models
 
                 if (XDifference + YDifference <= SightRange)
                 {
-                    if (XDifference > 0)
-                    {
-                        NewX = XDifference >= Speed ? X - Speed : NewX;
-                    }
-                    else if (XDifference < 0)
-                    {
-                        NewX = XDifference <= -Speed ? X + Speed : NewX;
-                    }
-
                     if (YDifference > 0)
                     {
-                        NewY = YDifference >= Speed ? Y - Speed : NewY;
+                        if (YDifference >= Speed)
+                        {
+                            MoveForward();
+                        }
                     }
                     else if (YDifference < 0)
                     {
-                        NewY = YDifference <= -Speed ? Y + Speed : NewY;
+                        if (YDifference <= -Speed)
+                        {
+                            MoveBackward();
+                        }
+                    }
+
+                    if (XDifference > 0)
+                    {
+                        if (XDifference >= Speed)
+                        {
+                            MoveLeft();
+                        }
+                    }
+                    else if (XDifference < 0)
+                    {
+                        if (XDifference <= -Speed)
+                        {
+                            MoveRight();
+                        }
                     }
                 }
-            }
-
-            if (NewX != X || NewY != Y)
-            {
-                Rectangle = new Rectangle(NewX, NewY, Size, Size);
-                Energy -= 0.3;
             }
         }
         public void Die()
         {
             Color = Color.Brown;
+        }
+        public void MoveForward()
+        {
+            Y -= Speed;
+            Energy -= 0.15;
+        }
+        public void MoveBackward()
+        {
+            Y += Speed;
+            Energy -= 0.15;
+        }
+        public void MoveLeft()
+        {
+            X -= Speed;
+            Energy -= 0.15;
+        }
+        public void MoveRight()
+        {
+            X += Speed;
+            Energy -= 0.15;
         }
         #endregion
     }
