@@ -20,6 +20,7 @@ namespace MaceEvolve.Models
         public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
+        public List<Apple> VisibleFood { get; set; }
         #endregion
 
         #region Constructors
@@ -52,6 +53,7 @@ namespace MaceEvolve.Models
 
             FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
             CreaturesList = new List<Creature>(GameHost.Creatures);
+            VisibleFood = GetVisibleFood(FoodList).ToList();
 
             if (TryEatFoodInRange())
             {
@@ -76,7 +78,7 @@ namespace MaceEvolve.Models
         }
         public bool TryEatFoodInRange()
         {
-            Apple ClosestApple = GetVisibleFood(FoodList).FirstOrDefault();
+            Apple ClosestApple = VisibleFood.FirstOrDefault();
 
             if (ClosestApple != null && GetDistanceFrom(ClosestApple.X, ClosestApple.Y) <= Size / 2)
             {
@@ -94,7 +96,7 @@ namespace MaceEvolve.Models
         }
         public void Move()
         {
-            Apple ClosestApple = GetVisibleFood(FoodList).FirstOrDefault();
+            Apple ClosestApple = VisibleFood.FirstOrDefault();
 
             if (ClosestApple != null)
             {
@@ -159,6 +161,16 @@ namespace MaceEvolve.Models
             X += Speed;
             Energy -= 0.15;
         }
+
+        #region Inputs
+        public double Input_DistanceFromFood()
+        {
+            Apple ClosestApple = VisibleFood.FirstOrDefault();
+            double DistanceFromFood = ClosestApple == null ? 0 : GetDistanceFrom(ClosestApple.X, ClosestApple.Y);
+            return ClosestApple == null ? 0 : Globals.Map(DistanceFromFood, 0, DistanceFromFood, 1, 0);
+        }
+        #endregion
+
         #endregion
     }
 }
