@@ -1,4 +1,6 @@
-﻿namespace MaceEvolve
+﻿using System.Windows.Forms;
+
+namespace MaceEvolve
 {
     partial class MainForm
     {
