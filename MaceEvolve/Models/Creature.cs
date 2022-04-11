@@ -67,10 +67,6 @@ namespace MaceEvolve.Models
         {
             return Math.Sqrt(Math.Pow(X - TargetX, 2) + Math.Pow(Y - TargetY, 2));
         }
-        public int GetDistanceFrom(Point TargetLocation)
-        {
-            return GetDistanceFrom(TargetLocation.X, TargetLocation.Y);
-        }
         public bool TryEatFoodInRange()
         {
             Apple ClosestApple = GetClosestFood(FoodList).FirstOrDefault();

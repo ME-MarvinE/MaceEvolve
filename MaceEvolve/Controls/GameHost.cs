@@ -25,7 +25,7 @@ namespace MaceEvolve.Controls
         public List<Creature> Creatures { get; set; } = new List<Creature>();
         public List<Apple> Food { get; set; } = new List<Apple>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
-        public int MaxFoodAmount { get; set; } = 200;
+        public int MaxFoodAmount { get; set; } = 350;
         public int TargetFPS
         {
             get
@@ -75,7 +75,7 @@ namespace MaceEvolve.Controls
                     Y = _Random.Next(Bounds.Top + Height),
                     Size = 10,
                     Color = Color.Red,
-                    Speed = 1,
+                    Speed = 1.3,
                     Metabolism = 0.1,
                     Energy = 150,
                     SightRange = 200

@@ -39,6 +39,20 @@ namespace MaceEvolve.Models
                 Rectangle.Y = value;
             }
         }
+        public double MX
+        {
+            get
+            {
+                return X - Size / 2;
+            }
+        }
+        public double MY
+        {
+            get
+            {
+                return Y - Size / 2;
+            }
+        }
         public double Size
         {
             get
@@ -87,7 +101,7 @@ namespace MaceEvolve.Models
         {
             using (SolidBrush Brush = new SolidBrush(Color))
             {
-                e.Graphics.FillEllipse(Brush, (int)X, (int)Y, (int)Size, (int)Size);
+                e.Graphics.FillEllipse(Brush, (float)MX, (float)MY, (float)Size, (float)Size);
             }
         }
         public virtual void Update()
