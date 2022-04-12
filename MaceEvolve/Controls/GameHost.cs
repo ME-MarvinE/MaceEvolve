@@ -23,7 +23,7 @@ namespace MaceEvolve.Controls
 
         #region Properties
         public List<Creature> Creatures { get; set; } = new List<Creature>();
-        public List<Apple> Food { get; set; } = new List<Apple>();
+        public List<Food> Food { get; set; } = new List<Food>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
         public int MaxFoodAmount { get; set; } = 350;
         public int TargetFPS
@@ -84,14 +84,14 @@ namespace MaceEvolve.Controls
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            List<Apple> FoodList = new List<Apple>(Food);
+            List<Food> FoodList = new List<Food>(Food);
             List<Creature> CreaturesList = new List<Creature>(Creatures);
 
             Food.RemoveAll(x => x.Servings <= 0);
 
-            foreach (Apple Apple in FoodList)
+            foreach (Food Food in FoodList)
             {
-                Apple.Update();
+                Food.Update();
             }
 
             foreach (Creature Creature in CreaturesList)
@@ -120,7 +120,7 @@ namespace MaceEvolve.Controls
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
         {
-            List<Apple> FoodList = new List<Apple>(Food);
+            List<Food> FoodList = new List<Food>(Food);
             List<Creature> CreaturesList = new List<Creature>(Creatures);
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -130,9 +130,9 @@ namespace MaceEvolve.Controls
                 Creature.Draw(e);
             }
 
-            foreach (Apple Apple in FoodList)
+            foreach (Food Food in FoodList)
             {
-                Apple.Draw(e);
+                Food.Draw(e);
             }
         }
 

@@ -9,8 +9,31 @@ namespace MaceEvolve.Models
 {
     public class Creature : GameObject
     {
+
+        public enum Inputs
+        {
+            DistanceFromNearestFood,
+            VisibleFood,
+            Energy,
+            Metabolism,
+            Speed
+        }
+        public enum Processes
+        {
+
+        }
+        public enum Outputs
+        {
+            Die,
+            MoveForward,
+            MoveBackward,
+            MoveLeft,
+            MoveRight,
+            TryEat
+        }
+
         #region Fields
-        private List<Apple> FoodList { get; set; }
+        private List<Food> FoodList { get; set; }
         private List<Creature> CreaturesList { get; set; }
         #endregion
 
@@ -20,7 +43,10 @@ namespace MaceEvolve.Models
         public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
-        public List<Apple> VisibleFood { get; set; }
+        public List<Food> VisibleFood { get; set; }
+        //public int StomachSize { get; set; } = 5;
+        //public List<Food> StomachContents { get; set; } = 5;
+        //public double DigestionRate = 0.1;
         #endregion
 
         #region Constructors
@@ -64,9 +90,9 @@ namespace MaceEvolve.Models
                 Move();
             }
         }
-        public IEnumerable<Apple> GetVisibleFood(IEnumerable<Apple> Food)
+        public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
         {
-            return Food.Where(Apple => GetDistanceFrom(Apple.X, Apple.Y) <= SightRange).OrderBy(Apple => GetDistanceFrom(Apple.X, Apple.Y));
+            return Food.Where(Food => GetDistanceFrom(Food.X, Food.Y) <= SightRange).OrderBy(Food => GetDistanceFrom(Food.X, Food.Y));
         }
         public int GetDistanceFrom(int TargetX, int TargetY)
         {
@@ -78,30 +104,30 @@ namespace MaceEvolve.Models
         }
         public bool TryEatFoodInRange()
         {
-            Apple ClosestApple = VisibleFood.FirstOrDefault();
+            Food ClosestFood = VisibleFood.FirstOrDefault();
 
-            if (ClosestApple != null && GetDistanceFrom(ClosestApple.X, ClosestApple.Y) <= Size / 2)
+            if (ClosestFood != null && GetDistanceFrom(ClosestFood.X, ClosestFood.Y) <= Size / 2)
             {
-                Eat(ClosestApple);
+                Eat(ClosestFood);
                 return true;
             }
 
             return false;
         }
-        public void Eat(Apple Apple)
+        public void Eat(Food Food)
         {
-            Energy -= Apple.ServingDigestionCost;
-            Apple.Servings -= 1;
-            Energy += Apple.EnergyPerServing;
+            Energy -= Food.ServingDigestionCost;
+            Food.Servings -= 1;
+            Energy += Food.EnergyPerServing;
         }
         public void Move()
         {
-            Apple ClosestApple = VisibleFood.FirstOrDefault();
+            Food ClosestFood = VisibleFood.FirstOrDefault();
 
-            if (ClosestApple != null)
+            if (ClosestFood != null)
             {
-                double XDifference = X - ClosestApple.X;
-                double YDifference = Y - ClosestApple.Y;
+                double XDifference = X - ClosestFood.X;
+                double YDifference = Y - ClosestFood.Y;
 
                 if (XDifference + YDifference <= SightRange)
                 {
@@ -161,13 +187,25 @@ namespace MaceEvolve.Models
             X += Speed;
             Energy -= 0.15;
         }
+        public double Sigmoid(double Num)
+        {
+            return 1 / (1 + Math.Exp(-Num));
+        }
+        public double SigmoidDerivative(double Num)
+        {
+            return Num * (1 - Num);
+        }
 
         #region Inputs
-        public double Input_DistanceFromFood()
+        public double Input_DistanceFromFood(double Weight)
         {
-            Apple ClosestApple = VisibleFood.FirstOrDefault();
-            double DistanceFromFood = ClosestApple == null ? 0 : GetDistanceFrom(ClosestApple.X, ClosestApple.Y);
-            return ClosestApple == null ? 0 : Globals.Map(DistanceFromFood, 0, DistanceFromFood, 1, 0);
+            Food ClosestFood = VisibleFood.FirstOrDefault();
+
+            if (ClosestFood == null) { return 0; }
+
+            double DistanceFromFood = GetDistanceFrom(ClosestFood.X, ClosestFood.Y);
+
+            return Globals.Map(DistanceFromFood, 0, DistanceFromFood, 1, 0);
         }
         #endregion
 

@@ -33,7 +33,7 @@ namespace MaceEvolve.Models
             DefaultGenes[GeneType.MoveForward] = MaxWeight;
         }
         public Genome()
-            : this(DefaultGenes.ToDictionary(x => x.Key, x => x.Value))
+            : this(new Dictionary<GeneType, int>(DefaultGenes))
         {
         }
         public Genome(Dictionary<GeneType, int> Genes)
@@ -68,6 +68,10 @@ namespace MaceEvolve.Models
         public static Dictionary<GeneType, int> GetRandomizedGenes()
         {
             return DefaultGenes.ToDictionary(x => x.Key, x => _Random.Next(MaxWeight + 1));
+        }
+        public static Dictionary<GeneType, int> Mutate(Dictionary<GeneType, int> Genes, double MutationChance, double MutationSeverity)
+        {
+            return new Dictionary<GeneType, int>(Genes);
         }
         #endregion
     }
