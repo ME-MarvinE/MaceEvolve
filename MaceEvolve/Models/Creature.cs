@@ -13,6 +13,7 @@ namespace MaceEvolve.Models
         #region Fields
         private List<Food> FoodList { get; set; }
         private List<Creature> CreaturesList { get; set; }
+        private List<ProcessNode> OutputNodes { get; set; } = new List<ProcessNode>();
         #endregion
 
         #region Properties
@@ -43,6 +44,59 @@ namespace MaceEvolve.Models
         public Creature(Genome Genome)
         {
             this.Genome = Genome;
+            ProcessNode OutputNodeTryEat = new ProcessNode()
+            {
+                ConnectionWeight = 1,
+                Inputs = new List<ProcessNode>()
+                {
+                    new ProcessNode()
+                    {
+                        ConnectionWeight = 1,
+                        Inputs = new List<ProcessNode>()
+                        {
+                            new ProcessNode()
+                            {
+                                ConnectionWeight = 2,
+                                IsStartNode = true,
+                                StartNodeValue = CreatureValue.PercentMaxEnergy,
+                                StartNodeCreature = this
+                            },
+                            new ProcessNode()
+                            {
+                                ConnectionWeight = 1,
+                                IsStartNode = true,
+                                StartNodeValue = CreatureValue.ProximityToFood,
+                                StartNodeCreature = this
+                            }
+                        }
+                    }
+                }
+            };
+
+            ProcessNode OutputNodeIdle = new ProcessNode()
+            {
+                ConnectionWeight = 1,
+                Inputs = new List<ProcessNode>()
+                {
+                    new ProcessNode()
+                    {
+                        ConnectionWeight = 1,
+                        Inputs = new List<ProcessNode>()
+                        {
+                            new ProcessNode()
+                            {
+                                ConnectionWeight = 0.2,
+                                IsStartNode = true,
+                                StartNodeValue = CreatureValue.ProximityToFood,
+                                StartNodeCreature = this
+                            }
+                        }
+                    }
+                }
+            };
+
+            OutputNodes.Add(OutputNodeTryEat);
+            OutputNodes.Add(OutputNodeIdle);
         }
         #endregion
 
@@ -67,23 +121,7 @@ namespace MaceEvolve.Models
             CreaturesList = new List<Creature>(GameHost.Creatures);
             VisibleFood = GetVisibleFood(FoodList).ToList();
 
-            double thing = ChanceToTryEat(Genome.Genes);
-            double thing2 = Sigmoid(thing);
-
-            if (_Random.NextDouble() <= thing2)
-            {
-                if (TryEatFoodInRange())
-                {
-                }
-                else
-                {
-                    Move();
-                }
-            }
-            else
-            {
-                Idle();
-            }
+            Live();
         }
         public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
         {
@@ -106,16 +144,29 @@ namespace MaceEvolve.Models
         }
         public void Die()
         {
+            Energy = 0;
             Color = Color.Brown;
         }
+        public void Live()
+        {
+            double TryEatValue = OutputNodes[0].GetValue();
+            double DieValue = OutputNodes[1].GetValue();
 
-        public double Sigmoid(double Num)
-        {
-            return 1 / (1 + Math.Exp(-Num));
-        }
-        public double SigmoidDerivative(double Num)
-        {
-            return Num * (1 - Num);
+            if (TryEatValue > DieValue)
+            {
+                if (TryEatFoodInRange())
+                {
+                }
+                else
+                {
+                    Move();
+                }
+                
+            }
+            else
+            {
+                Idle();
+            }
         }
 
 
@@ -158,7 +209,7 @@ namespace MaceEvolve.Models
                 }
                 Output += InputResult * KeyValuePair.Value;
             }
-            return Sigmoid(Output);
+            return Globals.Sigmoid(Output);
         }
         public double Neuron(Dictionary<CreatureProcess, double> Values)
         {
@@ -177,7 +228,7 @@ namespace MaceEvolve.Models
                 }
                 Output += InputResult * KeyValuePair.Value;
             }
-            return Sigmoid(Output);
+            return Globals.Sigmoid(Output);
         }
         #endregion
 

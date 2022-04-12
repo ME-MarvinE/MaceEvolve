@@ -59,6 +59,14 @@ namespace MaceEvolve
         {
             return Math.Max(Math.Min(Num, Max), Min);
         }
+        public static double Sigmoid(double Num)
+        {
+            return 1 / (1 + Math.Exp(-Num));
+        }
+        public static double SigmoidDerivative(double Num)
+        {
+            return Num * (1 - Num);
+        }
         #endregion
     }
 }

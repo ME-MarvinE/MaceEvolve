@@ -6,13 +6,7 @@ using System.Threading.Tasks;
 
 namespace MaceEvolve.Models
 {
-    public abstract class Node<T>
+    public abstract class Node
     {
-        public Type InputType { get; }
-        public Node()
-        {
-            InputType = typeof(T);
-        }
-        public Func<T, double> Getter { get; }
     }
 }
