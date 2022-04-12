@@ -1,6 +1,6 @@
 ﻿namespace MaceEvolve.Enums
 {
-    public enum CreatureInput
+    public enum CreatureValue
     {
         ProximityToFood,
         PercentMaxEnergy
