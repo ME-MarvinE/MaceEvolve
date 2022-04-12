@@ -84,6 +84,21 @@ namespace MaceEvolve.Controls
                     MaxEnergy = 150
                 });
             }
+
+            for (int i = 0; i < MaxCreatures; i++)
+            {
+                Food.Add(new Apple()
+                {
+                    GameHost = this,
+                    X = _Random.Next(Bounds.Left, Bounds.Right),
+                    Y = _Random.Next(Bounds.Top, Bounds.Bottom),
+                    Servings = 1,
+                    EnergyPerServing = 30,
+                    ServingDigestionCost = 0.05,
+                    Size = 7,
+                    Color = Color.Green
+                });
+            }
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {

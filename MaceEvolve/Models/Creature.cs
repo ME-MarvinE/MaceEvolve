@@ -160,12 +160,11 @@ namespace MaceEvolve.Models
         {
             return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
         }
- 
         public void Eat(Food Food)
         {
             Energy -= Food.ServingDigestionCost;
             Food.Servings -= 1;
-            Energy += Food.EnergyPerServing;
+            Energy = Energy + Food.EnergyPerServing < MaxEnergy ? Energy + Food.EnergyPerServing : MaxEnergy;
         }
         public void Die()
         {
@@ -204,7 +203,7 @@ namespace MaceEvolve.Models
         }
 
 
-        #region CreatureValues
+        #region Inputs
         public static double PercentMaxEnergy(Creature Creature)
         {
             return Globals.Map(Creature.Energy, 0, Creature.MaxEnergy, 0, 1);
@@ -218,51 +217,6 @@ namespace MaceEvolve.Models
             double DistanceFromFood = Creature.GetDistanceFrom(ClosestFood.X, ClosestFood.Y);
 
             return Globals.Map(DistanceFromFood, 0, Creature.SightRange, 0, 1);
-        }
-        #endregion
-
-        #region Processes
-        public double ChanceToTryEat(Dictionary<CreatureValue, double> Values)
-        {
-            double Output = 0;
-            foreach (var KeyValuePair in Values)
-            {
-                double InputResult;
-                switch (KeyValuePair.Key)
-                {
-                    case CreatureValue.ProximityToFood:
-                        InputResult = ProximityToFood(this);
-                        break;
-
-                    case CreatureValue.PercentMaxEnergy:
-                        InputResult = PercentMaxEnergy(this);
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
-                Output += InputResult * KeyValuePair.Value;
-            }
-            return Globals.Sigmoid(Output);
-        }
-        public double Neuron(Dictionary<CreatureProcess, double> Values)
-        {
-            double Output = 0;
-            foreach (var KeyValuePair in Values)
-            {
-                double InputResult;
-                switch (KeyValuePair.Key)
-                {
-                    case CreatureProcess.ChanceToTryEat:
-                        InputResult = ProximityToFood(this);
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
-                Output += InputResult * KeyValuePair.Value;
-            }
-            return Globals.Sigmoid(Output);
         }
         #endregion
 
@@ -371,7 +325,7 @@ namespace MaceEvolve.Models
                     Color = Color.FromArgb(255, 255, 255, 64),
                     Speed = 1.3,
                     Metabolism = 0.1,
-                    Energy = ReproductionCost,
+                    Energy = _Random.Next((int)ReproductionCost, (int)(ReproductionCost * 1.5)),
                     SightRange = 100,
                     MaxEnergy = _Random.Next(100, 200)
                 });
