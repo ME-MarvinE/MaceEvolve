@@ -11,9 +11,9 @@ namespace MaceEvolve.Models
     {
         #region Properties
         protected static Random _Random { get; }
-        public static List<GeneType> GeneTypes { get; }
-        public static Dictionary<GeneType, int> DefaultGenes { get; }
-        public Dictionary<GeneType, int> Genes { get; }
+        public static List<CreatureInput> CreatureInputs { get; }
+        public static Dictionary<CreatureInput, double> DefaultGenes { get; }
+        public Dictionary<CreatureInput, double> Genes { get; }
         public static int MinWeight { get; } = 0;
         public static int MaxWeight { get; } = 100;
         #endregion
@@ -22,21 +22,19 @@ namespace MaceEvolve.Models
         static Genome()
         {
             _Random = new Random();
-            GeneTypes = Enum.GetValues(typeof(GeneType)).Cast<GeneType>().ToList();
+            CreatureInputs = Enum.GetValues(typeof(CreatureInput)).Cast<CreatureInput>().ToList();
 
-            DefaultGenes = new Dictionary<GeneType, int>();
-            foreach (GeneType GeneType in GeneTypes)
+            DefaultGenes = new Dictionary<CreatureInput, double>();
+            foreach (CreatureInput Input in CreatureInputs)
             {
-                DefaultGenes.Add(GeneType, MinWeight);
+                DefaultGenes.Add(Input, _Random.NextDouble());
             }
-
-            DefaultGenes[GeneType.MoveForward] = MaxWeight;
         }
         public Genome()
-            : this(new Dictionary<GeneType, int>(DefaultGenes))
+            : this(new Dictionary<CreatureInput, double>(DefaultGenes))
         {
         }
-        public Genome(Dictionary<GeneType, int> Genes)
+        public Genome(Dictionary<CreatureInput, double> Genes)
         {
             this.Genes = Genes;
         }
@@ -58,20 +56,20 @@ namespace MaceEvolve.Models
                 return Num;
             }
         }
-        public static void RandomizeGenes(Dictionary<GeneType, int> Genes)
+        public static void RandomizeGenes(Dictionary<CreatureInput, double> Genes)
         {
             foreach (var Gene in Genes)
             {
                 Genes[Gene.Key] = _Random.Next(MaxWeight + 1);
             }
         }
-        public static Dictionary<GeneType, int> GetRandomizedGenes()
+        public static Dictionary<CreatureInput, double> GetRandomizedGenes()
         {
-            return DefaultGenes.ToDictionary(x => x.Key, x => _Random.Next(MaxWeight + 1));
+            return DefaultGenes.ToDictionary(x => x.Key, x => _Random.NextDouble());
         }
-        public static Dictionary<GeneType, int> Mutate(Dictionary<GeneType, int> Genes, double MutationChance, double MutationSeverity)
+        public static Dictionary<CreatureInput, double> Mutate(Dictionary<CreatureInput, double> Genes, double MutationChance, double MutationSeverity)
         {
-            return new Dictionary<GeneType, int>(Genes);
+            return new Dictionary<CreatureInput, double>(Genes);
         }
         #endregion
     }

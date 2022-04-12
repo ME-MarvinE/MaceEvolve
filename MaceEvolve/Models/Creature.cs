@@ -4,40 +4,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
+using MaceEvolve.Enums;
 
 namespace MaceEvolve.Models
 {
     public class Creature : GameObject
     {
-
-        public enum Inputs
-        {
-            DistanceFromNearestFood,
-            VisibleFood,
-            Energy,
-            Metabolism,
-            Speed
-        }
-        public enum Processes
-        {
-
-        }
-        public enum Outputs
-        {
-            Die,
-            MoveForward,
-            MoveBackward,
-            MoveLeft,
-            MoveRight,
-            TryEat
-        }
-
         #region Fields
         private List<Food> FoodList { get; set; }
         private List<Creature> CreaturesList { get; set; }
         #endregion
 
         #region Properties
+        private double MoveCost { get; set; } = 0.5;
+        private double IdleCost
+        {
+            get
+            {
+                return Metabolism;
+            }
+        }
         public Genome Genome;
         public double Energy { get; set; } = 150;
         public double Speed { get; set; } = 1;
@@ -81,13 +67,22 @@ namespace MaceEvolve.Models
             CreaturesList = new List<Creature>(GameHost.Creatures);
             VisibleFood = GetVisibleFood(FoodList).ToList();
 
-            if (TryEatFoodInRange())
+            double thing = ChanceToTryEat(Genome.Genes);
+            double thing2 = Sigmoid(thing);
+
+            if (_Random.NextDouble() <= thing2)
             {
-                return;
+                if (TryEatFoodInRange())
+                {
+                }
+                else
+                {
+                    Move();
+                }
             }
             else
             {
-                Move();
+                Idle();
             }
         }
         public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
@@ -102,6 +97,46 @@ namespace MaceEvolve.Models
         {
             return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
         }
+ 
+        public void Eat(Food Food)
+        {
+            Energy -= Food.ServingDigestionCost;
+            Food.Servings -= 1;
+            Energy += Food.EnergyPerServing;
+        }
+        public void Die()
+        {
+            Color = Color.Brown;
+        }
+
+        public double Sigmoid(double Num)
+        {
+            return 1 / (1 + Math.Exp(-Num));
+        }
+        public double SigmoidDerivative(double Num)
+        {
+            return Num * (1 - Num);
+        }
+
+
+        #region Inputs
+        public double PercentMaxEnergy()
+        {
+            return Globals.Map(Energy, 0, 100, 0, 1);
+        }
+        public double ProximityToFood()
+        {
+            Food ClosestFood = VisibleFood.FirstOrDefault();
+
+            if (ClosestFood == null) { return 0; }
+
+            double DistanceFromFood = GetDistanceFrom(ClosestFood.X, ClosestFood.Y);
+
+            return Globals.Map(DistanceFromFood, 0, SightRange, 0, 1);
+        }
+        #endregion
+
+        #region Outputs
         public bool TryEatFoodInRange()
         {
             Food ClosestFood = VisibleFood.FirstOrDefault();
@@ -114,11 +149,29 @@ namespace MaceEvolve.Models
 
             return false;
         }
-        public void Eat(Food Food)
+        public void Idle()
         {
-            Energy -= Food.ServingDigestionCost;
-            Food.Servings -= 1;
-            Energy += Food.EnergyPerServing;
+            Energy -= IdleCost;
+        }
+        public void MoveForward()
+        {
+            Y -= Speed;
+            Energy -= MoveCost;
+        }
+        public void MoveBackward()
+        {
+            Y += Speed;
+            Energy -= MoveCost;
+        }
+        public void MoveLeft()
+        {
+            X -= Speed;
+            Energy -= MoveCost;
+        }
+        public void MoveRight()
+        {
+            X += Speed;
+            Energy -= MoveCost;
         }
         public void Move()
         {
@@ -163,52 +216,31 @@ namespace MaceEvolve.Models
                 }
             }
         }
-        public void Die()
-        {
-            Color = Color.Brown;
-        }
-        public void MoveForward()
-        {
-            Y -= Speed;
-            Energy -= 0.15;
-        }
-        public void MoveBackward()
-        {
-            Y += Speed;
-            Energy -= 0.15;
-        }
-        public void MoveLeft()
-        {
-            X -= Speed;
-            Energy -= 0.15;
-        }
-        public void MoveRight()
-        {
-            X += Speed;
-            Energy -= 0.15;
-        }
-        public double Sigmoid(double Num)
-        {
-            return 1 / (1 + Math.Exp(-Num));
-        }
-        public double SigmoidDerivative(double Num)
-        {
-            return Num * (1 - Num);
-        }
-
-        #region Inputs
-        public double Input_DistanceFromFood(double Weight)
-        {
-            Food ClosestFood = VisibleFood.FirstOrDefault();
-
-            if (ClosestFood == null) { return 0; }
-
-            double DistanceFromFood = GetDistanceFrom(ClosestFood.X, ClosestFood.Y);
-
-            return Globals.Map(DistanceFromFood, 0, DistanceFromFood, 1, 0);
-        }
         #endregion
 
+        public double ChanceToTryEat(Dictionary<CreatureInput, double> Values)
+        {
+            double Output = 0;
+            foreach (var KeyValuePair in Values)
+            {
+                double InputResult;
+                switch (KeyValuePair.Key)
+                {
+                    case CreatureInput.ProximityToFood:
+                        InputResult = ProximityToFood();
+                        break;
+
+                    case CreatureInput.PercentMaxEnergy:
+                        InputResult = PercentMaxEnergy();
+                        break;
+
+                    default:
+                        throw new NotImplementedException();
+                }
+                Output += InputResult * KeyValuePair.Value;
+            }
+            return Sigmoid(Output);
+        }
         #endregion
     }
 }

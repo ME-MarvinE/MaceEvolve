@@ -1,12 +1,12 @@
 ﻿namespace MaceEvolve.Enums
 {
-    public enum GeneType
+    public enum CreatureOutput
     {
+        Die,
         MoveForward,
         MoveBackward,
         MoveLeft,
         MoveRight,
-        Eat,
-        Reproduce
+        TryEat
     }
 }
