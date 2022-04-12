@@ -38,6 +38,8 @@ namespace MaceEvolve.Controls
                 DrawTimer.Interval = 1000 / TargetFPS;
             }
         }
+        public Queue<Creature> BornCreatures { get; set; } = new Queue<Creature>();
+        public int MaxCreatures { get; set; } = 300;
         #endregion
 
         #region Constructors
@@ -66,28 +68,37 @@ namespace MaceEvolve.Controls
             Creatures.Clear();
             Food.Clear();
 
-            for (int i = 0; i < 300; i++)
+            for (int i = 0; i < MaxCreatures; i++)
             {
                 Creatures.Add(new Creature(new Genome(Genome.GetRandomizedGenes()))
                 {
                     GameHost = this,
-                    X = _Random.Next(Bounds.Left + Width),
-                    Y = _Random.Next(Bounds.Top + Height),
+                    X = _Random.Next(Bounds.Left, Bounds.Right),
+                    Y = _Random.Next(Bounds.Top, Bounds.Bottom),
                     Size = 10,
                     Color = Color.FromArgb(255, 64, 64, 255),
                     Speed = 1.3,
                     Metabolism = 0.1,
                     Energy = 150,
-                    SightRange = 100
+                    SightRange = 100,
+                    MaxEnergy = 150
                 });
             }
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
+            //Add creatures resulting from reproduction.
+            while (BornCreatures.Count != 0)
+            {
+                Creatures.Add(BornCreatures.Dequeue());
+            }
+
             List<Food> FoodList = new List<Food>(Food);
             List<Creature> CreaturesList = new List<Creature>(Creatures);
 
+            //Remove depleted food.
             Food.RemoveAll(x => x.Servings <= 0);
+
 
             foreach (Food Food in FoodList)
             {
@@ -99,15 +110,16 @@ namespace MaceEvolve.Controls
                 Creature.Update();
             }
 
-            if (_Random.Next(0, 1001) <= 800) //80%
+            //Add food.
+            if (_Random.Next(0, 1001) <= 900) //80%
             {
                 if (FoodList.Count < MaxFoodAmount)
                 {
                     Food.Add(new Apple()
                     {
                         GameHost = this,
-                        X = _Random.Next(Bounds.Left + Width),
-                        Y = _Random.Next(Bounds.Top + Height),
+                        X = _Random.Next(Bounds.Left, Bounds.Right),
+                        Y = _Random.Next(Bounds.Top, Bounds.Bottom),
                         Servings = 1,
                         EnergyPerServing = 30,
                         ServingDigestionCost = 0.05,

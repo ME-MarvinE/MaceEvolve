@@ -18,6 +18,7 @@ namespace MaceEvolve.Models
 
         #region Properties
         private double MoveCost { get; set; } = 0.5;
+        private double ReproductionCost { get; set; } = 50;
         private double IdleCost
         {
             get
@@ -31,6 +32,7 @@ namespace MaceEvolve.Models
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
         public List<Food> VisibleFood { get; set; }
+        public double MaxEnergy = 150;
         //public int StomachSize { get; set; } = 5;
         //public List<Food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
@@ -56,14 +58,14 @@ namespace MaceEvolve.Models
                         {
                             new ProcessNode()
                             {
-                                ConnectionWeight = 2,
+                                ConnectionWeight = _Random.NextDouble(),
                                 IsStartNode = true,
                                 StartNodeValue = CreatureValue.PercentMaxEnergy,
                                 StartNodeCreature = this
                             },
                             new ProcessNode()
                             {
-                                ConnectionWeight = 1,
+                                ConnectionWeight = _Random.NextDouble() / 4,
                                 IsStartNode = true,
                                 StartNodeValue = CreatureValue.ProximityToFood,
                                 StartNodeCreature = this
@@ -85,7 +87,7 @@ namespace MaceEvolve.Models
                         {
                             new ProcessNode()
                             {
-                                ConnectionWeight = 0.2,
+                                ConnectionWeight = _Random.NextDouble(),
                                 IsStartNode = true,
                                 StartNodeValue = CreatureValue.ProximityToFood,
                                 StartNodeCreature = this
@@ -95,8 +97,31 @@ namespace MaceEvolve.Models
                 }
             };
 
+            ProcessNode OutputNodeReproduce = new ProcessNode()
+            {
+                ConnectionWeight = 1,
+                Inputs = new List<ProcessNode>()
+                {
+                    new ProcessNode()
+                    {
+                        ConnectionWeight = 1,
+                        Inputs = new List<ProcessNode>()
+                        {
+                            new ProcessNode()
+                            {
+                                ConnectionWeight = _Random.NextDouble(),
+                                IsStartNode = true,
+                                StartNodeValue = CreatureValue.PercentMaxEnergy,
+                                StartNodeCreature = this
+                            }
+                        }
+                    }
+                }
+            };
+
             OutputNodes.Add(OutputNodeTryEat);
             OutputNodes.Add(OutputNodeIdle);
+            OutputNodes.Add(OutputNodeReproduce);
         }
         #endregion
 
@@ -151,8 +176,14 @@ namespace MaceEvolve.Models
         {
             double TryEatValue = OutputNodes[0].GetValue();
             double DieValue = OutputNodes[1].GetValue();
+            double ReproduceValue = OutputNodes[2].GetValue();
 
-            if (TryEatValue > DieValue)
+            if (Energy - ReproductionCost <= 0 || CreaturesList.Where(x => x.Energy > 0).Count() + 1 > GameHost.MaxCreatures)
+            {
+                ReproduceValue = 0;
+            }
+
+            if (TryEatValue > DieValue && TryEatValue > ReproduceValue)
             {
                 if (TryEatFoodInRange())
                 {
@@ -161,9 +192,12 @@ namespace MaceEvolve.Models
                 {
                     Move();
                 }
-                
             }
-            else
+            else if (ReproduceValue > TryEatValue && ReproduceValue > DieValue)
+            {
+                Reproduce();
+            }
+            else if (DieValue > TryEatValue && DieValue > ReproduceValue)
             {
                 Idle();
             }
@@ -173,7 +207,7 @@ namespace MaceEvolve.Models
         #region CreatureValues
         public static double PercentMaxEnergy(Creature Creature)
         {
-            return Globals.Map(Creature.Energy, 0, 100, 0, 1);
+            return Globals.Map(Creature.Energy, 0, Creature.MaxEnergy, 0, 1);
         }
         public static double ProximityToFood(Creature Creature)
         {
@@ -311,6 +345,38 @@ namespace MaceEvolve.Models
                     }
                 }
             }
+        }
+        public void Reproduce()
+        {
+            double RandomX = X + _Random.Next(-30, 30);
+            double RandomY = Y + _Random.Next(-30, 30);
+
+            if (RandomX < GameHost.Bounds.Left || RandomX > GameHost.Bounds.Right)
+            {
+                RandomX = X;
+            }
+
+            if (RandomY < GameHost.Bounds.Top || RandomY > GameHost.Bounds.Bottom)
+            {
+                RandomY = Y;
+            }
+
+            GameHost.BornCreatures.Enqueue(
+                new Creature(new Genome(Genome.GetRandomizedGenes()))
+                {
+                    GameHost = GameHost,
+                    X = RandomX,
+                    Y = RandomY,
+                    Size = 10,
+                    Color = Color.FromArgb(255, 255, 255, 64),
+                    Speed = 1.3,
+                    Metabolism = 0.1,
+                    Energy = ReproductionCost,
+                    SightRange = 100,
+                    MaxEnergy = _Random.Next(100, 200)
+                });
+
+            Energy -= ReproductionCost;
         }
         #endregion
 

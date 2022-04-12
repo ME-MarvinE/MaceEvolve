@@ -28,11 +28,11 @@ namespace MaceEvolve.Models
                 switch (StartNodeValue)
                 {
                     case CreatureValue.ProximityToFood:
-                        ReturnValue = Creature.ProximityToFood(StartNodeCreature);
+                        ReturnValue = Creature.ProximityToFood(StartNodeCreature) * ConnectionWeight;
                         break;
 
                     case CreatureValue.PercentMaxEnergy:
-                        ReturnValue = Creature.PercentMaxEnergy(StartNodeCreature);
+                        ReturnValue = Creature.PercentMaxEnergy(StartNodeCreature) * ConnectionWeight;
                         break;
 
                     default:
