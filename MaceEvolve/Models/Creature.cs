@@ -345,11 +345,11 @@ namespace MaceEvolve.Models
                     switch (ProcessNode.StartNodeValue)
                     {
                         case CreatureValue.ProximityToFood:
-                            ReturnValue = Creature.ProximityToFood(this) * ProcessNode.ConnectionWeight;
+                            ReturnValue = ProximityToFood(this) * ProcessNode.ConnectionWeight;
                             break;
 
                         case CreatureValue.PercentMaxEnergy:
-                            ReturnValue = Creature.PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
+                            ReturnValue = PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
                             break;
 
                         default:
@@ -357,14 +357,15 @@ namespace MaceEvolve.Models
                     }
                     break;
                 case LayerType.Output:
+
                     switch (ProcessNode.OutputNodeCreature)
                     {
                         case CreatureValue.ProximityToFood:
-                            ReturnValue = Creature.ProximityToFood(this) * ProcessNode.ConnectionWeight;
+                            ReturnValue = ProximityToFood(this) * ProcessNode.ConnectionWeight;
                             break;
 
                         case CreatureValue.PercentMaxEnergy:
-                            ReturnValue = Creature.PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
+                            ReturnValue = PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
                             break;
 
                         default:
@@ -372,12 +373,42 @@ namespace MaceEvolve.Models
                     }
                     break;
                 case LayerType.Process:
-
+                    foreach (ProcessNode Node in ProcessNode.Inputs)
+                    {
+                        ReturnValue += Node.GetValue() * Node.ConnectionWeight;
+                    }
                     break;
                 default:
                     throw new NotImplementedException();
             }
             return Globals.Sigmoid(ReturnValue);
+        }
+        public (double, CreatureOutput) ExecuteProcessNode(ProcessNode ProcessNode)
+        {
+            switch (ProcessNode.LayerType)
+            {
+                case LayerType.Output:
+
+                    switch (ProcessNode.OutputNodeCreature)
+                    {
+                        case CreatureOutput.MoveLeft:
+                            ReturnValue = ProximityToFood(this) * ProcessNode.ConnectionWeight;
+                            break;
+
+                        case CreatureValue.PercentMaxEnergy:
+                            ReturnValue = PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
+                            break;
+
+                        default:
+                            throw new NotImplementedException();
+                    }
+                    break;
+                case LayerType.Input:
+                case LayerType.Process:
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         #endregion
