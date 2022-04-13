@@ -12,7 +12,9 @@ namespace MaceEvolve.Models
         public double ConnectionWeight { get; set; } = 1;
         public List<ProcessNode> Inputs { get; set; } = new List<ProcessNode>();
         public Creature StartNodeCreature { get; set; }
+        public Creature OutputNodeCreature { get; set; }
         public CreatureValue StartNodeValue { get; set; }
+        public CreatureOutput OutputNodeValue { get; set; }
         public bool IsStartNode { get; set; }
         public int Depth
         {
@@ -38,11 +40,12 @@ namespace MaceEvolve.Models
                 return Inputs.Count;
             }
         }
+        public LayerType LayerType { get; set; }
         public double GetValue()
         {
             double ReturnValue = 0;
 
-            if (IsStartNode)
+            if (IsStartNode || LayerType == LayerType.Input)
             {
                 if (StartNodeCreature == null)
                 {
@@ -63,7 +66,7 @@ namespace MaceEvolve.Models
                         throw new NotImplementedException();
                 }
             }
-            else
+            else if (LayerType == LayerType.Process)
             {
                 if (Inputs.Count == 0)
                 {
@@ -74,6 +77,13 @@ namespace MaceEvolve.Models
                 {
                     ReturnValue += ProcessNode.GetValue() * ProcessNode.ConnectionWeight;
                 }
+            }
+            else if (LayerType == LayerType.Output)
+            {
+            }
+            else
+            {
+                throw new NotImplementedException();
             }
 
 

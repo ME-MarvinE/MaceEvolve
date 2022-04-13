@@ -122,6 +122,8 @@ namespace MaceEvolve.Models
             OutputNodes.Add(OutputNodeTryEat);
             OutputNodes.Add(OutputNodeIdle);
             OutputNodes.Add(OutputNodeReproduce);
+
+            List<ProcessNode> Brain = Genome.GenerateRandomLayers(1, 8, 1, 2, this);
         }
         #endregion
 
@@ -333,6 +335,50 @@ namespace MaceEvolve.Models
             Energy -= ReproductionCost;
         }
         #endregion
+
+        public double GetNodeValue(ProcessNode ProcessNode)
+        {
+            double ReturnValue = 0;
+            switch (ProcessNode.LayerType)
+            {
+                case LayerType.Input:
+                    switch (ProcessNode.StartNodeValue)
+                    {
+                        case CreatureValue.ProximityToFood:
+                            ReturnValue = Creature.ProximityToFood(this) * ProcessNode.ConnectionWeight;
+                            break;
+
+                        case CreatureValue.PercentMaxEnergy:
+                            ReturnValue = Creature.PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
+                            break;
+
+                        default:
+                            throw new NotImplementedException();
+                    }
+                    break;
+                case LayerType.Output:
+                    switch (ProcessNode.OutputNodeCreature)
+                    {
+                        case CreatureValue.ProximityToFood:
+                            ReturnValue = Creature.ProximityToFood(this) * ProcessNode.ConnectionWeight;
+                            break;
+
+                        case CreatureValue.PercentMaxEnergy:
+                            ReturnValue = Creature.PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
+                            break;
+
+                        default:
+                            throw new NotImplementedException();
+                    }
+                    break;
+                case LayerType.Process:
+
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            return Globals.Sigmoid(ReturnValue);
+        }
 
         #endregion
     }
