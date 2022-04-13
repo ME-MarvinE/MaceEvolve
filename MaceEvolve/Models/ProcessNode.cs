@@ -31,6 +31,13 @@ namespace MaceEvolve.Models
                 return NewDepth;
             }
         }
+        public int Breadth
+        {
+            get
+            {
+                return Inputs.Count;
+            }
+        }
         public double GetValue()
         {
             double ReturnValue = 0;
