@@ -10,10 +10,27 @@ namespace MaceEvolve.Models
     public class ProcessNode : Node
     {
         public double ConnectionWeight { get; set; } = 1;
-        public List<ProcessNode> Inputs { get; set; }
+        public List<ProcessNode> Inputs { get; set; } = new List<ProcessNode>();
         public Creature StartNodeCreature { get; set; }
         public CreatureValue StartNodeValue { get; set; }
         public bool IsStartNode { get; set; }
+        public int Depth
+        {
+            get
+            {
+                int NewDepth = 0;
+
+                foreach (ProcessNode ProcessNode in Inputs)
+                {
+                    if (ProcessNode.Depth + 1 > NewDepth)
+                    {
+                        NewDepth = ProcessNode.Depth + 1;
+                    }
+                }
+
+                return NewDepth;
+            }
+        }
         public double GetValue()
         {
             double ReturnValue = 0;
