@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MaceEvolve.Enums
 {
-    public enum LayerType
+    public enum NodeType
     {
         Input,
         Process,

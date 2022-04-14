@@ -13,7 +13,6 @@ namespace MaceEvolve.Models
         #region Fields
         private List<Food> FoodList { get; set; }
         private List<Creature> CreaturesList { get; set; }
-        private List<ProcessNode> OutputNodes { get; set; } = new List<ProcessNode>();
         #endregion
 
         #region Properties
@@ -26,13 +25,15 @@ namespace MaceEvolve.Models
                 return Metabolism;
             }
         }
-        public Genome Genome;
+        public Genome Genome { get; }
         public double Energy { get; set; } = 150;
         public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
         public List<Food> VisibleFood { get; set; }
         public double MaxEnergy = 150;
+        public List<ProcessNode> InputNodes { get; }
+        public Dictionary<CreatureValue, double> CurrentCreatureValues { get; } = Genome.CreatureInputs.ToDictionary(x => x, x => 0d);
         //public int StomachSize { get; set; } = 5;
         //public List<Food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
@@ -46,88 +47,103 @@ namespace MaceEvolve.Models
         public Creature(Genome Genome)
         {
             this.Genome = Genome;
-            ProcessNode OutputNodeTryEat = new ProcessNode()
-            {
-                ConnectionWeight = 1,
-                Inputs = new List<ProcessNode>()
-                {
-                    new ProcessNode()
-                    {
-                        ConnectionWeight = 1,
-                        Inputs = new List<ProcessNode>()
-                        {
-                            new ProcessNode()
-                            {
-                                ConnectionWeight = _Random.NextDouble(),
-                                IsStartNode = true,
-                                StartNodeValue = CreatureValue.PercentMaxEnergy,
-                                StartNodeCreature = this
-                            },
-                            new ProcessNode()
-                            {
-                                ConnectionWeight = _Random.NextDouble() / 4,
-                                IsStartNode = true,
-                                StartNodeValue = CreatureValue.ProximityToFood,
-                                StartNodeCreature = this
-                            }
-                        }
-                    }
-                }
-            };
+            InputNodes = GetInputNodes(Genome.Genes);
+            //ProcessNode OutputNodeTryEat = new ProcessNode()
+            //{
+            //    ConnectionWeight = 1,
+            //    Inputs = new List<ProcessNode>()
+            //    {
+            //        new ProcessNode()
+            //        {
+            //            ConnectionWeight = 1,
+            //            Inputs = new List<ProcessNode>()
+            //            {
+            //                new ProcessNode()
+            //                {
+            //                    ConnectionWeight = _Random.NextDouble(),
+            //                    IsStartNode = true,
+            //                    InputNodeCreatureInput = CreatureValue.PercentMaxEnergy,
+            //                    StartNodeCreature = this
+            //                },
+            //                new ProcessNode()
+            //                {
+            //                    ConnectionWeight = _Random.NextDouble() / 4,
+            //                    IsStartNode = true,
+            //                    InputNodeCreatureInput = CreatureValue.ProximityToFood,
+            //                    StartNodeCreature = this
+            //                }
+            //            }
+            //        }
+            //    }
+            //};
 
-            ProcessNode OutputNodeIdle = new ProcessNode()
-            {
-                ConnectionWeight = 1,
-                Inputs = new List<ProcessNode>()
-                {
-                    new ProcessNode()
-                    {
-                        ConnectionWeight = 1,
-                        Inputs = new List<ProcessNode>()
-                        {
-                            new ProcessNode()
-                            {
-                                ConnectionWeight = _Random.NextDouble(),
-                                IsStartNode = true,
-                                StartNodeValue = CreatureValue.ProximityToFood,
-                                StartNodeCreature = this
-                            }
-                        }
-                    }
-                }
-            };
+            //ProcessNode OutputNodeIdle = new ProcessNode()
+            //{
+            //    ConnectionWeight = 1,
+            //    Inputs = new List<ProcessNode>()
+            //    {
+            //        new ProcessNode()
+            //        {
+            //            ConnectionWeight = 1,
+            //            Inputs = new List<ProcessNode>()
+            //            {
+            //                new ProcessNode()
+            //                {
+            //                    ConnectionWeight = _Random.NextDouble(),
+            //                    IsStartNode = true,
+            //                    InputNodeCreatureInput = CreatureValue.ProximityToFood,
+            //                    StartNodeCreature = this
+            //                }
+            //            }
+            //        }
+            //    }
+            //};
 
-            ProcessNode OutputNodeReproduce = new ProcessNode()
-            {
-                ConnectionWeight = 1,
-                Inputs = new List<ProcessNode>()
-                {
-                    new ProcessNode()
-                    {
-                        ConnectionWeight = 1,
-                        Inputs = new List<ProcessNode>()
-                        {
-                            new ProcessNode()
-                            {
-                                ConnectionWeight = _Random.NextDouble(),
-                                IsStartNode = true,
-                                StartNodeValue = CreatureValue.PercentMaxEnergy,
-                                StartNodeCreature = this
-                            }
-                        }
-                    }
-                }
-            };
+            //ProcessNode OutputNodeReproduce = new ProcessNode()
+            //{
+            //    ConnectionWeight = 1,
+            //    Inputs = new List<ProcessNode>()
+            //    {
+            //        new ProcessNode()
+            //        {
+            //            ConnectionWeight = 1,
+            //            Inputs = new List<ProcessNode>()
+            //            {
+            //                new ProcessNode()
+            //                {
+            //                    ConnectionWeight = _Random.NextDouble(),
+            //                    IsStartNode = true,
+            //                    InputNodeCreatureInput = CreatureValue.PercentMaxEnergy,
+            //                    StartNodeCreature = this
+            //                }
+            //            }
+            //        }
+            //    }
+            //};
 
-            OutputNodes.Add(OutputNodeTryEat);
-            OutputNodes.Add(OutputNodeIdle);
-            OutputNodes.Add(OutputNodeReproduce);
-
-            List<ProcessNode> Brain = Genome.GenerateRandomLayers(1, 8, 1, 2, this);
+            //OutputNodes.Add(OutputNodeTryEat);
+            //OutputNodes.Add(OutputNodeIdle);
+            //OutputNodes.Add(OutputNodeReproduce);
         }
         #endregion
 
         #region Methods
+        public static List<ProcessNode> GetInputNodes(IEnumerable<ProcessNode> ProcessNodes)
+        {
+            List<ProcessNode> InputNodes = new List<ProcessNode>();
+            foreach (ProcessNode ProcessNode in ProcessNodes)
+            {
+                if (ProcessNode.NodeType == NodeType.Input)
+                {
+                    InputNodes.Add(ProcessNode);
+                }
+                else
+                {
+                    InputNodes.AddRange(GetInputNodes(ProcessNode.Inputs));
+                }
+            }
+            return InputNodes;
+        }
         public override void Update()
         {
             if (Energy <= 0)
@@ -152,7 +168,7 @@ namespace MaceEvolve.Models
         }
         public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
         {
-            return Food.Where(Food => GetDistanceFrom(Food.X, Food.Y) <= SightRange).OrderBy(Food => GetDistanceFrom(Food.X, Food.Y));
+            return Food.Where(Food => Food.Servings > 0 && GetDistanceFrom(Food.X, Food.Y) <= SightRange).OrderBy(Food => GetDistanceFrom(Food.X, Food.Y));
         }
         public int GetDistanceFrom(int TargetX, int TargetY)
         {
@@ -175,32 +191,75 @@ namespace MaceEvolve.Models
         }
         public void Live()
         {
-            double TryEatValue = OutputNodes[0].GetValue();
-            double DieValue = OutputNodes[1].GetValue();
-            double ReproduceValue = OutputNodes[2].GetValue();
-
-            if (Energy - ReproductionCost <= 0 || CreaturesList.Where(x => x.Energy > 0).Count() + 1 > GameHost.MaxCreatures)
+            foreach (CreatureValue CreatureInput in CurrentCreatureValues.Keys)
             {
-                ReproduceValue = 0;
+                CurrentCreatureValues[CreatureInput] = GetCreatureInput(CreatureInput);
             }
 
-            if (TryEatValue > DieValue && TryEatValue > ReproduceValue)
+            foreach (ProcessNode InputNode in InputNodes)
             {
-                if (TryEatFoodInRange())
-                {
-                }
-                else
-                {
-                    Move();
-                }
+                InputNode.InputNodeValue = CurrentCreatureValues[InputNode.InputNodeCreatureInput];
             }
-            else if (ReproduceValue > TryEatValue && ReproduceValue > DieValue)
+
+            //Dictionary<ProcessNode, double> OutputNodesDesc;
+            //OutputNodesDesc = Genome.Genes
+            //    .Select(Node => (Node, Node.GetValue()))
+            //    .OrderByDescending(x => x.Item2)
+            //    .ToDictionary(x => x.Node, x => x.Item2);
+
+            //CreatureOutput HighestValueOutput = OutputNodesDesc.Keys.First().OutputNodeCreatureOutput;
+
+            Dictionary<CreatureOutput, double> OutputNodesDesc;
+            OutputNodesDesc = Genome.Genes
+                .Select(Node => (Node, Node.GetValue()))
+                .OrderByDescending(x => x.Item2)
+                .ToDictionary(x => x.Node.OutputNodeCreatureOutput, x => x.Item2);
+
+            CreatureOutput HighestValueOutput = OutputNodesDesc.Keys.First();
+
+            TryEatFoodInRange();
+
+            ExecuteCreatureOutput(HighestValueOutput);
+        }
+        public void ExecuteCreatureOutput(CreatureOutput CreatureOutput)
+        {
+            switch (CreatureOutput)
             {
-                Reproduce();
+                case CreatureOutput.MoveForward:
+                    MoveForward();
+                    break;
+                case CreatureOutput.MoveBackward:
+                    MoveBackward();
+                    break;
+                case CreatureOutput.MoveLeft:
+                    MoveLeft();
+                    break;
+                case CreatureOutput.MoveRight:
+                    MoveRight();
+                    break;
+                case CreatureOutput.Reproduce:
+                    Reproduce();
+                    break;
+                //case CreatureOutput.TryEat:
+                //    TryEatFoodInRange();
+                //    break;
+                case CreatureOutput.Idle:
+                    Idle();
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
-            else if (DieValue > TryEatValue && DieValue > ReproduceValue)
+        }
+        public double GetCreatureInput(CreatureValue CreatureValue)
+        {
+            switch (CreatureValue)
             {
-                Idle();
+                case CreatureValue.PercentMaxEnergy:
+                    return ProximityToFood(this);
+                case CreatureValue.ProximityToFood:
+                    return PercentMaxEnergy(this);
+                default:
+                    throw new NotImplementedException();
             }
         }
 
@@ -242,65 +301,38 @@ namespace MaceEvolve.Models
         public void MoveForward()
         {
             Y -= Speed;
+            if (Y < GameHost.Bounds.Top)
+            {
+                Y += GameHost.Bounds.Height;
+            }
             Energy -= MoveCost;
         }
         public void MoveBackward()
         {
             Y += Speed;
+            if (Y > GameHost.Bounds.Bottom)
+            {
+                Y -= GameHost.Bounds.Height;
+            }
             Energy -= MoveCost;
         }
         public void MoveLeft()
         {
             X -= Speed;
+            if (X < GameHost.Bounds.Left)
+            {
+                X += GameHost.Bounds.Width;
+            }
             Energy -= MoveCost;
         }
         public void MoveRight()
         {
             X += Speed;
-            Energy -= MoveCost;
-        }
-        public void Move()
-        {
-            Food ClosestFood = VisibleFood.FirstOrDefault();
-
-            if (ClosestFood != null)
+            if (X < GameHost.Bounds.Right)
             {
-                double XDifference = X - ClosestFood.X;
-                double YDifference = Y - ClosestFood.Y;
-
-                if (XDifference + YDifference <= SightRange)
-                {
-                    if (YDifference > 0)
-                    {
-                        if (YDifference >= Speed)
-                        {
-                            MoveForward();
-                        }
-                    }
-                    else if (YDifference < 0)
-                    {
-                        if (YDifference <= -Speed)
-                        {
-                            MoveBackward();
-                        }
-                    }
-
-                    if (XDifference > 0)
-                    {
-                        if (XDifference >= Speed)
-                        {
-                            MoveLeft();
-                        }
-                    }
-                    else if (XDifference < 0)
-                    {
-                        if (XDifference <= -Speed)
-                        {
-                            MoveRight();
-                        }
-                    }
-                }
+                X -= GameHost.Bounds.Width;
             }
+            Energy -= MoveCost;
         }
         public void Reproduce()
         {
@@ -318,7 +350,7 @@ namespace MaceEvolve.Models
             }
 
             GameHost.BornCreatures.Enqueue(
-                new Creature(new Genome(Genome.GetRandomizedGenes()))
+                new Creature(new Genome(Genome.GenerateNodeNetwork(GameHost.MinNodeBreadth, GameHost.MaxNodeBreadth, _Random.Next(GameHost.MaxNodeDepth), NodeType.Output)))
                 {
                     GameHost = GameHost,
                     X = RandomX,
@@ -335,81 +367,6 @@ namespace MaceEvolve.Models
             Energy -= ReproductionCost;
         }
         #endregion
-
-        public double GetNodeValue(ProcessNode ProcessNode)
-        {
-            double ReturnValue = 0;
-            switch (ProcessNode.LayerType)
-            {
-                case LayerType.Input:
-                    switch (ProcessNode.StartNodeValue)
-                    {
-                        case CreatureValue.ProximityToFood:
-                            ReturnValue = ProximityToFood(this) * ProcessNode.ConnectionWeight;
-                            break;
-
-                        case CreatureValue.PercentMaxEnergy:
-                            ReturnValue = PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
-                            break;
-
-                        default:
-                            throw new NotImplementedException();
-                    }
-                    break;
-                case LayerType.Output:
-
-                    switch (ProcessNode.OutputNodeCreature)
-                    {
-                        case CreatureValue.ProximityToFood:
-                            ReturnValue = ProximityToFood(this) * ProcessNode.ConnectionWeight;
-                            break;
-
-                        case CreatureValue.PercentMaxEnergy:
-                            ReturnValue = PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
-                            break;
-
-                        default:
-                            throw new NotImplementedException();
-                    }
-                    break;
-                case LayerType.Process:
-                    foreach (ProcessNode Node in ProcessNode.Inputs)
-                    {
-                        ReturnValue += Node.GetValue() * Node.ConnectionWeight;
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-            return Globals.Sigmoid(ReturnValue);
-        }
-        public (double, CreatureOutput) ExecuteProcessNode(ProcessNode ProcessNode)
-        {
-            switch (ProcessNode.LayerType)
-            {
-                case LayerType.Output:
-
-                    switch (ProcessNode.OutputNodeCreature)
-                    {
-                        case CreatureOutput.MoveLeft:
-                            ReturnValue = ProximityToFood(this) * ProcessNode.ConnectionWeight;
-                            break;
-
-                        case CreatureValue.PercentMaxEnergy:
-                            ReturnValue = PercentMaxEnergy(this) * ProcessNode.ConnectionWeight;
-                            break;
-
-                        default:
-                            throw new NotImplementedException();
-                    }
-                    break;
-                case LayerType.Input:
-                case LayerType.Process:
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
 
         #endregion
     }

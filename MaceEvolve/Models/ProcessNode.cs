@@ -7,16 +7,13 @@ using System.Threading.Tasks;
 
 namespace MaceEvolve.Models
 {
-    public class ProcessNode : Node
+    public class ProcessNode
     {
         public double ConnectionWeight { get; set; } = 1;
         public List<ProcessNode> Inputs { get; set; } = new List<ProcessNode>();
-        public Creature StartNodeCreature { get; set; }
-        public Creature OutputNodeCreature { get; set; }
-        public CreatureValue StartNodeValue { get; set; }
-        public CreatureOutput OutputNodeValue { get; set; }
-        public bool IsStartNode { get; set; }
-        public int Depth
+        public CreatureValue InputNodeCreatureInput { get; set; }
+        public CreatureOutput OutputNodeCreatureOutput { get; set; }
+        public int HighestDepth
         {
             get
             {
@@ -24,9 +21,9 @@ namespace MaceEvolve.Models
 
                 foreach (ProcessNode ProcessNode in Inputs)
                 {
-                    if (ProcessNode.Depth + 1 > NewDepth)
+                    if (ProcessNode.HighestDepth + 1 > NewDepth)
                     {
-                        NewDepth = ProcessNode.Depth + 1;
+                        NewDepth = ProcessNode.HighestDepth + 1;
                     }
                 }
 
@@ -40,53 +37,36 @@ namespace MaceEvolve.Models
                 return Inputs.Count;
             }
         }
-        public LayerType LayerType { get; set; }
+        public NodeType NodeType { get; set; }
+        public double? InputNodeValue { get; set; } 
         public double GetValue()
         {
             double ReturnValue = 0;
 
-            if (IsStartNode || LayerType == LayerType.Input)
+            switch (NodeType)
             {
-                if (StartNodeCreature == null)
-                {
-                    throw new InvalidOperationException("No creature specified for startnode.");
-                }
+                case NodeType.Input:
+                    if (InputNodeValue == null)
+                    {
+                        throw new InvalidOperationException("No input value given for input node.");
+                    }
+                    ReturnValue = InputNodeValue.Value * ConnectionWeight;
+                    break;
+                case NodeType.Process:
+                case NodeType.Output:
+                    if (Inputs.Count == 0)
+                    {
+                        throw new InvalidOperationException("No inputs specified for node.");
+                    }
 
-                switch (StartNodeValue)
-                {
-                    case CreatureValue.ProximityToFood:
-                        ReturnValue = Creature.ProximityToFood(StartNodeCreature) * ConnectionWeight;
-                        break;
-
-                    case CreatureValue.PercentMaxEnergy:
-                        ReturnValue = Creature.PercentMaxEnergy(StartNodeCreature) * ConnectionWeight;
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
+                    foreach (ProcessNode ProcessNode in Inputs)
+                    {
+                        ReturnValue += ProcessNode.GetValue() * ProcessNode.ConnectionWeight;
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
             }
-            else if (LayerType == LayerType.Process)
-            {
-                if (Inputs.Count == 0)
-                {
-                    throw new InvalidOperationException("No inputs specified for non-startnode.");
-                }
-
-                foreach (ProcessNode ProcessNode in Inputs)
-                {
-                    ReturnValue += ProcessNode.GetValue() * ProcessNode.ConnectionWeight;
-                }
-            }
-            else if (LayerType == LayerType.Output)
-            {
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-
-
             return Globals.Sigmoid(ReturnValue);
         }
     }

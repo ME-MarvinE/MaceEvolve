@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using MaceEvolve.Enums;
 
 namespace MaceEvolve.Controls
 {
@@ -40,6 +41,9 @@ namespace MaceEvolve.Controls
         }
         public Queue<Creature> BornCreatures { get; set; } = new Queue<Creature>();
         public int MaxCreatures { get; set; } = 300;
+        public int MaxNodeDepth { get; set; } = 3;
+        public int MinNodeBreadth { get; set; } = 1;
+        public int MaxNodeBreadth { get; set; } = 8;
         #endregion
 
         #region Constructors
@@ -70,7 +74,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatures; i++)
             {
-                Creatures.Add(new Creature(new Genome(Genome.GetRandomizedGenes()))
+                Creatures.Add(new Creature(new Genome(Genome.GenerateNodeNetwork(MinNodeBreadth, MaxNodeBreadth, _Random.Next(MaxNodeDepth), NodeType.Output)))
                 {
                     GameHost = this,
                     X = _Random.Next(Bounds.Left, Bounds.Right),
@@ -113,7 +117,6 @@ namespace MaceEvolve.Controls
 
             //Remove depleted food.
             Food.RemoveAll(x => x.Servings <= 0);
-
 
             foreach (Food Food in FoodList)
             {

@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MaceEvolve.Models
 {
@@ -11,15 +9,10 @@ namespace MaceEvolve.Models
     {
         #region Properties
         protected static Random _Random { get; }
-        public Dictionary<CreatureOutput, ProcessNode> Nodes { get; set; }
+        public List<ProcessNode> Genes { get; }
         public static List<CreatureValue> CreatureInputs { get; }
         public static List<CreatureOutput> CreatureOutputs { get; }
-        public static Dictionary<CreatureValue, double> DefaultGenes { get; }
-        public Dictionary<CreatureValue, double> Genes { get; }
-        public static int MinWeight { get; } = 0;
-        public static int MaxWeight { get; } = 100;
-        public static int MaxNodeDepth { get; } = 3;
-        public static int MaxNodeBreadth { get; } = 16;
+        public static List<ProcessNode> DefaultNodeNetwork { get; }
         #endregion
 
         #region Constructors
@@ -29,206 +22,182 @@ namespace MaceEvolve.Models
             CreatureInputs = Enum.GetValues(typeof(CreatureValue)).Cast<CreatureValue>().ToList();
             CreatureOutputs = Enum.GetValues(typeof(CreatureOutput)).Cast<CreatureOutput>().ToList();
 
-            DefaultGenes = new Dictionary<CreatureValue, double>();
-            foreach (CreatureValue Input in CreatureInputs)
-            {
-                DefaultGenes.Add(Input, _Random.NextDouble());
-            }
+            DefaultNodeNetwork = GenerateNodeNetwork(1, 4, _Random.Next(4), NodeType.Output);
         }
         public Genome()
-            : this(new Dictionary<CreatureValue, double>(DefaultGenes))
+            : this(new List<ProcessNode>(DefaultNodeNetwork))
         {
         }
-        public Genome(Dictionary<CreatureValue, double> Genes)
+        public Genome(List<ProcessNode> Genes)
         {
             this.Genes = Genes;
         }
         #endregion
 
         #region Methods
-        public static int ClampToRange(int Num, int Min, int Max)
-        {
-            if (Num < Min)
-            {
-                return Min;
-            }
-            else if (Num > Max)
-            {
-                return Max;
-            }
-            else
-            {
-                return Num;
-            }
-        }
-        public static void RandomizeGenes(Dictionary<CreatureValue, double> Genes)
-        {
-            foreach (var Gene in Genes)
-            {
-                Genes[Gene.Key] = _Random.Next(MaxWeight + 1);
-            }
-        }
-        public static Dictionary<CreatureValue, double> GetRandomizedGenes()
-        {
-            return DefaultGenes.ToDictionary(x => x.Key, x => _Random.NextDouble());
-        }
-        public static Dictionary<CreatureValue, double> Mutate(Dictionary<CreatureValue, double> Genes, double MutationChance, double MutationSeverity)
-        {
-            return new Dictionary<CreatureValue, double>(Genes);
-        }
-        //public static Dictionary<CreatureOutput, ProcessNode> GetRandomizedNodes(Creature Creature)
-        //{
-
-        //    Dictionary<CreatureOutput, ProcessNode> RandomizedNodes = new Dictionary<CreatureOutput, ProcessNode>();
-
-        //    int RandomOutputNodeCount = _Random.Next(1, CreatureOutputs.Count + 1);
-        //    for (int i = 0; i < RandomOutputNodeCount; i++)
-        //    {
-        //        CreatureOutput RandomCreatureOutput = CreatureOutputs[_Random.Next(CreatureOutputs.Count + 1)];
-        //        ProcessNode OutputNode = new ProcessNode()
-        //        {
-        //            ConnectionWeight = GetRandomWeight(),
-        //            StartNodeCreature = Creature
-        //        };
-
-        //        OutputNode.Inputs.AddRange(GetRandomNodeLayer(1, MaxNodeBreadth + 1));
-
-        //        ////int RandomNodeDepth = _Random.Next(1, MaxNodeDepth + 1);
-        //        //int RandomNodeBreadth = _Random.Next(1, MaxNodeBreadth + 1);
-
-        //        //for (int j = 0; j < RandomNodeBreadth; j++)
-        //        //{
-        //        //    //bool CreateNode = _Random.Next(0, 2) == 1;
-        //        //    ProcessNode NewNode = new ProcessNode()
-        //        //    {
-        //        //        ConnectionWeight = GetRandomWeight(),
-        //        //        StartNodeCreature = Creature
-        //        //    };
-        //        //}
-
-        //        int AllowedDepth = OutputNode.Layers - OutputNode.Depth;
-        //        if (AllowedDepth > 0)
-        //        {
-        //            foreach (ProcessNode ProcessNode in OutputNode.Inputs)
-        //            {
-        //                OutputNode.Inputs.AddRange(GetRandomNodeLayer(0, MaxNodeBreadth + 1));
-        //            }
-        //        }
-        //    }
-
-        //}
         public static double GetRandomWeight()
         {
             int Bound = 5;
             bool IsNegative = _Random.Next(0, 2) == 1;
             return _Random.NextDouble() * (IsNegative ? Bound : -Bound);
         }
-        public static List<ProcessNode> GenerateRandomLayers(int MinBreadth, int MaxBreadth, int Layers, Creature Creature)
+        public static List<ProcessNode> GenerateNodeNetwork(int MinBreadth, int MaxBreadth, int HiddenLayerCount, NodeType LayerType)
         {
-            List<ProcessNode> ProcessNodes = new List<ProcessNode>();
+            List<ProcessNode> ProcessNodes;
+            bool HasHiddenLayers = HiddenLayerCount > 0;
+            int RandomBreadth = _Random.Next(MinBreadth, MaxBreadth);
 
-            bool IsStartLayer = Layers == 1;
-
-            ProcessNodes.AddRange(GetRandomNodeLayer(MinBreadth, MaxBreadth + 1));
-
-            foreach (ProcessNode ProcessNode in ProcessNodes)
+            switch (LayerType)
             {
-                if (IsStartLayer)
-                {
-                    ProcessNode.IsStartNode = true;
-                    ProcessNode.StartNodeCreature = Creature;
-                    ProcessNode.StartNodeValue = GetRandomCreatureInput();
-                }
-                else
-                {
-                    ProcessNode.Inputs.AddRange(GenerateRandomLayers(MinBreadth, MaxBreadth, Layers - 1, Creature));
-                }
+                case NodeType.Input:
+                    ProcessNodes = GenerateNodes(RandomBreadth, NodeType.Input);
+                    break;
+
+                case NodeType.Output:
+                    ProcessNodes = GenerateNodes(RandomBreadth, NodeType.Output);
+
+                    if (HasHiddenLayers)
+                    {
+                        foreach (ProcessNode ProcessNode in ProcessNodes)
+                        {
+                            ProcessNode.Inputs = GenerateNodeNetwork(MinBreadth, MaxBreadth, HiddenLayerCount, NodeType.Process);
+                        }
+                    }
+                    else
+                    {
+                        foreach (ProcessNode ProcessNode in ProcessNodes)
+                        {
+                            ProcessNode.Inputs = GenerateNodes(RandomBreadth, NodeType.Input);
+                        }
+                    }
+                    break;
+
+                case NodeType.Process:
+                    if (HasHiddenLayers)
+                    {
+                        ProcessNodes = GenerateNodes(RandomBreadth, NodeType.Process);
+                        foreach (ProcessNode ProcessNode in ProcessNodes)
+                        {
+                            ProcessNode.Inputs = GenerateNodeNetwork(MinBreadth, MaxBreadth, HiddenLayerCount - 1, NodeType.Process);
+                        }
+                    }
+                    else
+                    {
+                        ProcessNodes = GenerateNodes(RandomBreadth, NodeType.Input);
+                    }
+                    break;
+
+                default:
+                    throw new NotImplementedException();
             }
 
             return ProcessNodes;
         }
-        public static List<ProcessNode> GetRandomNodeLayer(int MinBreadth, int MaxBreadth, LayerType LayerType, Creature InputCreature)
+        public static List<ProcessNode> GenerateNodes(int TargetAmount, NodeType NodeType)
         {
             List<ProcessNode> ProcessNodes = new List<ProcessNode>();
+            List<double> RandomNodeWeights = GenerateRandomWeights(TargetAmount);
 
-            int RandomNodeBreadth = _Random.Next(MinBreadth, MaxBreadth + 1);
-
-            for (int i = 0; i < RandomNodeBreadth; i++)
+            switch (NodeType)
             {
-                ProcessNodes.Add(
-                    new ProcessNode()
-                    {
-                        ConnectionWeight = GetRandomWeight()
-                    });
-            }
+                case NodeType.Input:
+                    List<CreatureValue> RandomCreatureInputs = GenerateRandomInputs(TargetAmount, CreatureInputs, true);
 
-            switch (LayerType)
-            {
-                case LayerType.Input:
-                    foreach (ProcessNode ProcessNode in ProcessNodes)
+                    for (int i = 0; i < RandomCreatureInputs.Count; i++)
                     {
-                        ProcessNode.IsStartNode = true;
-                        ProcessNode.StartNodeCreature = InputCreature;
-                        ProcessNode.StartNodeValue = GetRandomCreatureInput();
+                        ProcessNodes.Add(new ProcessNode()
+                        {
+                            ConnectionWeight = RandomNodeWeights[i],
+                            InputNodeCreatureInput = RandomCreatureInputs[i],
+                            NodeType = NodeType
+                        });
                     }
                     break;
-                case LayerType.Output:
-                    foreach (ProcessNode ProcessNode in ProcessNodes)
-                    {
 
+                case NodeType.Output:
+                    List<CreatureOutput> RandomCreatureOutputs = GenerateRandomOutputs(TargetAmount, CreatureOutputs, true);
+
+                    for (int i = 0; i < RandomCreatureOutputs.Count; i++)
+                    {
+                        ProcessNodes.Add(new ProcessNode()
+                        {
+                            ConnectionWeight = RandomNodeWeights[i],
+                            OutputNodeCreatureOutput = RandomCreatureOutputs[i],
+                            NodeType = NodeType
+                        });
                     }
                     break;
-                case LayerType.Process:
 
+                case NodeType.Process:
+                    for (int i = 0; i < TargetAmount; i++)
+                    {
+                        ProcessNodes.Add(new ProcessNode()
+                        {
+                            ConnectionWeight = RandomNodeWeights[i],
+                            NodeType = NodeType
+                        });
+                    }
                     break;
                 default:
                     throw new NotImplementedException();
             }
 
-            foreach (ProcessNode ProcessNode in ProcessNodes)
+            return ProcessNodes;
+        }
+        public static List<double> GenerateRandomWeights(int TargetAmount)
+        {
+            List<double> Weights = new List<double>();
+
+            for (int i = 0; i < TargetAmount; i++)
             {
-                if (IsStartLayer)
+                Weights.Add(GetRandomWeight());
+            }
+
+            return Weights;
+        }
+        public static List<CreatureOutput> GenerateRandomOutputs(int TargetAmount, IEnumerable<CreatureOutput> PossibleOutputs, bool Distinct)
+        {
+            List<CreatureOutput> Outputs = new List<CreatureOutput>();
+            List<CreatureOutput> PossibleOutputsList = PossibleOutputs.ToList();
+
+            if (Distinct)
+            {
+                TargetAmount = TargetAmount < PossibleOutputsList.Count ? TargetAmount : PossibleOutputsList.Count;
+            }
+
+            for (int i = 0; i < TargetAmount; i++)
+            {
+                int RandomIndex = _Random.Next(PossibleOutputsList.Count);
+                Outputs.Add(PossibleOutputsList[RandomIndex]);
+                if (Distinct)
                 {
-                    ProcessNode.IsStartNode = true;
-                    ProcessNode.StartNodeCreature = Creature;
-                    ProcessNode.StartNodeValue = GetRandomCreatureInput();
-                }
-                else
-                {
-                    ProcessNode.Inputs.AddRange(GenerateRandomLayers(MinBreadth, MaxBreadth, Layers - 1, Creature));
+                    PossibleOutputsList.Remove(PossibleOutputsList[RandomIndex]);
                 }
             }
 
-            return ProcessNodes;
+            return Outputs;
         }
-        //public static void AddLayerToInputs(List<ProcessNode> Inputs, ProcessNode ParentNode = null)
-        //{
-        //    if (ParentNode == null)
-        //    {
-        //        foreach (ProcessNode ChildNode in Inputs)
-        //        {
-        //            if (Inputs == null)
-        //            {
-        //                bool MoreDepth = _Random.Next(0, 2) == 1;
-        //                if (MoreDepth)
-        //                {
-        //                    Inputs.AddRange(GetRandomNodeLayer(1, ));
-        //                }
-        //            }
-        //            else
-        //            {
+        public static List<CreatureValue> GenerateRandomInputs(int TargetAmount, IEnumerable<CreatureValue> PossibleInputs, bool Distinct)
+        {
+            List<CreatureValue> Inputs = new List<CreatureValue>();
+            List<CreatureValue> PossibleInputsList = PossibleInputs.ToList();
 
-        //            }
-        //        }
-        //    }
-        //}
-        public static CreatureOutput GetRandomCreatureOutput()
-        {
-            return CreatureOutputs[_Random.Next(CreatureOutputs.Count)];
-        }
-        public static CreatureValue GetRandomCreatureInput()
-        {
-            return CreatureInputs[_Random.Next(CreatureInputs.Count)];
+            if (Distinct)
+            {
+                TargetAmount = TargetAmount < PossibleInputsList.Count ? TargetAmount : PossibleInputsList.Count;
+            }
+
+            for (int i = 0; i < TargetAmount; i++)
+            {
+                int RandomIndex = _Random.Next(PossibleInputsList.Count);
+                Inputs.Add(PossibleInputsList[RandomIndex]);
+                if (Distinct)
+                {
+                    PossibleInputsList.Remove(PossibleInputsList[RandomIndex]);
+                }
+            }
+
+            return Inputs;
         }
         #endregion
     }

@@ -2,12 +2,12 @@
 {
     public enum CreatureOutput
     {
-        Die,
+        Idle,
         MoveForward,
         MoveBackward,
         MoveLeft,
         MoveRight,
-        TryEat,
+        //TryEat,
         Reproduce
     }
 }
