@@ -74,7 +74,7 @@ namespace MaceEvolve.Models
             for (int i = 0; i < PossibleInputs.Count; i++)
             {
                 CreatureValue CreatureValue = PossibleInputs[i];
-                InputNodes.Add(i + 1, new Node(CreatureValue));
+                InputNodes.Add(i + 1, new Node(CreatureValue, Globals.Random.NextDouble()));
             }
 
             return InputNodes;
@@ -86,7 +86,7 @@ namespace MaceEvolve.Models
             for (int i = 0; i < PossibleOutputs.Count; i++)
             {
                 CreatureOutput CreatureOutput = PossibleOutputs[i];
-                OutputNodes.Add(i + 1, new Node(CreatureOutput));
+                OutputNodes.Add(i + 1, new Node(CreatureOutput, Globals.Random.NextDouble()));
             }
 
             return OutputNodes;
@@ -97,7 +97,7 @@ namespace MaceEvolve.Models
 
             for (int i = 0; i < MaxProcessNodes; i++)
             {
-                ProcessNodes.Add(i + 1, new Node());
+                ProcessNodes.Add(i + 1, new Node(Globals.Random.NextDouble()));
             }
 
             return ProcessNodes;

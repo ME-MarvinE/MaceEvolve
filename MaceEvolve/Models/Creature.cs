@@ -49,7 +49,7 @@ namespace MaceEvolve.Models
 
             NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleOutputs, 1);
             NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(100, 1000, NeuralNetwork.Nodes);
-            this.Brain = NeuralNetwork;
+            Brain = NeuralNetwork;
             //ProcessNode OutputNodeTryEat = new ProcessNode()
             //{
             //    ConnectionWeight = 1,
@@ -210,7 +210,6 @@ namespace MaceEvolve.Models
             if (HighestOutputNode != null)
             {
                 ExecuteOutput(HighestOutputNode.CreatureOutput);
-                Console.WriteLine($"{HighestOutputNode.CreatureOutput}: {HighestOutputNode.PreviousOutput}");
             }
         }
 

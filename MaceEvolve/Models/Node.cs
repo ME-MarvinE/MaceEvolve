@@ -10,20 +10,24 @@ namespace MaceEvolve.Models
         public NodeType NodeType { get; }
         public CreatureValue CreatureValue { get; }
         public CreatureOutput CreatureOutput { get; }
+        public double Bias { get; }
         #endregion
 
         #region Constructors
-        public Node()
+        public Node(double Bias)
         {
+            this.Bias = Bias;
             NodeType = NodeType.Process;
         }
-        public Node(CreatureValue CreatureValue)
+        public Node(CreatureValue CreatureValue, double Bias)
         {
+            this.Bias = Bias;
             NodeType = NodeType.Input;
             this.CreatureValue = CreatureValue;
         }
-        public Node(CreatureOutput CreatureOutput)
+        public Node(CreatureOutput CreatureOutput, double Bias)
         {
+            this.Bias = Bias;
             NodeType = NodeType.Output;
             this.CreatureOutput = CreatureOutput;
         }
@@ -58,7 +62,7 @@ namespace MaceEvolve.Models
                 }
             }
 
-            double Output = Globals.Sigmoid(WeightedSum);
+            double Output = Globals.Sigmoid(WeightedSum + Bias);
             PreviousOutput = Output;
             return Output;
         }
