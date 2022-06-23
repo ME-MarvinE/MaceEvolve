@@ -18,13 +18,6 @@ namespace MaceEvolve.Models
         #region Properties
         public NeuralNetwork Brain { get; }
         private double MoveCost { get; set; } = 0.5;
-        private double IdleCost
-        {
-            get
-            {
-                return Metabolism;
-            }
-        }
         public Genome Genome;
         public double Energy { get; set; } = 150;
         public double Speed { get; set; } = 1;
@@ -129,10 +122,6 @@ namespace MaceEvolve.Models
 
                 case CreatureAction.MoveRight:
                     MoveRight();
-                    break;
-
-                case CreatureAction.Die:
-                    Die();
                     break;
 
                 case CreatureAction.TryEat:
