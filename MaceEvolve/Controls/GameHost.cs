@@ -25,7 +25,7 @@ namespace MaceEvolve.Controls
         public List<Creature> Creatures { get; set; } = new List<Creature>();
         public List<Food> Food { get; set; } = new List<Food>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
-        public int MaxFoodAmount { get; set; } = 350;
+        public int MaxFoodAmount { get; set; } = 200;
         public int TargetFPS
         {
             get
@@ -66,7 +66,7 @@ namespace MaceEvolve.Controls
             Creatures.Clear();
             Food.Clear();
 
-            for (int i = 0; i < 300; i++)
+            for (int i = 0; i < 50; i++)
             {
                 Creatures.Add(new Creature(new Genome(Genome.GetRandomizedGenes()))
                 {

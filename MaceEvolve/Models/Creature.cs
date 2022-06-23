@@ -13,10 +13,10 @@ namespace MaceEvolve.Models
         #region Fields
         private List<Food> FoodList { get; set; }
         private List<Creature> CreaturesList { get; set; }
-        private List<ProcessNode> OutputNodes { get; set; } = new List<ProcessNode>();
         #endregion
 
         #region Properties
+        public NeuralNetwork Brain { get; }
         private double MoveCost { get; set; } = 0.5;
         private double IdleCost
         {
@@ -44,79 +44,125 @@ namespace MaceEvolve.Models
         public Creature(Genome Genome)
         {
             this.Genome = Genome;
-            ProcessNode OutputNodeTryEat = new ProcessNode()
-            {
-                ConnectionWeight = 1,
-                Inputs = new List<ProcessNode>()
-                {
-                    new ProcessNode()
-                    {
-                        ConnectionWeight = 1,
-                        Inputs = new List<ProcessNode>()
-                        {
-                            new ProcessNode()
-                            {
-                                ConnectionWeight = 2,
-                                IsStartNode = true,
-                                StartNodeValue = CreatureValue.PercentMaxEnergy,
-                                StartNodeCreature = this
-                            },
-                            new ProcessNode()
-                            {
-                                ConnectionWeight = 1,
-                                IsStartNode = true,
-                                StartNodeValue = CreatureValue.ProximityToFood,
-                                StartNodeCreature = this
-                            }
-                        }
-                    }
-                }
-            };
+            Dictionary<int, CreatureValue> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
+            Dictionary<int, CreatureOutput> PossibleOutputs = Globals.AllCreatureOutputs.ToDictionary(x => (int)x, y => y);
 
-            ProcessNode OutputNodeIdle = new ProcessNode()
-            {
-                ConnectionWeight = 1,
-                Inputs = new List<ProcessNode>()
-                {
-                    new ProcessNode()
-                    {
-                        ConnectionWeight = 1,
-                        Inputs = new List<ProcessNode>()
-                        {
-                            new ProcessNode()
-                            {
-                                ConnectionWeight = 0.2,
-                                IsStartNode = true,
-                                StartNodeValue = CreatureValue.ProximityToFood,
-                                StartNodeCreature = this
-                            }
-                        }
-                    }
-                }
-            };
+            NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleOutputs, 1);
+            NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(100, 1000, NeuralNetwork.Nodes);
+            this.Brain = NeuralNetwork;
+            //ProcessNode OutputNodeTryEat = new ProcessNode()
+            //{
+            //    ConnectionWeight = 1,
+            //    Inputs = new List<ProcessNode>()
+            //    {
+            //        new ProcessNode()
+            //        {
+            //            ConnectionWeight = 1,
+            //            Inputs = new List<ProcessNode>()
+            //            {
+            //                new ProcessNode()
+            //                {
+            //                    ConnectionWeight = 2,
+            //                    IsStartNode = true,
+            //                    StartNodeValue = CreatureValue.PercentMaxEnergy,
+            //                    StartNodeCreature = this
+            //                },
+            //                new ProcessNode()
+            //                {
+            //                    ConnectionWeight = 1,
+            //                    IsStartNode = true,
+            //                    StartNodeValue = CreatureValue.ProximityToFood,
+            //                    StartNodeCreature = this
+            //                }
+            //            }
+            //        }
+            //    }
+            //};
 
-            OutputNodes.Add(OutputNodeTryEat);
-            OutputNodes.Add(OutputNodeIdle);
+            //ProcessNode OutputNodeIdle = new ProcessNode()
+            //{
+            //    ConnectionWeight = 1,
+            //    Inputs = new List<ProcessNode>()
+            //    {
+            //        new ProcessNode()
+            //        {
+            //            ConnectionWeight = 1,
+            //            Inputs = new List<ProcessNode>()
+            //            {
+            //                new ProcessNode()
+            //                {
+            //                    ConnectionWeight = 0.2,
+            //                    IsStartNode = true,
+            //                    StartNodeValue = CreatureValue.ProximityToFood,
+            //                    StartNodeCreature = this
+            //                }
+            //            }
+            //        }
+            //    }
+            //};
+
+            //OutputNodes.Add(OutputNodeTryEat);
+            //OutputNodes.Add(OutputNodeIdle);
+        }
+        public Creature(NeuralNetwork Brain)
+        {
+            this.Brain = Brain;
         }
         #endregion
 
         #region Methods
+        public void ExecuteOutput(CreatureOutput CreatureOutput)
+        {
+            switch (CreatureOutput)
+            {
+                case CreatureOutput.MoveForward:
+                    MoveForward();
+                    break;
+
+                case CreatureOutput.MoveBackward:
+                    MoveBackward();
+                    break;
+
+                case CreatureOutput.MoveLeft:
+                    MoveLeft();
+                    break;
+
+                case CreatureOutput.MoveRight:
+                    MoveRight();
+                    break;
+
+                case CreatureOutput.Die:
+                    Die();
+                    break;
+
+                case CreatureOutput.TryEat:
+                    TryEatFoodInRange();
+                    break;
+
+                case CreatureOutput.Idle:
+                    Idle();
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+        public double GetInput(CreatureValue CreatureValue)
+        {
+            switch (CreatureValue)
+            {
+                case CreatureValue.PercentMaxEnergy:
+                    return Globals.Random.NextDouble();
+
+                case CreatureValue.ProximityToFood:
+                    return Globals.Random.NextDouble();
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
         public override void Update()
         {
-            if (Energy <= 0)
-            {
-                Die();
-                return;
-            }
-
-            Energy -= Metabolism;
-
-            if (Energy <= 0)
-            {
-                Die();
-                return;
-            }
-
             FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
             CreaturesList = new List<Creature>(GameHost.Creatures);
             VisibleFood = GetVisibleFood(FoodList).ToList();
@@ -136,7 +182,7 @@ namespace MaceEvolve.Models
             return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
         }
  
-        public void Eat(Food Food)
+        private void Eat(Food Food)
         {
             Energy -= Food.ServingDigestionCost;
             Food.Servings -= 1;
@@ -149,23 +195,22 @@ namespace MaceEvolve.Models
         }
         public void Live()
         {
-            double TryEatValue = OutputNodes[0].GetValue();
-            double DieValue = OutputNodes[1].GetValue();
+            Energy -= Metabolism;
 
-            if (TryEatValue > DieValue)
+            if (Energy <= 0)
             {
-                if (TryEatFoodInRange())
-                {
-                }
-                else
-                {
-                    Move();
-                }
-                
+                Die();
+                return;
             }
-            else
+
+            Brain.InputValues[CreatureValue.PercentMaxEnergy] = PercentMaxEnergy(this);
+            Brain.InputValues[CreatureValue.ProximityToFood] = ProximityToFood(this);
+            Brain.StepTime();
+            Node HighestOutputNode = Brain.Nodes.Values.Where(x => x.NodeType == NodeType.Output).OrderByDescending(x => x.PreviousOutput).FirstOrDefault();
+            if (HighestOutputNode != null)
             {
-                Idle();
+                ExecuteOutput(HighestOutputNode.CreatureOutput);
+                Console.WriteLine($"{HighestOutputNode.CreatureOutput}: {HighestOutputNode.PreviousOutput}");
             }
         }
 
@@ -187,52 +232,7 @@ namespace MaceEvolve.Models
         }
         #endregion
 
-        #region Processes
-        public double ChanceToTryEat(Dictionary<CreatureValue, double> Values)
-        {
-            double Output = 0;
-            foreach (var KeyValuePair in Values)
-            {
-                double InputResult;
-                switch (KeyValuePair.Key)
-                {
-                    case CreatureValue.ProximityToFood:
-                        InputResult = ProximityToFood(this);
-                        break;
-
-                    case CreatureValue.PercentMaxEnergy:
-                        InputResult = PercentMaxEnergy(this);
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
-                Output += InputResult * KeyValuePair.Value;
-            }
-            return Globals.Sigmoid(Output);
-        }
-        public double Neuron(Dictionary<CreatureProcess, double> Values)
-        {
-            double Output = 0;
-            foreach (var KeyValuePair in Values)
-            {
-                double InputResult;
-                switch (KeyValuePair.Key)
-                {
-                    case CreatureProcess.ChanceToTryEat:
-                        InputResult = ProximityToFood(this);
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
-                Output += InputResult * KeyValuePair.Value;
-            }
-            return Globals.Sigmoid(Output);
-        }
-        #endregion
-
-        #region Outputs
+        #region Actions
         public bool TryEatFoodInRange()
         {
             Food ClosestFood = VisibleFood.FirstOrDefault();

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MaceEvolve.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,12 @@ namespace MaceEvolve
 {
     public static class Globals
     {
+        #region Properties
+        public static Random Random = new Random();
+        public static List<CreatureValue> AllCreatureValues { get; } = Enum.GetValues(typeof(CreatureValue)).Cast<CreatureValue>().ToList();
+        public static List<CreatureOutput> AllCreatureOutputs { get; } = Enum.GetValues(typeof(CreatureOutput)).Cast<CreatureOutput>().ToList();
+        #endregion
+
         #region Methods
         public static double ToPositive(double Num1)
         {
