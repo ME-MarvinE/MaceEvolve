@@ -11,6 +11,7 @@ namespace MaceEvolve.Models
         public CreatureValue CreatureValue { get; }
         public CreatureAction CreatureAction { get; }
         public double Bias { get; }
+        private bool Evaluating { get; set; }
         #endregion
 
         #region Constructors
@@ -36,6 +37,7 @@ namespace MaceEvolve.Models
         #region Methods
         public double EvaluateValue(NeuralNetwork Network)
         {
+            Evaluating = true;
             int MyId = Network.Nodes.First(x => x.Value == this).Key;
             double WeightedSum = 0;
 
@@ -48,6 +50,7 @@ namespace MaceEvolve.Models
                 foreach (var Connection in Network.Connections.Where(x => x.TargetId == MyId))
                 {
                     double SourceNodeOutput;
+                    Node ConnectionSourceNode = Network.Nodes[Connection.SourceId];
 
                     if (Connection.SourceId == MyId)
                     {
@@ -55,7 +58,7 @@ namespace MaceEvolve.Models
                     }
                     else
                     {
-                        SourceNodeOutput = Network.Nodes[Connection.SourceId].EvaluateValue(Network);
+                        SourceNodeOutput = ConnectionSourceNode.Evaluating ? ConnectionSourceNode.PreviousOutput : ConnectionSourceNode.EvaluateValue(Network);
                     }
 
                     WeightedSum += SourceNodeOutput * Connection.Weight;
@@ -64,6 +67,7 @@ namespace MaceEvolve.Models
 
             double Output = Globals.Sigmoid(WeightedSum + Bias);
             PreviousOutput = Output;
+            Evaluating = false;
             return Output;
         }
         #endregion

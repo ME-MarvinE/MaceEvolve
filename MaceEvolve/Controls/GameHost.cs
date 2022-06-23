@@ -13,7 +13,7 @@ namespace MaceEvolve.Controls
     {
         #region Fields
         protected static Random _Random = new Random();
-        private int _TargetFPS = 5;
+        private int _TargetFPS = 10;
         #endregion
 
         #region Properties

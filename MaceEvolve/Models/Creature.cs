@@ -47,7 +47,7 @@ namespace MaceEvolve.Models
             Dictionary<int, CreatureValue> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
             Dictionary<int, CreatureAction> PossibleActions = Globals.AllCreatureActions.ToDictionary(x => (int)x, y => y);
 
-            NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleActions, 1);
+            NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleActions, 2);
             NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(2, 5, NeuralNetwork.Nodes);
             Brain = NeuralNetwork;
             //ProcessNode OutputNodeTryEat = new ProcessNode()
