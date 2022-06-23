@@ -31,16 +31,14 @@ namespace MaceEvolve.Models
 
         #region Constructors
         public Creature()
-            :this(new Genome())
+            : this(new Genome())
         {
         }
         public Creature(Genome Genome)
         {
             this.Genome = Genome;
-            Dictionary<int, CreatureInput> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
-            Dictionary<int, CreatureAction> PossibleActions = Globals.AllCreatureActions.ToDictionary(x => (int)x, y => y);
 
-            NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleActions, 2);
+            NeuralNetwork NeuralNetwork = new NeuralNetwork(Globals.AllCreatureValues, Globals.AllCreatureActions, 2);
             NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(2, 5, NeuralNetwork.Nodes);
             Brain = NeuralNetwork;
             //ProcessNode OutputNodeTryEat = new ProcessNode()
@@ -166,7 +164,7 @@ namespace MaceEvolve.Models
         {
             return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
         }
- 
+
         private void Eat(Food Food)
         {
             Energy -= Food.ServingDigestionCost;
@@ -191,7 +189,7 @@ namespace MaceEvolve.Models
             Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
             Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
             Brain.StepTime();
-            List<Node> OrderedOutputNodes = Brain.Nodes.Values.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
+            List<Node> OrderedOutputNodes = Brain.Nodes.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
             Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
 
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)

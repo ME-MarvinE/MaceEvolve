@@ -38,7 +38,7 @@ namespace MaceEvolve.Models
         public double EvaluateValue(NeuralNetwork Network)
         {
             Evaluating = true;
-            int MyId = Network.Nodes.First(x => x.Value == this).Key;
+            int MyId = Network.Nodes.IndexOf(this);
             double WeightedSum = 0;
 
             if (NodeType == NodeType.Input)
