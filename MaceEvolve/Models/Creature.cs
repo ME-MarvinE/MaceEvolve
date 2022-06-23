@@ -45,9 +45,9 @@ namespace MaceEvolve.Models
         {
             this.Genome = Genome;
             Dictionary<int, CreatureValue> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
-            Dictionary<int, CreatureOutput> PossibleOutputs = Globals.AllCreatureOutputs.ToDictionary(x => (int)x, y => y);
+            Dictionary<int, CreatureAction> PossibleActions = Globals.AllCreatureActions.ToDictionary(x => (int)x, y => y);
 
-            NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleOutputs, 1);
+            NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleActions, 1);
             NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(2, 5, NeuralNetwork.Nodes);
             Brain = NeuralNetwork;
             //ProcessNode OutputNodeTryEat = new ProcessNode()
@@ -111,31 +111,31 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Methods
-        public void ExecuteOutput(CreatureOutput CreatureOutput)
+        public void ExecuteAction(CreatureAction CreatureAction)
         {
-            switch (CreatureOutput)
+            switch (CreatureAction)
             {
-                case CreatureOutput.MoveForward:
+                case CreatureAction.MoveForward:
                     MoveForward();
                     break;
 
-                case CreatureOutput.MoveBackward:
+                case CreatureAction.MoveBackward:
                     MoveBackward();
                     break;
 
-                case CreatureOutput.MoveLeft:
+                case CreatureAction.MoveLeft:
                     MoveLeft();
                     break;
 
-                case CreatureOutput.MoveRight:
+                case CreatureAction.MoveRight:
                     MoveRight();
                     break;
 
-                case CreatureOutput.Die:
+                case CreatureAction.Die:
                     Die();
                     break;
 
-                case CreatureOutput.TryEat:
+                case CreatureAction.TryEat:
                     TryEatFoodInRange();
                     break;
 
@@ -207,7 +207,7 @@ namespace MaceEvolve.Models
 
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
             {
-                ExecuteOutput(HighestOutputNode.CreatureOutput);
+                ExecuteAction(HighestOutputNode.CreatureAction);
             }
         }
 

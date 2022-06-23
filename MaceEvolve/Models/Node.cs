@@ -9,7 +9,7 @@ namespace MaceEvolve.Models
         public double PreviousOutput { get; protected set; } = 0;
         public NodeType NodeType { get; }
         public CreatureValue CreatureValue { get; }
-        public CreatureOutput CreatureOutput { get; }
+        public CreatureAction CreatureAction { get; }
         public double Bias { get; }
         #endregion
 
@@ -25,11 +25,11 @@ namespace MaceEvolve.Models
             NodeType = NodeType.Input;
             this.CreatureValue = CreatureValue;
         }
-        public Node(CreatureOutput CreatureOutput, double Bias)
+        public Node(CreatureAction CreatureAction, double Bias)
         {
             this.Bias = Bias;
             NodeType = NodeType.Output;
-            this.CreatureOutput = CreatureOutput;
+            this.CreatureAction = CreatureAction;
         }
         #endregion
 

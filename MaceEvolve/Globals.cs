@@ -12,7 +12,7 @@ namespace MaceEvolve
         #region Properties
         public static Random Random = new Random();
         public static List<CreatureValue> AllCreatureValues { get; } = Enum.GetValues(typeof(CreatureValue)).Cast<CreatureValue>().ToList();
-        public static List<CreatureOutput> AllCreatureOutputs { get; } = Enum.GetValues(typeof(CreatureOutput)).Cast<CreatureOutput>().ToList();
+        public static List<CreatureAction> AllCreatureActions { get; } = Enum.GetValues(typeof(CreatureAction)).Cast<CreatureAction>().ToList();
         #endregion
 
         #region Methods

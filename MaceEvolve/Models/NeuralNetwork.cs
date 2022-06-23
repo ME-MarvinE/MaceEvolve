@@ -14,22 +14,22 @@ namespace MaceEvolve.Models
         public Dictionary<int, CreatureValue> Inputs { get; } = new Dictionary<int, CreatureValue>();
         public Dictionary<CreatureValue, double> InputValues { get; } = new Dictionary<CreatureValue, double>();
         public List<int> EvaluatedNodeIds { get; } = new List<int>();
-        public Dictionary<int, CreatureOutput> Outputs { get; } = new Dictionary<int, CreatureOutput>();
+        public Dictionary<int, CreatureAction> Actions { get; } = new Dictionary<int, CreatureAction>();
         public Dictionary<int, Node> Nodes { get; } = new Dictionary<int, Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
         public int TimesStepped { get; private set; }
         #endregion
 
         #region Constructors
-        public NeuralNetwork(Dictionary<int, CreatureValue> Inputs, Dictionary<int, CreatureOutput> Outputs, int MaxProcessNodes)
+        public NeuralNetwork(Dictionary<int, CreatureValue> Inputs, Dictionary<int, CreatureAction> Actions, int MaxProcessNodes)
         {
             this.Inputs = new Dictionary<int, CreatureValue>(Inputs);
-            this.Outputs = new Dictionary<int, CreatureOutput>(Outputs);
+            this.Actions = new Dictionary<int, CreatureAction>(Actions);
             this.MaxProcessNodes = MaxProcessNodes;
 
             List<Node> NewNodes = new List<Node>();
             NewNodes.AddRange(GenerateInputNodes(Inputs.Values.ToList()).Values);
-            NewNodes.AddRange(GenerateOutputNodes(Outputs.Values.ToList()).Values);
+            NewNodes.AddRange(GenerateOutputNodes(Actions.Values.ToList()).Values);
             NewNodes.AddRange(GenerateProcessNodes(MaxProcessNodes).Values);
 
             for (int i = 0; i < NewNodes.Count; i++)
@@ -79,14 +79,14 @@ namespace MaceEvolve.Models
 
             return InputNodes;
         }
-        public static Dictionary<int, Node> GenerateOutputNodes(List<CreatureOutput> PossibleOutputs)
+        public static Dictionary<int, Node> GenerateOutputNodes(List<CreatureAction> PossibleOutputs)
         {
             Dictionary<int, Node> OutputNodes = new Dictionary<int, Node>();
 
             for (int i = 0; i < PossibleOutputs.Count; i++)
             {
-                CreatureOutput CreatureOutput = PossibleOutputs[i];
-                OutputNodes.Add(i + 1, new Node(CreatureOutput, Globals.Random.NextDouble()));
+                CreatureAction CreatureAction = PossibleOutputs[i];
+                OutputNodes.Add(i + 1, new Node(CreatureAction, Globals.Random.NextDouble()));
             }
 
             return OutputNodes;
@@ -124,9 +124,9 @@ namespace MaceEvolve.Models
         {
             return Inputs.First(x => x.Value == CreatureValue).Key;
         }
-        public int GetCreatureOutputId(CreatureOutput CreatureOutput)
+        public int GetCreatureActionId(CreatureAction CreatureAction)
         {
-            return Outputs.First(x => x.Value == CreatureOutput).Key;
+            return Actions.First(x => x.Value == CreatureAction).Key;
         }
         #endregion
     }

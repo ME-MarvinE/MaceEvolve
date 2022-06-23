@@ -1,6 +1,6 @@
 ﻿namespace MaceEvolve.Enums
 {
-    public enum CreatureOutput
+    public enum CreatureAction
     {
         Die,
         MoveForward,
