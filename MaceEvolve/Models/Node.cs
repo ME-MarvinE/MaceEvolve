@@ -8,7 +8,7 @@ namespace MaceEvolve.Models
         #region Properties
         public double PreviousOutput { get; protected set; } = 0;
         public NodeType NodeType { get; }
-        public CreatureValue CreatureValue { get; }
+        public CreatureInputType CreatureValue { get; }
         public CreatureAction CreatureAction { get; }
         public double Bias { get; }
         private bool Evaluating { get; set; }
@@ -20,7 +20,7 @@ namespace MaceEvolve.Models
             this.Bias = Bias;
             NodeType = NodeType.Process;
         }
-        public Node(CreatureValue CreatureValue, double Bias)
+        public Node(CreatureInputType CreatureValue, double Bias)
         {
             this.Bias = Bias;
             NodeType = NodeType.Input;

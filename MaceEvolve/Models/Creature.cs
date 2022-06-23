@@ -37,7 +37,7 @@ namespace MaceEvolve.Models
         public Creature(Genome Genome)
         {
             this.Genome = Genome;
-            Dictionary<int, CreatureValue> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
+            Dictionary<int, CreatureInputType> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
             Dictionary<int, CreatureAction> PossibleActions = Globals.AllCreatureActions.ToDictionary(x => (int)x, y => y);
 
             NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleActions, 2);
@@ -46,25 +46,25 @@ namespace MaceEvolve.Models
             //ProcessNode OutputNodeTryEat = new ProcessNode()
             //{
             //    ConnectionWeight = 1,
-            //    Inputs = new List<ProcessNode>()
+            //    InputTypes = new List<ProcessNode>()
             //    {
             //        new ProcessNode()
             //        {
             //            ConnectionWeight = 1,
-            //            Inputs = new List<ProcessNode>()
+            //            InputTypes = new List<ProcessNode>()
             //            {
             //                new ProcessNode()
             //                {
             //                    ConnectionWeight = 2,
             //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureValue.PercentMaxEnergy,
+            //                    StartNodeValue = CreatureInputType.PercentMaxEnergy,
             //                    StartNodeCreature = this
             //                },
             //                new ProcessNode()
             //                {
             //                    ConnectionWeight = 1,
             //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureValue.ProximityToFood,
+            //                    StartNodeValue = CreatureInputType.ProximityToFood,
             //                    StartNodeCreature = this
             //                }
             //            }
@@ -75,18 +75,18 @@ namespace MaceEvolve.Models
             //ProcessNode OutputNodeIdle = new ProcessNode()
             //{
             //    ConnectionWeight = 1,
-            //    Inputs = new List<ProcessNode>()
+            //    InputTypes = new List<ProcessNode>()
             //    {
             //        new ProcessNode()
             //        {
             //            ConnectionWeight = 1,
-            //            Inputs = new List<ProcessNode>()
+            //            InputTypes = new List<ProcessNode>()
             //            {
             //                new ProcessNode()
             //                {
             //                    ConnectionWeight = 0.2,
             //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureValue.ProximityToFood,
+            //                    StartNodeValue = CreatureInputType.ProximityToFood,
             //                    StartNodeCreature = this
             //                }
             //            }
@@ -132,14 +132,14 @@ namespace MaceEvolve.Models
                     throw new NotImplementedException();
             }
         }
-        public double GetInput(CreatureValue CreatureValue)
+        public double GetInput(CreatureInputType CreatureValue)
         {
             switch (CreatureValue)
             {
-                case CreatureValue.PercentMaxEnergy:
+                case CreatureInputType.PercentMaxEnergy:
                     return Globals.Random.NextDouble();
 
-                case CreatureValue.ProximityToFood:
+                case CreatureInputType.ProximityToFood:
                     return Globals.Random.NextDouble();
 
                 default:
@@ -188,8 +188,8 @@ namespace MaceEvolve.Models
                 return;
             }
 
-            Brain.InputValues[CreatureValue.PercentMaxEnergy] = PercentMaxEnergy(this);
-            Brain.InputValues[CreatureValue.ProximityToFood] = ProximityToFood(this);
+            Brain.InputValues[CreatureInputType.PercentMaxEnergy] = PercentMaxEnergy(this);
+            Brain.InputValues[CreatureInputType.ProximityToFood] = ProximityToFood(this);
             Brain.StepTime();
             List<Node> OrderedOutputNodes = Brain.Nodes.Values.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
             Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
