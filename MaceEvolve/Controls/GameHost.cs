@@ -1,16 +1,11 @@
 ﻿using MaceEvolve.Models;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace MaceEvolve.Controls
 {
@@ -38,6 +33,7 @@ namespace MaceEvolve.Controls
                 DrawTimer.Interval = 1000 / TargetFPS;
             }
         }
+        public Rectangle WorldBounds { get; set; }
         #endregion
 
         #region Constructors
@@ -62,6 +58,7 @@ namespace MaceEvolve.Controls
         }
         public void Reset()
         {
+            WorldBounds = new Rectangle(Bounds.Location, Bounds.Size);
             Stopwatch.Reset();
             Creatures.Clear();
             Food.Clear();
@@ -71,8 +68,8 @@ namespace MaceEvolve.Controls
                 Creatures.Add(new Creature(new Genome(Genome.GetRandomizedGenes()))
                 {
                     GameHost = this,
-                    X = _Random.Next(Bounds.Left + Width),
-                    Y = _Random.Next(Bounds.Top + Height),
+                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
+                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
                     Size = 10,
                     Color = Color.FromArgb(255, 64, 64, 255),
                     Speed = 1.3,
@@ -106,8 +103,8 @@ namespace MaceEvolve.Controls
                     Food.Add(new Apple()
                     {
                         GameHost = this,
-                        X = _Random.Next(Bounds.Left + Width),
-                        Y = _Random.Next(Bounds.Top + Height),
+                        X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
+                        Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
                         Servings = 1,
                         EnergyPerServing = 30,
                         ServingDigestionCost = 0.05,

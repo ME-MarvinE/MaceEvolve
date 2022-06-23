@@ -251,21 +251,37 @@ namespace MaceEvolve.Models
         public void MoveForward()
         {
             Y -= Speed;
+            if (Y < GameHost.WorldBounds.Top)
+            {
+                Y += GameHost.WorldBounds.Height;
+            }
             Energy -= MoveCost;
         }
         public void MoveBackward()
         {
             Y += Speed;
+            if (Y > GameHost.WorldBounds.Bottom)
+            {
+                Y -= GameHost.WorldBounds.Height;
+            }
             Energy -= MoveCost;
         }
         public void MoveLeft()
         {
             X -= Speed;
+            if (X < GameHost.WorldBounds.Left)
+            {
+                X += GameHost.WorldBounds.Width;
+            }
             Energy -= MoveCost;
         }
         public void MoveRight()
         {
             X += Speed;
+            if (X > GameHost.WorldBounds.Right)
+            {
+                X -= GameHost.WorldBounds.Width;
+            }
             Energy -= MoveCost;
         }
         public void Move()
