@@ -7,7 +7,6 @@
         MoveBackward,
         MoveLeft,
         MoveRight,
-        TryEat,
-        Idle
+        TryEat
     }
 }

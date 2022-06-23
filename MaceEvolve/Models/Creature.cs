@@ -48,7 +48,7 @@ namespace MaceEvolve.Models
             Dictionary<int, CreatureOutput> PossibleOutputs = Globals.AllCreatureOutputs.ToDictionary(x => (int)x, y => y);
 
             NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleOutputs, 1);
-            NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(100, 1000, NeuralNetwork.Nodes);
+            NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(2, 5, NeuralNetwork.Nodes);
             Brain = NeuralNetwork;
             //ProcessNode OutputNodeTryEat = new ProcessNode()
             //{
@@ -139,10 +139,6 @@ namespace MaceEvolve.Models
                     TryEatFoodInRange();
                     break;
 
-                case CreatureOutput.Idle:
-                    Idle();
-                    break;
-
                 default:
                     throw new NotImplementedException();
             }
@@ -206,8 +202,10 @@ namespace MaceEvolve.Models
             Brain.InputValues[CreatureValue.PercentMaxEnergy] = PercentMaxEnergy(this);
             Brain.InputValues[CreatureValue.ProximityToFood] = ProximityToFood(this);
             Brain.StepTime();
-            Node HighestOutputNode = Brain.Nodes.Values.Where(x => x.NodeType == NodeType.Output).OrderByDescending(x => x.PreviousOutput).FirstOrDefault();
-            if (HighestOutputNode != null)
+            List<Node> OrderedOutputNodes = Brain.Nodes.Values.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
+            Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
+
+            if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
             {
                 ExecuteOutput(HighestOutputNode.CreatureOutput);
             }
@@ -243,10 +241,6 @@ namespace MaceEvolve.Models
             }
 
             return false;
-        }
-        public void Idle()
-        {
-            Energy -= IdleCost;
         }
         public void MoveForward()
         {
