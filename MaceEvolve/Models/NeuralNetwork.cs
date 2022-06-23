@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Enums;
+using MaceEvolve.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,7 +62,7 @@ namespace MaceEvolve.Models
                 int RandomConnectionSource = PossibleSourceNodes.Keys.ToList()[Globals.Random.Next(0, PossibleSourceNodes.Count)];
                 int RandomConnectionTarget = PossibleTargetNodes.Keys.ToList()[Globals.Random.Next(0, PossibleTargetNodes.Count)];
 
-                Connection NewConnection = new Connection() { SourceId = RandomConnectionSource, TargetId = RandomConnectionTarget, Weight = Globals.Random.NextDouble() };
+                Connection NewConnection = new Connection() { SourceId = RandomConnectionSource, TargetId = RandomConnectionTarget, Weight = Globals.Random.NextDouble(-1, 1) };
                 GeneratedConnections.Add(NewConnection);
             }
 
@@ -74,7 +75,7 @@ namespace MaceEvolve.Models
             for (int i = 0; i < PossibleInputs.Count; i++)
             {
                 CreatureValue CreatureValue = PossibleInputs[i];
-                InputNodes.Add(i + 1, new Node(CreatureValue, Globals.Random.NextDouble()));
+                InputNodes.Add(i + 1, new Node(CreatureValue, Globals.Random.NextDouble(-1, 1)));
             }
 
             return InputNodes;
@@ -86,7 +87,7 @@ namespace MaceEvolve.Models
             for (int i = 0; i < PossibleOutputs.Count; i++)
             {
                 CreatureAction CreatureAction = PossibleOutputs[i];
-                OutputNodes.Add(i + 1, new Node(CreatureAction, Globals.Random.NextDouble()));
+                OutputNodes.Add(i + 1, new Node(CreatureAction, Globals.Random.NextDouble(-1, 1)));
             }
 
             return OutputNodes;
@@ -97,7 +98,7 @@ namespace MaceEvolve.Models
 
             for (int i = 0; i < MaxProcessNodes; i++)
             {
-                ProcessNodes.Add(i + 1, new Node(Globals.Random.NextDouble()));
+                ProcessNodes.Add(i + 1, new Node(Globals.Random.NextDouble(-1, 1)));
             }
 
             return ProcessNodes;
