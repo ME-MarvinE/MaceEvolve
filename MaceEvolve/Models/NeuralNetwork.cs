@@ -12,8 +12,8 @@ namespace MaceEvolve.Models
     {
         #region Properties
         public int MaxProcessNodes { get; }
-        public Dictionary<int, CreatureInputType> InputTypes { get; } = new Dictionary<int, CreatureInputType>();
-        public Dictionary<CreatureInputType, double> InputValues { get; } = new Dictionary<CreatureInputType, double>();
+        public Dictionary<int, CreatureInput> InputTypes { get; } = new Dictionary<int, CreatureInput>();
+        public Dictionary<CreatureInput, double> InputValues { get; } = new Dictionary<CreatureInput, double>();
         public List<int> EvaluatedNodeIds { get; } = new List<int>();
         public Dictionary<int, CreatureAction> Actions { get; } = new Dictionary<int, CreatureAction>();
         public Dictionary<int, Node> Nodes { get; } = new Dictionary<int, Node>();
@@ -22,9 +22,9 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Constructors
-        public NeuralNetwork(Dictionary<int, CreatureInputType> InputTypes, Dictionary<int, CreatureAction> Actions, int MaxProcessNodes)
+        public NeuralNetwork(Dictionary<int, CreatureInput> InputTypes, Dictionary<int, CreatureAction> Actions, int MaxProcessNodes)
         {
-            this.InputTypes = new Dictionary<int, CreatureInputType>(InputTypes);
+            this.InputTypes = new Dictionary<int, CreatureInput>(InputTypes);
             this.Actions = new Dictionary<int, CreatureAction>(Actions);
             this.MaxProcessNodes = MaxProcessNodes;
 
@@ -68,13 +68,13 @@ namespace MaceEvolve.Models
 
             return GeneratedConnections;
         }
-        public static Dictionary<int, Node> GenerateInputNodes(List<CreatureInputType> PossibleInputs)
+        public static Dictionary<int, Node> GenerateInputNodes(List<CreatureInput> PossibleInputs)
         {
             Dictionary<int, Node> InputNodes = new Dictionary<int, Node>();
 
             for (int i = 0; i < PossibleInputs.Count; i++)
             {
-                CreatureInputType CreatureValue = PossibleInputs[i];
+                CreatureInput CreatureValue = PossibleInputs[i];
                 InputNodes.Add(i + 1, new Node(CreatureValue, Globals.Random.NextDouble(-1, 1)));
             }
 

@@ -37,7 +37,7 @@ namespace MaceEvolve.Models
         public Creature(Genome Genome)
         {
             this.Genome = Genome;
-            Dictionary<int, CreatureInputType> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
+            Dictionary<int, CreatureInput> PossibleInputs = Globals.AllCreatureValues.ToDictionary(x => (int)x, y => y);
             Dictionary<int, CreatureAction> PossibleActions = Globals.AllCreatureActions.ToDictionary(x => (int)x, y => y);
 
             NeuralNetwork NeuralNetwork = new NeuralNetwork(PossibleInputs, PossibleActions, 2);
@@ -57,14 +57,14 @@ namespace MaceEvolve.Models
             //                {
             //                    ConnectionWeight = 2,
             //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureInputType.PercentMaxEnergy,
+            //                    StartNodeValue = CreatureInput.PercentMaxEnergy,
             //                    StartNodeCreature = this
             //                },
             //                new ProcessNode()
             //                {
             //                    ConnectionWeight = 1,
             //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureInputType.ProximityToFood,
+            //                    StartNodeValue = CreatureInput.ProximityToFood,
             //                    StartNodeCreature = this
             //                }
             //            }
@@ -86,7 +86,7 @@ namespace MaceEvolve.Models
             //                {
             //                    ConnectionWeight = 0.2,
             //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureInputType.ProximityToFood,
+            //                    StartNodeValue = CreatureInput.ProximityToFood,
             //                    StartNodeCreature = this
             //                }
             //            }
@@ -132,14 +132,14 @@ namespace MaceEvolve.Models
                     throw new NotImplementedException();
             }
         }
-        public double GetInput(CreatureInputType CreatureValue)
+        public double GetInput(CreatureInput CreatureValue)
         {
             switch (CreatureValue)
             {
-                case CreatureInputType.PercentMaxEnergy:
+                case CreatureInput.PercentMaxEnergy:
                     return Globals.Random.NextDouble();
 
-                case CreatureInputType.ProximityToFood:
+                case CreatureInput.ProximityToFood:
                     return Globals.Random.NextDouble();
 
                 default:
@@ -188,8 +188,8 @@ namespace MaceEvolve.Models
                 return;
             }
 
-            Brain.InputValues[CreatureInputType.PercentMaxEnergy] = PercentMaxEnergy(this);
-            Brain.InputValues[CreatureInputType.ProximityToFood] = ProximityToFood(this);
+            Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
+            Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
             Brain.StepTime();
             List<Node> OrderedOutputNodes = Brain.Nodes.Values.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
             Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
