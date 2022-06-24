@@ -10,7 +10,7 @@ namespace MaceEvolve.Models
     {
         #region Fields
         private List<Food> FoodList { get; set; }
-        private List<Creature> CreaturesList { get; set; }
+        private List<Creature> CreatureList { get; set; }
         #endregion
 
         #region Properties
@@ -22,6 +22,7 @@ namespace MaceEvolve.Models
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
         public List<Food> VisibleFood { get; set; }
+        public List<Creature> VisibleCreatures { get; set; }
         //public int StomachSize { get; set; } = 5;
         //public List<Food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
@@ -94,8 +95,9 @@ namespace MaceEvolve.Models
             if (Energy > 0)
             {
                 FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
-                CreaturesList = new List<Creature>(GameHost.Creatures);
+                CreatureList = new List<Creature>(GameHost.Creatures);
                 VisibleFood = GetVisibleFood(FoodList).ToList();
+                VisibleCreatures = GetVisibleCreatures(CreatureList).ToList();
 
                 Live();
 
@@ -108,6 +110,10 @@ namespace MaceEvolve.Models
         public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
         {
             return Food.Where(Food => GetDistanceFrom(Food.X, Food.Y) <= SightRange).OrderBy(Food => GetDistanceFrom(Food.X, Food.Y));
+        }
+        public IEnumerable<Creature> GetVisibleCreatures(IEnumerable<Creature> Creatures)
+        {
+            return Creatures.Where(Creature => GetDistanceFrom(Creature.X, Creature.Y) <= SightRange).OrderBy(Creature => GetDistanceFrom(Creature.X, Creature.Y));
         }
         public int GetDistanceFrom(int TargetX, int TargetY)
         {
@@ -140,6 +146,7 @@ namespace MaceEvolve.Models
         {
             Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
             Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
+            Brain.InputValues[CreatureInput.ProximityToCreature] = ProximityToCreature(this);
 
             foreach (var OutputNode in Brain.OutputNodes)
             {
@@ -149,6 +156,7 @@ namespace MaceEvolve.Models
 
 
         #region CreatureValues
+        //Creature values map from 0 to 1.
         public static double PercentMaxEnergy(Creature Creature)
         {
             return Globals.Map(Creature.Energy, 0, 100, 0, 1);
@@ -162,6 +170,16 @@ namespace MaceEvolve.Models
             double DistanceFromFood = Creature.GetDistanceFrom(ClosestFood.X, ClosestFood.Y);
 
             return Globals.Map(DistanceFromFood, 0, Creature.SightRange, 0, 1);
+        }
+        public static double ProximityToCreature(Creature Creature)
+        {
+            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault();
+
+            if (ClosestCreature == null) { return 0; }
+
+            double DistanceFromCreature = Creature.GetDistanceFrom(ClosestCreature.X, ClosestCreature.Y);
+
+            return Globals.Map(DistanceFromCreature, 0, Creature.SightRange, 0, 1);
         }
         #endregion
 
