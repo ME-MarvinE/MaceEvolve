@@ -15,6 +15,9 @@ namespace MaceEvolve.Models
         public List<CreatureInput> InputTypes { get; } = new List<CreatureInput>();
         public Dictionary<CreatureInput, double> InputValues { get; } = new Dictionary<CreatureInput, double>();
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
+        public List<InputNode> InputNodes { get; } = new List<InputNode>();
+        public List<ProcessNode> ProcessNodes { get; } = new List<ProcessNode>();
+        public List<OutputNode> OutputNodes { get; } = new List<OutputNode>();
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
         public int TimesStepped { get; private set; }
@@ -27,9 +30,13 @@ namespace MaceEvolve.Models
             this.Actions = new List<CreatureAction>(Actions);
             this.MaxProcessNodes = MaxProcessNodes;
 
-            Nodes.AddRange(GenerateInputNodes(this.InputTypes));
-            Nodes.AddRange(GenerateOutputNodes(this.Actions));
-            Nodes.AddRange(GenerateProcessNodes(MaxProcessNodes));
+            InputNodes.AddRange(GenerateInputNodes(this.InputTypes));
+            ProcessNodes.AddRange(GenerateProcessNodes(MaxProcessNodes));
+            OutputNodes.AddRange(GenerateOutputNodes(this.Actions));
+
+            Nodes.AddRange(InputNodes);
+            Nodes.AddRange(ProcessNodes);
+            Nodes.AddRange(OutputNodes);
 
             foreach (var Input in InputTypes)
             {
@@ -61,21 +68,21 @@ namespace MaceEvolve.Models
 
             return GeneratedConnections;
         }
-        public static List<Node> GenerateInputNodes(IEnumerable<CreatureInput> PossibleInputs)
+        public static List<InputNode> GenerateInputNodes(IEnumerable<CreatureInput> PossibleInputs)
         {
-            return PossibleInputs.Select(x => new Node(x, Globals.Random.NextDouble(-1, 1))).ToList();
+            return PossibleInputs.Select(x => new InputNode(x, Globals.Random.NextDouble(-1, 1))).ToList();
         }
-        public static List<Node> GenerateOutputNodes(IEnumerable<CreatureAction> PossibleOutputs)
+        public static List<OutputNode> GenerateOutputNodes(IEnumerable<CreatureAction> PossibleOutputs)
         {
-            return PossibleOutputs.Select(x => new Node(x, Globals.Random.NextDouble(-1, 1))).ToList();
+            return PossibleOutputs.Select(x => new OutputNode(x, Globals.Random.NextDouble(-1, 1))).ToList();
         }
-        public static List<Node> GenerateProcessNodes(int MaxProcessNodes)
+        public static List<ProcessNode> GenerateProcessNodes(int MaxProcessNodes)
         {
-            List<Node> ProcessNodes = new List<Node>();
+            List<ProcessNode> ProcessNodes = new List<ProcessNode>();
 
             for (int i = 0; i < MaxProcessNodes; i++)
             {
-                ProcessNodes.Add(new Node(Globals.Random.NextDouble(-1, 1)));
+                ProcessNodes.Add(new ProcessNode(Globals.Random.NextDouble(-1, 1)));
             }
 
             return ProcessNodes;
@@ -87,7 +94,7 @@ namespace MaceEvolve.Models
                 InputValues[Key] = Globals.Random.NextDouble();
             }
 
-            foreach (var OutputNode in Nodes.Where(x => x.NodeType == NodeType.Output))
+            foreach (var OutputNode in OutputNodes)
             {
                 OutputNode.EvaluateValue(this);
             }

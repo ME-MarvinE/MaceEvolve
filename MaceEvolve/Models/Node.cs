@@ -3,34 +3,20 @@ using System.Linq;
 
 namespace MaceEvolve.Models
 {
-    public class Node
+    public abstract class Node
     {
         #region Properties
         public double PreviousOutput { get; protected set; } = 0;
-        public NodeType NodeType { get; }
-        public CreatureInput CreatureValue { get; }
-        public CreatureAction CreatureAction { get; }
+        public virtual NodeType NodeType { get; }
         public double Bias { get; }
-        private bool Evaluating { get; set; }
+        public bool Evaluating { get; private set; }
         #endregion
 
         #region Constructors
-        public Node(double Bias)
+        protected Node(NodeType NodeType, double Bias)
         {
+            this.NodeType = NodeType;
             this.Bias = Bias;
-            NodeType = NodeType.Process;
-        }
-        public Node(CreatureInput CreatureValue, double Bias)
-        {
-            this.Bias = Bias;
-            NodeType = NodeType.Input;
-            this.CreatureValue = CreatureValue;
-        }
-        public Node(CreatureAction CreatureAction, double Bias)
-        {
-            this.Bias = Bias;
-            NodeType = NodeType.Output;
-            this.CreatureAction = CreatureAction;
         }
         #endregion
 
@@ -38,38 +24,16 @@ namespace MaceEvolve.Models
         public double EvaluateValue(NeuralNetwork Network)
         {
             Evaluating = true;
-            int MyId = Network.Nodes.IndexOf(this);
-            double WeightedSum = 0;
 
-            if (NodeType == NodeType.Input)
-            {
-                WeightedSum += Network.InputValues[CreatureValue];
-            }
-            else
-            {
-                foreach (var Connection in Network.Connections.Where(x => x.TargetId == MyId))
-                {
-                    double SourceNodeOutput;
-                    Node ConnectionSourceNode = Network.Nodes[Connection.SourceId];
-
-                    if (Connection.SourceId == MyId)
-                    {
-                        SourceNodeOutput = PreviousOutput;
-                    }
-                    else
-                    {
-                        SourceNodeOutput = ConnectionSourceNode.Evaluating ? ConnectionSourceNode.PreviousOutput : ConnectionSourceNode.EvaluateValue(Network);
-                    }
-
-                    WeightedSum += SourceNodeOutput * Connection.Weight;
-                }
-            }
-
+            double WeightedSum = GetWeightedSum(Network);
             double Output = Globals.Sigmoid(WeightedSum + Bias);
+
             PreviousOutput = Output;
             Evaluating = false;
+
             return Output;
         }
+        public abstract double GetWeightedSum(NeuralNetwork Network);
         #endregion
     }
 }

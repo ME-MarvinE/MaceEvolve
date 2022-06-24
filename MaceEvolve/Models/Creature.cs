@@ -134,8 +134,8 @@ namespace MaceEvolve.Models
             Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
             Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
             Brain.StepTime();
-            List<Node> OrderedOutputNodes = Brain.Nodes.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
-            Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
+            List<OutputNode> OrderedOutputNodes = Brain.OutputNodes.OrderBy(x => x.PreviousOutput).ToList();
+            OutputNode HighestOutputNode = OrderedOutputNodes.LastOrDefault();
 
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
             {
