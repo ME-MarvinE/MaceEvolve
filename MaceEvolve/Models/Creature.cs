@@ -34,12 +34,9 @@ namespace MaceEvolve.Models
         {
         }
         public Creature(Genome Genome)
+            : this(new NeuralNetwork(Globals.AllCreatureInputs, 5, Globals.AllCreatureActions, 10, 50))
         {
             this.Genome = Genome;
-
-            NeuralNetwork NeuralNetwork = new NeuralNetwork(Globals.AllCreatureValues, 2, Globals.AllCreatureActions);
-            NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(2, 5, NeuralNetwork.Nodes);
-            Brain = NeuralNetwork;
         }
         public Creature(NeuralNetwork Brain)
         {

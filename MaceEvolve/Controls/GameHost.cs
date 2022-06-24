@@ -1,9 +1,11 @@
-﻿using MaceEvolve.Models;
+﻿using MaceEvolve.Enums;
+using MaceEvolve.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using Rectangle = System.Drawing.Rectangle;
 
@@ -66,7 +68,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creatures.Add(new Creature(new Genome(Genome.GetRandomizedGenes()))
+                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, 2, Globals.AllCreatureActions, 2, 10))
                 {
                     GameHost = this,
                     X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
@@ -115,6 +117,11 @@ namespace MaceEvolve.Controls
                 }
             }
 
+            foreach (var Creature in CreaturesList.Where(x => x.Energy > 0))
+            {
+
+            }
+
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
         {
@@ -133,14 +140,12 @@ namespace MaceEvolve.Controls
                 Food.Draw(e);
             }
         }
-
         private void GameHost_Load(object sender, EventArgs e)
         {
             DoubleBuffered = true;
             TargetFPS = 60;
             Reset();
         }
-
         private void DrawTimer_Tick(object sender, EventArgs e)
         {
             Invalidate();

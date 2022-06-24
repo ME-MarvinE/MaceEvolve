@@ -22,24 +22,24 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Constructors
-        public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions)
-            : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions))
+        public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections)
+            : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), MinConnections, MaxConnections)
         {
         }
         public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
             : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), Connections)
         {
         }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes)
-            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction))
+        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, int MinConnections, int MaxConnections)
+            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), MinConnections, MaxConnections)
         {
         }
         public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<Connection> Connections)
             : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), Connections)
         {
         }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions)
-            : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(2, 5, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes)))
+        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections)
+            : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes)))
         {
         }
         public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
