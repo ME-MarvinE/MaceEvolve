@@ -117,13 +117,6 @@ namespace MaceEvolve.Models
         {
             return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
         }
-
-        private void Eat(Food Food)
-        {
-            Energy -= Food.ServingDigestionCost;
-            Food.Servings -= 1;
-            Energy += Food.EnergyPerServing;
-        }
         public void Die()
         {
             Energy = 0;
@@ -131,9 +124,8 @@ namespace MaceEvolve.Models
         }
         public void Live()
         {
-            Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
-            Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
-            Brain.StepTime();
+            Think();
+
             List<OutputNode> OrderedOutputNodes = Brain.OutputNodes.OrderBy(x => x.PreviousOutput).ToList();
             OutputNode HighestOutputNode = OrderedOutputNodes.LastOrDefault();
 
@@ -143,6 +135,16 @@ namespace MaceEvolve.Models
             }
 
             Energy -= Metabolism;
+        }
+        public void Think()
+        {
+            Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
+            Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
+
+            foreach (var OutputNode in Brain.OutputNodes)
+            {
+                OutputNode.EvaluateValue(Brain);
+            }
         }
 
 
@@ -164,6 +166,12 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Actions
+        private void Eat(Food Food)
+        {
+            Energy -= Food.ServingDigestionCost;
+            Food.Servings -= 1;
+            Energy += Food.EnergyPerServing;
+        }
         public bool TryEatFoodInRange()
         {
             Food ClosestFood = VisibleFood.FirstOrDefault();

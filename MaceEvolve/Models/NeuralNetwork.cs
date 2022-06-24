@@ -20,7 +20,6 @@ namespace MaceEvolve.Models
         public List<OutputNode> OutputNodes { get; } = new List<OutputNode>();
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
-        public int TimesStepped { get; private set; }
         #endregion
 
         #region Constructors
@@ -86,20 +85,6 @@ namespace MaceEvolve.Models
             }
 
             return ProcessNodes;
-        }
-        public void StepTime()
-        {
-            foreach (var Key in InputValues.Keys)
-            {
-                InputValues[Key] = Globals.Random.NextDouble();
-            }
-
-            foreach (var OutputNode in OutputNodes)
-            {
-                OutputNode.EvaluateValue(this);
-            }
-
-            TimesStepped += 1;
         }
         #endregion
     }
