@@ -1,10 +1,8 @@
-﻿using System;
+﻿using MaceEvolve.Enums;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
-using MaceEvolve.Enums;
+using System.Linq;
 
 namespace MaceEvolve.Models
 {
@@ -41,59 +39,6 @@ namespace MaceEvolve.Models
             NeuralNetwork NeuralNetwork = new NeuralNetwork(Globals.AllCreatureValues, Globals.AllCreatureActions, 2);
             NeuralNetwork.Connections = NeuralNetwork.GenerateRandomConnections(2, 5, NeuralNetwork.Nodes);
             Brain = NeuralNetwork;
-            //ProcessNode OutputNodeTryEat = new ProcessNode()
-            //{
-            //    ConnectionWeight = 1,
-            //    InputTypes = new List<ProcessNode>()
-            //    {
-            //        new ProcessNode()
-            //        {
-            //            ConnectionWeight = 1,
-            //            InputTypes = new List<ProcessNode>()
-            //            {
-            //                new ProcessNode()
-            //                {
-            //                    ConnectionWeight = 2,
-            //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureInput.PercentMaxEnergy,
-            //                    StartNodeCreature = this
-            //                },
-            //                new ProcessNode()
-            //                {
-            //                    ConnectionWeight = 1,
-            //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureInput.ProximityToFood,
-            //                    StartNodeCreature = this
-            //                }
-            //            }
-            //        }
-            //    }
-            //};
-
-            //ProcessNode OutputNodeIdle = new ProcessNode()
-            //{
-            //    ConnectionWeight = 1,
-            //    InputTypes = new List<ProcessNode>()
-            //    {
-            //        new ProcessNode()
-            //        {
-            //            ConnectionWeight = 1,
-            //            InputTypes = new List<ProcessNode>()
-            //            {
-            //                new ProcessNode()
-            //                {
-            //                    ConnectionWeight = 0.2,
-            //                    IsStartNode = true,
-            //                    StartNodeValue = CreatureInput.ProximityToFood,
-            //                    StartNodeCreature = this
-            //                }
-            //            }
-            //        }
-            //    }
-            //};
-
-            //OutputNodes.Add(OutputNodeTryEat);
-            //OutputNodes.Add(OutputNodeIdle);
         }
         public Creature(NeuralNetwork Brain)
         {
@@ -146,11 +91,19 @@ namespace MaceEvolve.Models
         }
         public override void Update()
         {
-            FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
-            CreaturesList = new List<Creature>(GameHost.Creatures);
-            VisibleFood = GetVisibleFood(FoodList).ToList();
+            if (Energy > 0)
+            {
+                FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
+                CreaturesList = new List<Creature>(GameHost.Creatures);
+                VisibleFood = GetVisibleFood(FoodList).ToList();
 
-            Live();
+                Live();
+
+                if (Energy <= 0)
+                {
+                    Die();
+                }
+            }
         }
         public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
         {
@@ -178,14 +131,6 @@ namespace MaceEvolve.Models
         }
         public void Live()
         {
-            Energy -= Metabolism;
-
-            if (Energy <= 0)
-            {
-                Die();
-                return;
-            }
-
             Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
             Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
             Brain.StepTime();
@@ -196,6 +141,8 @@ namespace MaceEvolve.Models
             {
                 ExecuteAction(HighestOutputNode.CreatureAction);
             }
+
+            Energy -= Metabolism;
         }
 
 
