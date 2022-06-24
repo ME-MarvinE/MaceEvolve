@@ -76,20 +76,6 @@ namespace MaceEvolve.Models
                     throw new NotImplementedException();
             }
         }
-        public double GetInput(CreatureInput CreatureValue)
-        {
-            switch (CreatureValue)
-            {
-                case CreatureInput.PercentMaxEnergy:
-                    return Globals.Random.NextDouble();
-
-                case CreatureInput.ProximityToFood:
-                    return Globals.Random.NextDouble();
-
-                default:
-                    throw new NotImplementedException();
-            }
-        }
         public override void Update()
         {
             if (Energy > 0)
@@ -144,16 +130,22 @@ namespace MaceEvolve.Models
         }
         public void Think()
         {
+            UpdateInputValues();
+            UpdateOutputValues();
+        }
+        public void UpdateInputValues()
+        {
             Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
             Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
             Brain.InputValues[CreatureInput.ProximityToCreature] = ProximityToCreature(this);
-
+        }
+        public void UpdateOutputValues()
+        {
             foreach (var OutputNode in Brain.OutputNodes)
             {
                 OutputNode.EvaluateValue(Brain);
             }
         }
-
 
         #region CreatureValues
         //Creature values map from 0 to 1.
