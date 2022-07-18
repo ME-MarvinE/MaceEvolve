@@ -4,8 +4,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MaceEvolve.Models
 {
@@ -32,16 +30,32 @@ namespace MaceEvolve.Models
             : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), Connections)
         {
         }
+        public NeuralNetwork(IEnumerable<Node> Nodes, int MinConnections, int MaxConnections)
+            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), MinConnections, MaxConnections)
+        {
+        }
         public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, int MinConnections, int MaxConnections)
             : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), MinConnections, MaxConnections)
+        {
+        }
+        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
+            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Connections)
         {
         }
         public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<Connection> Connections)
             : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), Connections)
         {
         }
+        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections)
+            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, MinConnections, MaxConnections)
+        {
+        }
         public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections)
             : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes)))
+        {
+        }
+        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
+            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, Connections)
         {
         }
         [JsonConstructor]
@@ -109,9 +123,9 @@ namespace MaceEvolve.Models
 
             return ProcessNodes;
         }
-        public static NeuralNetwork CloneNetwork(NeuralNetwork NeuralNetwork)
+        public NeuralNetwork CloneNetwork()
         {
-            return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(NeuralNetwork));
+            return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(this));
         }
         #endregion
     }

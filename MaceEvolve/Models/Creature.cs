@@ -118,39 +118,39 @@ namespace MaceEvolve.Models
             List<OutputNode> OrderedOutputNodes = Brain.OutputNodes.OrderBy(x => x.PreviousOutput).ToList();
             OutputNode HighestOutputNode = OrderedOutputNodes.LastOrDefault();
 
-            switch (HighestOutputNode?.CreatureAction)
-            {
-                case CreatureAction.MoveForward:
-                    if (Y - Speed < GameHost.WorldBounds.Top)
-                    {
-                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-                    }
-                    break;
+            //switch (HighestOutputNode?.CreatureAction)
+            //{
+            //    case CreatureAction.MoveForward:
+            //        if (Y - Speed < GameHost.WorldBounds.Top)
+            //        {
+            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+            //        }
+            //        break;
 
-                case CreatureAction.MoveBackward:
-                    if (Y + Speed > GameHost.WorldBounds.Bottom)
-                    {
-                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-                    }
-                    break;
+            //    case CreatureAction.MoveBackward:
+            //        if (Y + Speed > GameHost.WorldBounds.Bottom)
+            //        {
+            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+            //        }
+            //        break;
 
-                case CreatureAction.MoveLeft:
-                    if (X - Speed < GameHost.WorldBounds.Left)
-                    {
-                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-                    }
-                    break;
+            //    case CreatureAction.MoveLeft:
+            //        if (X - Speed < GameHost.WorldBounds.Left)
+            //        {
+            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+            //        }
+            //        break;
 
-                case CreatureAction.MoveRight:
-                    if (X + Speed > GameHost.WorldBounds.Right)
-                    {
-                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-                    }
-                    break;
+            //    case CreatureAction.MoveRight:
+            //        if (X + Speed > GameHost.WorldBounds.Right)
+            //        {
+            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+            //        }
+            //        break;
 
-                default:
-                    break;
-            }
+            //    default:
+            //        break;
+            //}
 
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
             {
@@ -176,6 +176,100 @@ namespace MaceEvolve.Models
             {
                 OutputNode.EvaluateValue(Brain);
             }
+        }
+        public static Creature SexuallyReproduce(IEnumerable<Creature> Parents, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions)
+        {
+            List<Connection> OffspringConnections = new List<Connection>();
+            List<Node> OffspringNodes = new List<Node>();
+            List<Creature> ParentsList = new List<Creature>(Parents);
+            List<Connection> AddedParentConnections = new List<Connection>();
+            List<Connection> AvailableParentConnections = new List<Connection>();
+            Dictionary<Node, Node> ParentNodeToOffSpringNodeMap = new Dictionary<Node, Node>();
+
+            foreach (var Parent in ParentsList)
+            {
+                AvailableParentConnections.AddRange(Parent.Brain.Connections);
+            }
+
+            int AverageNumberOfParentConnections = (int)Parents.Average(x => x.Brain.Connections.Count);
+
+            if (AverageNumberOfParentConnections < 1)
+            {
+                AverageNumberOfParentConnections = 1;
+            }
+
+            while (OffspringConnections.Count != AverageNumberOfParentConnections && AvailableParentConnections.Count > 0)
+            {
+                int RandomParentNum = _Random.Next(ParentsList.Count);
+                Creature RandomParent = ParentsList[RandomParentNum];
+                Connection RandomParentConnection = RandomParent.Brain.Connections[_Random.Next(RandomParent.Brain.Connections.Count)];
+                Node RandomParentConnectionSourceNode = RandomParent.Brain.Nodes[RandomParentConnection.SourceId];
+                Node RandomParentConnectionTargetNode = RandomParent.Brain.Nodes[RandomParentConnection.TargetId];
+
+                Connection ConnectionToAdd = new Connection() { Weight = RandomParentConnection.Weight };
+
+                if (ParentNodeToOffSpringNodeMap.ContainsKey(RandomParentConnectionSourceNode))
+                {
+                    ConnectionToAdd.SourceId = OffspringNodes.IndexOf(ParentNodeToOffSpringNodeMap[RandomParentConnectionSourceNode]);
+                }
+                else
+                {
+                    Node SourceNodeToAdd;
+
+                    switch (RandomParentConnectionSourceNode.NodeType)
+                    {
+                        case NodeType.Input:
+                            SourceNodeToAdd = new InputNode(((InputNode)RandomParentConnectionSourceNode).CreatureInput, RandomParentConnectionSourceNode.Bias);
+                            break;
+                        case NodeType.Process:
+                            SourceNodeToAdd = new ProcessNode(RandomParentConnectionSourceNode.Bias);
+                            break;
+                        case NodeType.Output:
+                            SourceNodeToAdd = new OutputNode(((OutputNode)RandomParentConnectionSourceNode).CreatureAction, RandomParentConnectionSourceNode.Bias);
+                            break;
+                        default:
+                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParent.Brain.Nodes[RandomParentConnection.SourceId].NodeType}' is not implemented.");
+                    }
+
+                    OffspringNodes.Add(SourceNodeToAdd);
+                    ParentNodeToOffSpringNodeMap.Add(RandomParentConnectionSourceNode, SourceNodeToAdd);
+                    ConnectionToAdd.SourceId = OffspringNodes.IndexOf(SourceNodeToAdd);
+                }
+
+                if (ParentNodeToOffSpringNodeMap.ContainsKey(RandomParentConnectionTargetNode))
+                {
+                    ConnectionToAdd.TargetId = OffspringNodes.IndexOf(ParentNodeToOffSpringNodeMap[RandomParentConnectionTargetNode]);
+                }
+                else
+                {
+                    Node TargetNodeToAdd;
+
+                    switch (RandomParentConnectionTargetNode.NodeType)
+                    {
+                        case NodeType.Input:
+                            TargetNodeToAdd = new InputNode(((InputNode)RandomParentConnectionTargetNode).CreatureInput, RandomParentConnectionTargetNode.Bias);
+                            break;
+                        case NodeType.Process:
+                            TargetNodeToAdd = new ProcessNode(RandomParentConnectionTargetNode.Bias);
+                            break;
+                        case NodeType.Output:
+                            TargetNodeToAdd = new OutputNode(((OutputNode)RandomParentConnectionTargetNode).CreatureAction, RandomParentConnectionTargetNode.Bias);
+                            break;
+                        default:
+                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParent.Brain.Nodes[RandomParentConnection.TargetId].NodeType}' is not implemented.");
+                    }
+
+                    OffspringNodes.Add(TargetNodeToAdd);
+                    ParentNodeToOffSpringNodeMap.Add(RandomParentConnectionTargetNode, TargetNodeToAdd);
+                    ConnectionToAdd.TargetId = OffspringNodes.IndexOf(TargetNodeToAdd);
+                }
+
+                OffspringConnections.Add(ConnectionToAdd);
+                AddedParentConnections.Add(RandomParentConnection);
+                AvailableParentConnections.Remove(RandomParentConnection);
+            }
+
+            return new Creature(new NeuralNetwork(OffspringNodes, Inputs, Actions, OffspringConnections));
         }
 
         #region CreatureValues

@@ -38,6 +38,8 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
+        public int MinCreatureConnections { get; set; } = 2;
+        public int MaxCreatureConnections { get; set; } = 10;
         #endregion
 
         #region Constructors
@@ -70,7 +72,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, 2, Globals.AllCreatureActions, 2, 10))
+                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, 2, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections))
                 {
                     GameHost = this,
                     X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
@@ -93,18 +95,18 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                NewCreatures.Add(new Creature(NeuralNetwork.CloneNetwork(SuccessfulCreatures[_Random.Next(SuccessfulCreatures.Count)].Brain))
-                {
-                    GameHost = this,
-                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
-                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
-                    Size = 10,
-                    Color = Color.FromArgb(255, 64, 64, 255),
-                    Speed = 1.3,
-                    Metabolism = 0.1,
-                    Energy = 150,
-                    SightRange = 100
-                });
+                Creature NewCreature = Creature.SexuallyReproduce(SuccessfulCreatures, Globals.AllCreatureInputs, Globals.AllCreatureActions);
+                NewCreature.GameHost = this;
+                NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+                NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+                NewCreature.Size = 10;
+                NewCreature.Color = Color.FromArgb(255, 64, 64, 255);
+                NewCreature.Speed = 1.3;
+                NewCreature.Metabolism = 0.1;
+                NewCreature.Energy = 150;
+                NewCreature.SightRange = 100;
+
+                NewCreatures.Add(NewCreature);
             }
 
             Creatures = NewCreatures;
