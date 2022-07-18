@@ -108,8 +108,8 @@ namespace MaceEvolve.Models
         }
         public void Die()
         {
-            Energy = 0;
             Color = Color.Brown;
+            Energy = 0;
         }
         public void Live()
         {
@@ -167,7 +167,8 @@ namespace MaceEvolve.Models
         public void UpdateInputValues()
         {
             Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
-            Brain.InputValues[CreatureInput.ProximityToFood] = ProximityToFood(this);
+            Brain.InputValues[CreatureInput.VerticalProximityToFood] = VerticalProximityToFood(this);
+            Brain.InputValues[CreatureInput.HorizontalProximityToFood] = HorizontalProximityToFood(this);
             Brain.InputValues[CreatureInput.ProximityToCreature] = ProximityToCreature(this);
         }
         public void UpdateOutputValues()
@@ -278,16 +279,6 @@ namespace MaceEvolve.Models
         {
             return Globals.Map(Creature.Energy, 0, 100, 0, 1);
         }
-        public static double ProximityToFood(Creature Creature)
-        {
-            Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
-
-            if (ClosestFood == null) { return 0; }
-
-            double DistanceFromFood = Creature.GetDistanceFrom(ClosestFood.X, ClosestFood.Y);
-
-            return Globals.Map(DistanceFromFood, 0, Creature.SightRange, 0, 1);
-        }
         public static double ProximityToCreature(Creature Creature)
         {
             Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault();
@@ -297,6 +288,26 @@ namespace MaceEvolve.Models
             double DistanceFromCreature = Creature.GetDistanceFrom(ClosestCreature.X, ClosestCreature.Y);
 
             return Globals.Map(DistanceFromCreature, 0, Creature.SightRange, 0, 1);
+        }
+        public static double HorizontalProximityToFood(Creature Creature)
+        {
+            Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
+
+            if (ClosestFood == null) { return 1; }
+
+            double HorizontalDistanceToFood = Creature.GetDistanceFrom(ClosestFood.X, Creature.Y);
+
+            return Globals.Map(HorizontalDistanceToFood, 0, Creature.SightRange, 0, 1);
+        }
+        public static double VerticalProximityToFood(Creature Creature)
+        {
+            Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
+
+            if (ClosestFood == null) { return 1; }
+
+            double VerticalDistanceToFood = Creature.GetDistanceFrom(Creature.X, ClosestFood.Y);
+
+            return Globals.Map(VerticalDistanceToFood, 0, Creature.SightRange, 0, 1);
         }
         #endregion
 

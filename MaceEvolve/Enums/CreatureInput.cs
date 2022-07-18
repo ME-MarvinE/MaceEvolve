@@ -2,8 +2,9 @@
 {
     public enum CreatureInput
     {
-        ProximityToFood,
         PercentMaxEnergy,
-        ProximityToCreature
+        ProximityToCreature,
+        VerticalProximityToFood,
+        HorizontalProximityToFood
     }
 }
