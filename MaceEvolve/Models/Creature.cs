@@ -185,7 +185,6 @@ namespace MaceEvolve.Models
             List<Connection> OffspringConnections = new List<Connection>();
             List<Node> OffspringNodes = new List<Node>();
             List<Creature> ParentsList = new List<Creature>(Parents);
-            List<Connection> AddedParentConnections = new List<Connection>();
             List<Connection> AvailableParentConnections = new List<Connection>();
             Dictionary<Node, Node> ParentNodeToOffSpringNodeMap = new Dictionary<Node, Node>();
 
@@ -231,7 +230,7 @@ namespace MaceEvolve.Models
                             SourceNodeToAdd = new OutputNode(((OutputNode)RandomParentConnectionSourceNode).CreatureAction, RandomParentConnectionSourceNode.Bias);
                             break;
                         default:
-                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParent.Brain.Nodes[RandomParentConnection.SourceId].NodeType}' is not implemented.");
+                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParentConnectionSourceNode.NodeType}' is not implemented.");
                     }
 
                     OffspringNodes.Add(SourceNodeToAdd);
@@ -259,7 +258,7 @@ namespace MaceEvolve.Models
                             TargetNodeToAdd = new OutputNode(((OutputNode)RandomParentConnectionTargetNode).CreatureAction, RandomParentConnectionTargetNode.Bias);
                             break;
                         default:
-                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParent.Brain.Nodes[RandomParentConnection.TargetId].NodeType}' is not implemented.");
+                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParentConnectionTargetNode.NodeType}' is not implemented.");
                     }
 
                     OffspringNodes.Add(TargetNodeToAdd);
@@ -268,7 +267,6 @@ namespace MaceEvolve.Models
                 }
 
                 OffspringConnections.Add(ConnectionToAdd);
-                AddedParentConnections.Add(RandomParentConnection);
                 AvailableParentConnections.Remove(RandomParentConnection);
             }
 

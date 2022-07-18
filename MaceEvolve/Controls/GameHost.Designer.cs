@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.GameTimer = new System.Windows.Forms.Timer(this.components);
             this.DrawTimer = new System.Windows.Forms.Timer(this.components);
+            this.NewGenerationTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // GameTimer
@@ -42,6 +43,10 @@
             // 
             this.DrawTimer.Interval = 17;
             this.DrawTimer.Tick += new System.EventHandler(this.DrawTimer_Tick);
+            // 
+            // NewGenerationTimer
+            // 
+            this.NewGenerationTimer.Tick += new System.EventHandler(this.NewGenerationTimer_Tick);
             // 
             // GameHost
             // 
@@ -60,5 +65,6 @@
 
         private System.Windows.Forms.Timer GameTimer;
         private System.Windows.Forms.Timer DrawTimer;
+        private System.Windows.Forms.Timer NewGenerationTimer;
     }
 }

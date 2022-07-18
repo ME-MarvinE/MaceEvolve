@@ -40,7 +40,10 @@ namespace MaceEvolve.Controls
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 15;
         public int MaxCreatureConnections { get; set; } = 20;
-        public double CreatureSpeed { get; set; } = 3.5;
+        public double CreatureSpeed { get; set; } = 2.5;
+        public double NewGenerationInterval { get; set; } = 8;
+        public double SecondsUntilNewGeneration { get; set; } = 8;
+        public int MaxCreatureProcessNodes { get; set; } = 5;
         #endregion
 
         #region Constructors
@@ -56,30 +59,33 @@ namespace MaceEvolve.Controls
             GameTimer.Start();
             DrawTimer.Start();
             Stopwatch.Start();
+            NewGenerationTimer.Start();
         }
         public void Stop()
         {
             GameTimer.Stop();
             DrawTimer.Stop();
             Stopwatch.Stop();
+            NewGenerationTimer.Stop();
         }
         public void Reset()
         {
             WorldBounds = new Rectangle(Bounds.Location, Bounds.Size);
             SuccessBounds = new Rectangle(WorldBounds.Location, new Size(100, WorldBounds.Height));
             Stopwatch.Reset();
+            SecondsUntilNewGeneration = NewGenerationInterval;
             Creatures.Clear();
             Food.Clear();
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, 2, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections))
+                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, MaxCreatureProcessNodes, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections))
                 {
                     GameHost = this,
                     X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
                     Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
                     Size = 10,
-                    Color = Color.FromArgb(255, 64, 64, 255),
+                    Color = Color.FromArgb(255, 64, 64, _Random.Next(256)),
                     Speed = CreatureSpeed,
                     Metabolism = 0.1,
                     Energy = 150,
@@ -109,8 +115,8 @@ namespace MaceEvolve.Controls
                 NewCreature.Energy = 150;
                 NewCreature.SightRange = 100;
 
-                NewCreature.Brain.MutateConnectionWeights(0.8);
-                NewCreature.Brain.MutateNodeBiases(0.8);
+                NewCreature.Brain.MutateConnectionWeights(0.2);
+                NewCreature.Brain.MutateNodeBiases(0.2);
 
                 NewCreatures.Add(NewCreature);
             }
@@ -180,6 +186,18 @@ namespace MaceEvolve.Controls
         private void DrawTimer_Tick(object sender, EventArgs e)
         {
             Invalidate();
+        }
+        private void NewGenerationTimer_Tick(object sender, EventArgs e)
+        {
+            if (SecondsUntilNewGeneration <= 0)
+            {
+                SecondsUntilNewGeneration = NewGenerationInterval;
+                NewGeneration();
+            }
+            else
+            {
+                SecondsUntilNewGeneration -= 0.1;
+            }
         }
         #endregion
     }
