@@ -37,6 +37,7 @@ namespace MaceEvolve.Controls
             }
         }
         public Rectangle WorldBounds { get; set; }
+        public Rectangle SuccessBounds { get; set; }
         #endregion
 
         #region Constructors
@@ -62,6 +63,7 @@ namespace MaceEvolve.Controls
         public void Reset()
         {
             WorldBounds = new Rectangle(Bounds.Location, Bounds.Size);
+            SuccessBounds = new Rectangle(WorldBounds.Location, new Size(100, WorldBounds.Height));
             Stopwatch.Reset();
             Creatures.Clear();
             Food.Clear();
@@ -81,6 +83,31 @@ namespace MaceEvolve.Controls
                     SightRange = 100
                 });
             }
+        }
+        public void NewGeneration()
+        {
+            List<Food> FoodList = new List<Food>(Food);
+            List<Creature> CreaturesList = new List<Creature>(Creatures);
+            List<Creature> SuccessfulCreatures = CreaturesList.Where(x => x.MX > SuccessBounds.Left && x.MX < SuccessBounds.Right && x.MX > SuccessBounds.Top && x.MX < SuccessBounds.Bottom).ToList();
+            List<Creature> NewCreatures = new List<Creature>();
+
+            for (int i = 0; i < MaxCreatureAmount; i++)
+            {
+                NewCreatures.Add(new Creature(NeuralNetwork.CloneNetwork(SuccessfulCreatures[_Random.Next(SuccessfulCreatures.Count)].Brain))
+                {
+                    GameHost = this,
+                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
+                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
+                    Size = 10,
+                    Color = Color.FromArgb(255, 64, 64, 255),
+                    Speed = 1.3,
+                    Metabolism = 0.1,
+                    Energy = 150,
+                    SightRange = 100
+                });
+            }
+
+            Creatures = NewCreatures;
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
@@ -116,12 +143,6 @@ namespace MaceEvolve.Controls
                     });
                 }
             }
-
-            foreach (var Creature in CreaturesList.Where(x => x.Energy > 0))
-            {
-
-            }
-
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
         {
@@ -139,6 +160,8 @@ namespace MaceEvolve.Controls
             {
                 Food.Draw(e);
             }
+
+            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), SuccessBounds);
         }
         private void GameHost_Load(object sender, EventArgs e)
         {

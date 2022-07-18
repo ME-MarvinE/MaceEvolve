@@ -31,21 +31,26 @@ namespace MaceEvolve
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            System.Diagnostics.Stopwatch stopwatch3 = new System.Diagnostics.Stopwatch();
+            System.Diagnostics.Stopwatch stopwatch2 = new System.Diagnostics.Stopwatch();
             this.MainGameHost = new MaceEvolve.Controls.GameHost();
             this.StartButton = new System.Windows.Forms.Button();
             this.StopButton = new System.Windows.Forms.Button();
             this.ResetButton = new System.Windows.Forms.Button();
+            this.NextGenButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // MainGameHost
             // 
             this.MainGameHost.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MainGameHost.Location = new System.Drawing.Point(0, 0);
+            this.MainGameHost.MaxCreatureAmount = 150;
+            this.MainGameHost.MaxFoodAmount = 350;
             this.MainGameHost.Name = "MainGameHost";
             this.MainGameHost.Size = new System.Drawing.Size(1067, 597);
-            this.MainGameHost.Stopwatch = stopwatch3;
+            this.MainGameHost.Stopwatch = stopwatch2;
             this.MainGameHost.TabIndex = 0;
+            this.MainGameHost.TargetFPS = 60;
+            this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 1067, 597);
             // 
             // StartButton
             // 
@@ -77,11 +82,22 @@ namespace MaceEvolve
             this.ResetButton.UseVisualStyleBackColor = true;
             this.ResetButton.Click += new System.EventHandler(this.ResetButton_Click);
             // 
+            // NextGenButton
+            // 
+            this.NextGenButton.Location = new System.Drawing.Point(255, 12);
+            this.NextGenButton.Name = "NextGenButton";
+            this.NextGenButton.Size = new System.Drawing.Size(75, 32);
+            this.NextGenButton.TabIndex = 1;
+            this.NextGenButton.Text = "Next Gen";
+            this.NextGenButton.UseVisualStyleBackColor = true;
+            this.NextGenButton.Click += new System.EventHandler(this.NextGenButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1067, 597);
+            this.Controls.Add(this.NextGenButton);
             this.Controls.Add(this.ResetButton);
             this.Controls.Add(this.StopButton);
             this.Controls.Add(this.StartButton);
@@ -98,5 +114,6 @@ namespace MaceEvolve
         private Button StartButton;
         private Button StopButton;
         private Button ResetButton;
+        private Button NextGenButton;
     }
 }

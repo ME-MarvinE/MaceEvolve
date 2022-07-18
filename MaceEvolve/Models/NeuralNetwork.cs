@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Enums;
 using MaceEvolve.Extensions;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +12,13 @@ namespace MaceEvolve.Models
     public class NeuralNetwork
     {
         #region Properties
-        public List<CreatureInput> InputTypes { get; } = new List<CreatureInput>();
+        public List<CreatureInput> Inputs { get; } = new List<CreatureInput>();
         public Dictionary<CreatureInput, double> InputValues { get; } = new Dictionary<CreatureInput, double>();
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
         public List<InputNode> InputNodes { get; } = new List<InputNode>();
         public List<ProcessNode> ProcessNodes { get; } = new List<ProcessNode>();
         public List<OutputNode> OutputNodes { get; } = new List<OutputNode>();
+        [JsonIgnore]
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
         #endregion
@@ -42,9 +44,10 @@ namespace MaceEvolve.Models
             : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes)))
         {
         }
+        [JsonConstructor]
         public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
         {
-            this.InputTypes = new List<CreatureInput>(Inputs);
+            this.Inputs = new List<CreatureInput>(Inputs);
             this.Actions = new List<CreatureAction>(Actions);
             this.InputNodes = new List<InputNode>(InputNodes);
             this.ProcessNodes = new List<ProcessNode>(ProcessNodes);
@@ -105,6 +108,10 @@ namespace MaceEvolve.Models
             }
 
             return ProcessNodes;
+        }
+        public static NeuralNetwork CloneNetwork(NeuralNetwork NeuralNetwork)
+        {
+            return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(NeuralNetwork));
         }
         #endregion
     }

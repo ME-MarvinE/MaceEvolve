@@ -118,6 +118,40 @@ namespace MaceEvolve.Models
             List<OutputNode> OrderedOutputNodes = Brain.OutputNodes.OrderBy(x => x.PreviousOutput).ToList();
             OutputNode HighestOutputNode = OrderedOutputNodes.LastOrDefault();
 
+            switch (HighestOutputNode?.CreatureAction)
+            {
+                case CreatureAction.MoveForward:
+                    if (Y - Speed < GameHost.WorldBounds.Top)
+                    {
+                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+                    }
+                    break;
+
+                case CreatureAction.MoveBackward:
+                    if (Y + Speed > GameHost.WorldBounds.Bottom)
+                    {
+                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+                    }
+                    break;
+
+                case CreatureAction.MoveLeft:
+                    if (X - Speed < GameHost.WorldBounds.Left)
+                    {
+                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+                    }
+                    break;
+
+                case CreatureAction.MoveRight:
+                    if (X + Speed > GameHost.WorldBounds.Right)
+                    {
+                        HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
             {
                 ExecuteAction(HighestOutputNode.CreatureAction);
