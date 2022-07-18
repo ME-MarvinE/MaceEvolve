@@ -127,6 +127,26 @@ namespace MaceEvolve.Models
         {
             return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(this));
         }
+        public void MutateConnectionWeights(double MutationChancePerNode)
+        {
+            foreach (var Node in Nodes)
+            {
+                if (Globals.Random.NextDouble() <= MutationChancePerNode)
+                {
+                    Node.Bias = Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1);
+                }
+            }
+        }
+        public void MutateNodeBiases(double MutationChancePerConnection)
+        {
+            foreach (var Connection in Connections)
+            {
+                if (Globals.Random.NextDouble() <= MutationChancePerConnection)
+                {
+                    Connection.Weight = Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1);
+                }
+            }
+        }
         #endregion
     }
 }

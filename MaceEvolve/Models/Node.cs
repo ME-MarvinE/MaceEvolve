@@ -8,7 +8,7 @@ namespace MaceEvolve.Models
         #region Properties
         public double PreviousOutput { get; protected set; } = 0;
         public virtual NodeType NodeType { get; }
-        public double Bias { get; }
+        public double Bias { get; set; }
         public bool Evaluating { get; private set; }
         #endregion
 

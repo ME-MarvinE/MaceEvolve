@@ -40,6 +40,7 @@ namespace MaceEvolve.Controls
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 15;
         public int MaxCreatureConnections { get; set; } = 20;
+        public double CreatureSpeed { get; set; } = 3.5;
         #endregion
 
         #region Constructors
@@ -79,7 +80,7 @@ namespace MaceEvolve.Controls
                     Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
                     Size = 10,
                     Color = Color.FromArgb(255, 64, 64, 255),
-                    Speed = 1.3,
+                    Speed = CreatureSpeed,
                     Metabolism = 0.1,
                     Energy = 150,
                     SightRange = 100
@@ -93,6 +94,8 @@ namespace MaceEvolve.Controls
             List<Creature> SuccessfulCreatures = CreaturesList.Where(x => x.MX > SuccessBounds.Left && x.MX < SuccessBounds.Right && x.MX > SuccessBounds.Top && x.MX < SuccessBounds.Bottom).ToList();
             List<Creature> NewCreatures = new List<Creature>();
 
+            List<Creature> RandomCreatures = new List<Creature>();
+
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
                 Creature NewCreature = Creature.SexuallyReproduce(SuccessfulCreatures, Globals.AllCreatureInputs, Globals.AllCreatureActions);
@@ -100,11 +103,14 @@ namespace MaceEvolve.Controls
                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
                 NewCreature.Size = 10;
-                NewCreature.Color = Color.FromArgb(255, 64, 64, 255);
-                NewCreature.Speed = 1.3;
+                NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+                NewCreature.Speed = CreatureSpeed;
                 NewCreature.Metabolism = 0.1;
                 NewCreature.Energy = 150;
                 NewCreature.SightRange = 100;
+
+                NewCreature.Brain.MutateConnectionWeights(0.8);
+                NewCreature.Brain.MutateNodeBiases(0.8);
 
                 NewCreatures.Add(NewCreature);
             }
