@@ -38,8 +38,8 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 2;
-        public int MaxCreatureConnections { get; set; } = 10;
+        public int MinCreatureConnections { get; set; } = 15;
+        public int MaxCreatureConnections { get; set; } = 20;
         #endregion
 
         #region Constructors

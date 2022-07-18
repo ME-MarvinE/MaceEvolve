@@ -170,6 +170,8 @@ namespace MaceEvolve.Models
             Brain.InputValues[CreatureInput.VerticalProximityToFood] = VerticalProximityToFood(this);
             Brain.InputValues[CreatureInput.HorizontalProximityToFood] = HorizontalProximityToFood(this);
             Brain.InputValues[CreatureInput.ProximityToCreature] = ProximityToCreature(this);
+            Brain.InputValues[CreatureInput.VerticalWorldBoundProximity] = VerticalWorldBoundProximity(this);
+            Brain.InputValues[CreatureInput.HorizontalWorldBoundProximity] = HorizontalWorldBoundProximity(this);
         }
         public void UpdateOutputValues()
         {
@@ -293,7 +295,7 @@ namespace MaceEvolve.Models
         {
             Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
 
-            if (ClosestFood == null) { return 1; }
+            if (ClosestFood == null) { return 0; }
 
             double HorizontalDistanceToFood = Creature.GetDistanceFrom(ClosestFood.X, Creature.Y);
 
@@ -303,11 +305,19 @@ namespace MaceEvolve.Models
         {
             Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
 
-            if (ClosestFood == null) { return 1; }
+            if (ClosestFood == null) { return 0; }
 
             double VerticalDistanceToFood = Creature.GetDistanceFrom(Creature.X, ClosestFood.Y);
 
             return Globals.Map(VerticalDistanceToFood, 0, Creature.SightRange, 0, 1);
+        }
+        public static double VerticalWorldBoundProximity(Creature Creature)
+        {
+            return Globals.Map(Creature.X, Creature.GameHost.WorldBounds.Top, Creature.GameHost.WorldBounds.Bottom, -1, 1);
+        }
+        public static double HorizontalWorldBoundProximity(Creature Creature)
+        {
+            return Globals.Map(Creature.X, Creature.GameHost.WorldBounds.Left, Creature.GameHost.WorldBounds.Right, - 1, 1);
         }
         #endregion
 

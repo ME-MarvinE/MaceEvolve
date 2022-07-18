@@ -5,6 +5,8 @@
         PercentMaxEnergy,
         ProximityToCreature,
         VerticalProximityToFood,
-        HorizontalProximityToFood
+        HorizontalProximityToFood,
+        VerticalWorldBoundProximity,
+        HorizontalWorldBoundProximity
     }
 }
