@@ -34,7 +34,7 @@ namespace MaceEvolve.Models
         {
         }
         public Creature(Genome Genome)
-            : this(new NeuralNetwork(Globals.AllCreatureInputs, 5, Globals.AllCreatureActions, 10, 50))
+            : this(new NeuralNetwork(Globals.AllCreatureInputs, 5, Globals.AllCreatureActions, 10, 50, 4))
         {
             this.Genome = Genome;
         }
@@ -117,40 +117,6 @@ namespace MaceEvolve.Models
 
             List<OutputNode> OrderedOutputNodes = Brain.OutputNodes.OrderBy(x => x.PreviousOutput).ToList();
             OutputNode HighestOutputNode = OrderedOutputNodes.LastOrDefault();
-
-            //switch (HighestOutputNode?.CreatureAction)
-            //{
-            //    case CreatureAction.MoveForward:
-            //        if (Y - Speed < GameHost.WorldBounds.Top)
-            //        {
-            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-            //        }
-            //        break;
-
-            //    case CreatureAction.MoveBackward:
-            //        if (Y + Speed > GameHost.WorldBounds.Bottom)
-            //        {
-            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-            //        }
-            //        break;
-
-            //    case CreatureAction.MoveLeft:
-            //        if (X - Speed < GameHost.WorldBounds.Left)
-            //        {
-            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-            //        }
-            //        break;
-
-            //    case CreatureAction.MoveRight:
-            //        if (X + Speed > GameHost.WorldBounds.Right)
-            //        {
-            //            HighestOutputNode = OrderedOutputNodes.SkipLast(1).LastOrDefault();
-            //        }
-            //        break;
-
-            //    default:
-            //        break;
-            //}
 
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
             {
@@ -343,7 +309,8 @@ namespace MaceEvolve.Models
             Y -= Speed;
             if (Y < GameHost.WorldBounds.Top)
             {
-                Y += GameHost.WorldBounds.Height;
+                Y += Speed;
+                //Y += GameHost.WorldBounds.Height;
             }
             Energy -= MoveCost;
         }
@@ -352,7 +319,8 @@ namespace MaceEvolve.Models
             Y += Speed;
             if (Y > GameHost.WorldBounds.Bottom)
             {
-                Y -= GameHost.WorldBounds.Height;
+                Y -= Speed;
+                //Y -= GameHost.WorldBounds.Height;
             }
             Energy -= MoveCost;
         }
@@ -361,7 +329,8 @@ namespace MaceEvolve.Models
             X -= Speed;
             if (X < GameHost.WorldBounds.Left)
             {
-                X += GameHost.WorldBounds.Width;
+                X += Speed;
+                //X += GameHost.WorldBounds.Width;
             }
             Energy -= MoveCost;
         }
@@ -370,7 +339,8 @@ namespace MaceEvolve.Models
             X += Speed;
             if (X > GameHost.WorldBounds.Right)
             {
-                X -= GameHost.WorldBounds.Width;
+                X -= Speed;
+                //X -= GameHost.WorldBounds.Width;
             }
             Energy -= MoveCost;
         }

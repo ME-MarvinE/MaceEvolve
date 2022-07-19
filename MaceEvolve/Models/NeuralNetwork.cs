@@ -22,20 +22,20 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Constructors
-        public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections)
-            : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), MinConnections, MaxConnections)
+        public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+            : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
         public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
             : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), Connections)
         {
         }
-        public NeuralNetwork(IEnumerable<Node> Nodes, int MinConnections, int MaxConnections)
-            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), MinConnections, MaxConnections)
+        public NeuralNetwork(IEnumerable<Node> Nodes, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, int MinConnections, int MaxConnections)
-            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), MinConnections, MaxConnections)
+        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
         public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
@@ -46,12 +46,12 @@ namespace MaceEvolve.Models
             : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), Connections)
         {
         }
-        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections)
-            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, MinConnections, MaxConnections)
+        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections)
-            : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes)))
+        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+            : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes), ConnectionWeightBound))
         {
         }
         public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
@@ -80,7 +80,7 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Methods
-        public static List<Connection> GenerateRandomConnections(int MinConnections, int MaxConnections, IEnumerable<Node> Nodes)
+        public static List<Connection> GenerateRandomConnections(int MinConnections, int MaxConnections, IEnumerable<Node> Nodes, double WeightBound)
         {
             List<Connection> GeneratedConnections = new List<Connection>();
             int TargetConnectionAmount = Globals.Random.Next(MinConnections, MaxConnections + 1);
@@ -98,7 +98,7 @@ namespace MaceEvolve.Models
                 int RandomConnectionSource = PossibleSourceNodes.Keys.ToList()[Globals.Random.Next(0, PossibleSourceNodes.Count)];
                 int RandomConnectionTarget = PossibleTargetNodes.Keys.ToList()[Globals.Random.Next(0, PossibleTargetNodes.Count)];
 
-                Connection NewConnection = new Connection() { SourceId = RandomConnectionSource, TargetId = RandomConnectionTarget, Weight = Globals.Random.NextDouble(-1, 1) };
+                Connection NewConnection = new Connection() { SourceId = RandomConnectionSource, TargetId = RandomConnectionTarget, Weight = Globals.Random.NextDouble(-WeightBound, WeightBound) };
                 GeneratedConnections.Add(NewConnection);
             }
 
@@ -162,13 +162,13 @@ namespace MaceEvolve.Models
                 }
             }
         }
-        public static void MutateConnectionWeights(double MutationChancePerConnection, IEnumerable<Connection> Connections)
+        public static void MutateConnectionWeights(double MutationChancePerConnection, IEnumerable<Connection> Connections, double ConnectionWeightBound)
         {
             foreach (var Connection in Connections)
             {
                 if (Globals.Random.NextDouble() <= MutationChancePerConnection)
                 {
-                    Connection.Weight = Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1);
+                    Connection.Weight = Globals.Map(Globals.Random.NextDouble(), 0, 1, -ConnectionWeightBound, ConnectionWeightBound);
                 }
             }
         }

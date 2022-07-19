@@ -40,11 +40,12 @@ namespace MaceEvolve.Controls
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 15;
         public int MaxCreatureConnections { get; set; } = 20;
-        public double CreatureSpeed { get; set; } = 2.5;
+        public double CreatureSpeed { get; set; } = 4;
         public double NewGenerationInterval { get; set; } = 8;
         public double SecondsUntilNewGeneration { get; set; } = 8;
-        public int MaxCreatureProcessNodes { get; set; } = 3;
+        public int MaxCreatureProcessNodes { get; set; } = 2;
         public double MutationChance { get; set; } = 0.2;
+        public double ConnectionWeightBound { get; set; } = 4;
         #endregion
 
         #region Constructors
@@ -80,7 +81,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, MaxCreatureProcessNodes, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections))
+                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, MaxCreatureProcessNodes, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound))
                 {
                     GameHost = this,
                     X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
@@ -116,7 +117,7 @@ namespace MaceEvolve.Controls
                 NewCreature.Energy = 150;
                 NewCreature.SightRange = 100;
 
-                NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections);
+                NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
                 NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
                 NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
 
