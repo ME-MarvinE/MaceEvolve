@@ -44,7 +44,7 @@ namespace MaceEvolve.Controls
         public double NewGenerationInterval { get; set; } = 8;
         public double SecondsUntilNewGeneration { get; set; } = 8;
         public int MaxCreatureProcessNodes { get; set; } = 2;
-        public double MutationChance { get; set; } = 0.2;
+        public double MutationChance { get; set; } = 0.5;
         public double ConnectionWeightBound { get; set; } = 4;
         #endregion
 
@@ -73,7 +73,7 @@ namespace MaceEvolve.Controls
         public void Reset()
         {
             WorldBounds = new Rectangle(Bounds.Location, Bounds.Size);
-            SuccessBounds = new Rectangle(WorldBounds.Location, new Size(100, WorldBounds.Height));
+            SuccessBounds = new Rectangle(WorldBounds.Location, new Size(150, 150));
             Stopwatch.Reset();
             SecondsUntilNewGeneration = NewGenerationInterval;
             Creatures.Clear();
@@ -127,15 +127,23 @@ namespace MaceEvolve.Controls
         {
             List<Creature> CreaturesList = new List<Creature>(Creatures);
             List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
+            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
             List<Creature> NewCreatures = new List<Creature>();
+
+            foreach (var Creature in SuccessfulCreatures)
+            {
+                double DistanceFromSuccessBoundsCenter = Globals.GetDistanceFrom(Creature.X, Creature.Y, SuccessBounds.Right - SuccessBounds.Width / 2, SuccessBounds.Bottom - SuccessBounds.Height / 2);
+                double MaxDistanceFromCenter = Globals.Hypotenuse(SuccessBounds.Width / 2, SuccessBounds.Height / 2);
+                double CreatureFitness = Globals.Map(DistanceFromSuccessBoundsCenter, 0, MaxDistanceFromCenter, 1, 0);
+                SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
+            }
 
             while (NewCreatures.Count < MaxCreatureAmount && SuccessfulCreatures.Count > 0)
             {
                 int RandomSuccessfulCreatureNum = _Random.Next(0, SuccessfulCreatures.Count);
                 Creature RandomSuccessfulCreature = SuccessfulCreatures[RandomSuccessfulCreatureNum];
-                double CreatureFitness = Globals.Map(RandomSuccessfulCreature.X, SuccessBounds.Left, SuccessBounds.Right, 1, 0);
 
-                if (_Random.NextDouble() <= CreatureFitness)
+                if (_Random.NextDouble() <= SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
                 {
                     Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs, Globals.AllCreatureActions);
                     NewCreature.GameHost = this;

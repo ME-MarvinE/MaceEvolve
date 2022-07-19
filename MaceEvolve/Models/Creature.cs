@@ -92,19 +92,11 @@ namespace MaceEvolve.Models
         }
         public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
         {
-            return Food.Where(Food => GetDistanceFrom(Food.X, Food.Y) <= SightRange).OrderBy(Food => GetDistanceFrom(Food.X, Food.Y));
+            return Food.Where(Food => Globals.GetDistanceFrom(X, Y, Food.X, Food.Y) <= SightRange).OrderBy(Food => Globals.GetDistanceFrom(X, Y, Food.X, Food.Y));
         }
         public IEnumerable<Creature> GetVisibleCreatures(IEnumerable<Creature> Creatures)
         {
-            return Creatures.Where(Creature => GetDistanceFrom(Creature.X, Creature.Y) <= SightRange).OrderBy(Creature => GetDistanceFrom(Creature.X, Creature.Y));
-        }
-        public int GetDistanceFrom(int TargetX, int TargetY)
-        {
-            return (int)GetDistanceFrom((double)TargetX, (double)TargetY);
-        }
-        public double GetDistanceFrom(double TargetX, double TargetY)
-        {
-            return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
+            return Creatures.Where(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y) <= SightRange).OrderBy(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y));
         }
         public void Die()
         {
@@ -250,7 +242,7 @@ namespace MaceEvolve.Models
 
             if (ClosestCreature == null) { return 0; }
 
-            double DistanceFromCreature = Creature.GetDistanceFrom(ClosestCreature.X, ClosestCreature.Y);
+            double DistanceFromCreature = Globals.GetDistanceFrom(Creature.X, Creature.Y, ClosestCreature.X, ClosestCreature.Y);
 
             return Globals.Map(DistanceFromCreature, 0, Creature.SightRange, 0, 1);
         }
@@ -260,7 +252,7 @@ namespace MaceEvolve.Models
 
             if (ClosestFood == null) { return 0; }
 
-            double HorizontalDistanceToFood = Creature.GetDistanceFrom(ClosestFood.X, Creature.Y);
+            double HorizontalDistanceToFood = Globals.GetDistanceFrom(Creature.X, Creature.Y, ClosestFood.X, Creature.Y);
 
             return Globals.Map(HorizontalDistanceToFood, 0, Creature.SightRange, 0, 1);
         }
@@ -270,7 +262,7 @@ namespace MaceEvolve.Models
 
             if (ClosestFood == null) { return 0; }
 
-            double VerticalDistanceToFood = Creature.GetDistanceFrom(Creature.X, ClosestFood.Y);
+            double VerticalDistanceToFood = Globals.GetDistanceFrom(Creature.X, Creature.Y, Creature.X, ClosestFood.Y);
 
             return Globals.Map(VerticalDistanceToFood, 0, Creature.SightRange, 0, 1);
         }
@@ -295,7 +287,7 @@ namespace MaceEvolve.Models
         {
             Food ClosestFood = VisibleFood.FirstOrDefault();
 
-            if (ClosestFood != null && GetDistanceFrom(ClosestFood.X, ClosestFood.Y) <= Size / 2)
+            if (ClosestFood != null && Globals.GetDistanceFrom(X, Y, ClosestFood.X, ClosestFood.Y) <= Size / 2)
             {
                 Eat(ClosestFood);
                 return true;

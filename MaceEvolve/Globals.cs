@@ -74,6 +74,18 @@ namespace MaceEvolve
         {
             return Num * (1 - Num);
         }
+        public static int GetDistanceFrom(int X, int Y, int TargetX, int TargetY)
+        {
+            return (int)GetDistanceFrom((double)X, (double)Y, (double)TargetX, (double)TargetY);
+        }
+        public static double GetDistanceFrom(double X, double Y, double TargetX, double TargetY)
+        {
+            return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
+        }
+        public static double Hypotenuse(int A, int B)
+        {
+            return Math.Sqrt(Math.Pow(A, 2) + Math.Pow(B, 2));
+        }
         #endregion
     }
 }
