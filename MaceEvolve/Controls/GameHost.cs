@@ -40,12 +40,14 @@ namespace MaceEvolve.Controls
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 16;
         public int MaxCreatureConnections { get; set; } = 32;
-        public double CreatureSpeed { get; set; } = 4;
-        public double NewGenerationInterval { get; set; } = 16;
-        public double SecondsUntilNewGeneration { get; set; } = 16;
+        public double CreatureSpeed { get; set; } = 2.75;
+        public double NewGenerationInterval { get; set; } = 10;
+        public double SecondsUntilNewGeneration { get; set; } = 10;
         public int MaxCreatureProcessNodes { get; set; } = 5;
-        public double MutationChance { get; set; } = 0.5;
+        public double MutationChance { get; set; } = 0.2;
         public double ConnectionWeightBound { get; set; } = 4;
+        public double MaxCreatureEnergy { get; set; } = 150;
+        public double SuccessfulCreaturesPercentile { get; set; } = 50;
         #endregion
 
         #region Constructors
@@ -90,8 +92,24 @@ namespace MaceEvolve.Controls
                     Color = Color.FromArgb(255, 64, 64, _Random.Next(256)),
                     Speed = CreatureSpeed,
                     Metabolism = 0.1,
-                    Energy = 150,
+                    Energy = MaxCreatureEnergy,
+                    MaxEnergy = MaxCreatureEnergy,
                     SightRange = 100
+                });
+            }
+
+            for (int i = 0; i < MaxFoodAmount; i++)
+            {
+                Food.Add(new Apple()
+                {
+                    GameHost = this,
+                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
+                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
+                    Servings = 1,
+                    EnergyPerServing = 30,
+                    ServingDigestionCost = 0.05,
+                    Size = 7,
+                    Color = Color.Green
                 });
             }
         }
@@ -111,7 +129,8 @@ namespace MaceEvolve.Controls
                 NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
                 NewCreature.Speed = CreatureSpeed;
                 NewCreature.Metabolism = 0.1;
-                NewCreature.Energy = 150;
+                NewCreature.Energy = MaxCreatureEnergy;
+                NewCreature.MaxEnergy = MaxCreatureEnergy;
                 NewCreature.SightRange = 100;
 
                 NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
@@ -128,22 +147,38 @@ namespace MaceEvolve.Controls
             List<Creature> CreaturesList = new List<Creature>(Creatures);
             Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
             List<Creature> NewCreatures = new List<Creature>();
-            double MostFoodEaten = CreaturesList.Max(x => x.FoodEaten);
-            double FoodEaten = CreaturesList.Sum(x => x.FoodEaten);
 
-            foreach (var Creature in CreaturesList)
+            int TotalFoodEaten = CreaturesList.Count == 0 ? 0 : CreaturesList.Sum(x => x.FoodEaten);
+            int MostFoodEaten = CreaturesList.Count == 0 ? 0 : CreaturesList.Max(x => x.FoodEaten);
+            double AverageFoodEaten = CreaturesList.Count == 0 ? 0 : (double)TotalFoodEaten / CreaturesList.Count;
+            int TopPercentileStartingIndex = (int)(CreaturesList.Count * (1 - (double)SuccessfulCreaturesPercentile / 100)) - 1;
+
+            List<Creature> OrderedCreatures = CreaturesList.OrderBy(x => x.FoodEaten).ToList();
+            List<Creature> SuccessfulCreatures = new List<Creature>();
+
+            for (int i = (int)TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
             {
-                double CreatureFitness = Creature.FoodEaten == 0 ? 0 : Globals.Map(Creature.FoodEaten, 0, MostFoodEaten, 0, 1);
+                SuccessfulCreatures.Add(OrderedCreatures[i]);
+            }
+
+            if (SuccessfulCreatures.Count == 0)
+            {
+                SuccessfulCreatures = OrderedCreatures;
+            }
+
+            foreach (var Creature in SuccessfulCreatures)
+            {
+                double CreatureFitness = MostFoodEaten == 0 ? 0 : (double)Creature.FoodEaten / MostFoodEaten;
 
                 SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
             }
 
-            while (NewCreatures.Count < MaxCreatureAmount && CreaturesList.Count > 0)
+            while (NewCreatures.Count < MaxCreatureAmount && SuccessfulCreatures.Count > 0)
             {
-                int RandomSuccessfulCreatureNum = _Random.Next(0, CreaturesList.Count);
-                Creature RandomSuccessfulCreature = CreaturesList[RandomSuccessfulCreatureNum];
+                int RandomSuccessfulCreatureNum = _Random.Next(0, SuccessfulCreatures.Count);
+                Creature RandomSuccessfulCreature = SuccessfulCreatures[RandomSuccessfulCreatureNum];
 
-                if (MostFoodEaten == 0 || _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
+                if (TotalFoodEaten == 0 || _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
                 {
                     Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
                     NewCreature.GameHost = this;
@@ -153,7 +188,8 @@ namespace MaceEvolve.Controls
                     NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
                     NewCreature.Speed = CreatureSpeed;
                     NewCreature.Metabolism = 0.1;
-                    NewCreature.Energy = 150;
+                    NewCreature.Energy = MaxCreatureEnergy;
+                    NewCreature.MaxEnergy = MaxCreatureEnergy;
                     NewCreature.SightRange = 100;
 
                     NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
@@ -187,7 +223,7 @@ namespace MaceEvolve.Controls
                 Creature.Update();
             }
 
-            if (_Random.Next(0, 1001) <= 800) //80%
+            if (_Random.NextDouble() <= 0.8)
             {
                 if (FoodList.Count < MaxFoodAmount)
                 {

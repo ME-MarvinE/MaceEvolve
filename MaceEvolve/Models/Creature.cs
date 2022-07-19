@@ -18,6 +18,7 @@ namespace MaceEvolve.Models
         private double MoveCost { get; set; } = 0.5;
         public Genome Genome;
         public double Energy { get; set; } = 150;
+        public double MaxEnergy { get; set; } = 150;
         public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
@@ -256,7 +257,7 @@ namespace MaceEvolve.Models
         //Creature values map from 0 to 1.
         public static double PercentMaxEnergy(Creature Creature)
         {
-            return Globals.Map(Creature.Energy, 0, 100, 0, 1);
+            return Globals.Map(Creature.Energy, 0, Creature.MaxEnergy, 0, 1);
         }
         public static double ProximityToCreature(Creature Creature)
         {
