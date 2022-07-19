@@ -87,8 +87,8 @@ namespace MaceEvolve.Models
 
             List<Node> NodesList = new List<Node>(Nodes);
 
-            Dictionary<int, Node> PossibleSourceNodes = NodesList.Where(x => x.NodeType == NodeType.Input || x.NodeType == NodeType.Process).ToDictionary(x => NodesList.IndexOf(x), x => x);
-            Dictionary<int, Node> PossibleTargetNodes = NodesList.Where(x => x.NodeType == NodeType.Output || x.NodeType == NodeType.Process).ToDictionary(x => NodesList.IndexOf(x), x => x);
+            Dictionary<int, Node> PossibleSourceNodes = GetPossibleSourceNodes(NodesList).ToDictionary(x => NodesList.IndexOf(x), x => x);
+            Dictionary<int, Node> PossibleTargetNodes = GetPossibleTargetNodes(NodesList).ToDictionary(x => NodesList.IndexOf(x), x => x);
 
             if (PossibleSourceNodes.Count == 0) { throw new InvalidOperationException("No possible source nodes."); }
             if (PossibleTargetNodes.Count == 0) { throw new InvalidOperationException("No possible target nodes."); }
@@ -127,7 +127,7 @@ namespace MaceEvolve.Models
         {
             return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(this));
         }
-        public void MutateConnectionWeights(double MutationChancePerNode)
+        public static void MutateNodeBiases(double MutationChancePerNode, IEnumerable<Node> Nodes)
         {
             foreach (var Node in Nodes)
             {
@@ -137,7 +137,32 @@ namespace MaceEvolve.Models
                 }
             }
         }
-        public void MutateNodeBiases(double MutationChancePerConnection)
+        public static void MutateConnections(double MutationChancePerConnection, IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
+        {
+            List<Node> NodesList = new List<Node>(Nodes);
+
+            List<Node> PossibleSourceNodes = GetPossibleSourceNodes(NodesList).ToList();
+            List<Node> PossibleTargetNodes = GetPossibleTargetNodes(NodesList).ToList();
+
+            foreach (var Connection in Connections)
+            {
+                if (Globals.Random.NextDouble() <= MutationChancePerConnection)
+                {
+                    int RandomNum = Globals.Random.Next(3);
+
+                    if (RandomNum == 0 || RandomNum == 2)
+                    {
+                        Connection.SourceId = GetNodeId(PossibleSourceNodes[Globals.Random.Next(PossibleSourceNodes.Count)], NodesList);
+                    }
+
+                    if (RandomNum == 1 || RandomNum == 2)
+                    {
+                        Connection.TargetId = GetNodeId(PossibleTargetNodes[Globals.Random.Next(PossibleTargetNodes.Count)], NodesList);
+                    }
+                }
+            }
+        }
+        public static void MutateConnectionWeights(double MutationChancePerConnection, IEnumerable<Connection> Connections)
         {
             foreach (var Connection in Connections)
             {
@@ -146,6 +171,22 @@ namespace MaceEvolve.Models
                     Connection.Weight = Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1);
                 }
             }
+        }
+        public int GetNodeId(Node Node)
+        {
+            return GetNodeId(Node, Nodes);
+        }
+        public static int GetNodeId(Node Node, List<Node> Nodes)
+        {
+            return Nodes.IndexOf(Node);
+        }
+        public static IEnumerable<Node> GetPossibleSourceNodes(IEnumerable<Node> Nodes)
+        {
+            return Nodes.Where(x => x.NodeType == NodeType.Input || x.NodeType == NodeType.Process);
+        }
+        public static IEnumerable<Node> GetPossibleTargetNodes(IEnumerable<Node> Nodes)
+        {
+            return Nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
         }
         #endregion
     }

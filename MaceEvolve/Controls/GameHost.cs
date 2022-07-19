@@ -43,7 +43,8 @@ namespace MaceEvolve.Controls
         public double CreatureSpeed { get; set; } = 2.5;
         public double NewGenerationInterval { get; set; } = 8;
         public double SecondsUntilNewGeneration { get; set; } = 8;
-        public int MaxCreatureProcessNodes { get; set; } = 5;
+        public int MaxCreatureProcessNodes { get; set; } = 3;
+        public double MutationChance { get; set; } = 0.2;
         #endregion
 
         #region Constructors
@@ -115,8 +116,9 @@ namespace MaceEvolve.Controls
                 NewCreature.Energy = 150;
                 NewCreature.SightRange = 100;
 
-                NewCreature.Brain.MutateConnectionWeights(0.2);
-                NewCreature.Brain.MutateNodeBiases(0.2);
+                NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections);
+                NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
 
                 NewCreatures.Add(NewCreature);
             }
