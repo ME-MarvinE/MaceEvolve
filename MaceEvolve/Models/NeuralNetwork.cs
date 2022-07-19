@@ -150,7 +150,7 @@ namespace MaceEvolve.Models
                 {
                     int RandomNum = Globals.Random.Next(3);
 
-                    if (PossibleSourceNodes.Count > 0 && RandomNum == 0 || RandomNum == 2)
+                    if (PossibleSourceNodes.Count > 0 && (RandomNum == 0 || RandomNum == 2))
                     {
                         int RandomNodeNum = Globals.Random.Next(PossibleSourceNodes.Count);
                         Node RandomNode = PossibleSourceNodes[RandomNodeNum];
@@ -158,7 +158,7 @@ namespace MaceEvolve.Models
                         Connection.SourceId = GetNodeId(RandomNode, NodesList);
                     }
 
-                    if (PossibleTargetNodes.Count > 0 && RandomNum == 1 || RandomNum == 2)
+                    if (PossibleTargetNodes.Count > 0 && (RandomNum == 1 || RandomNum == 2))
                     {
                         int RandomNodeNum = Globals.Random.Next(PossibleTargetNodes.Count);
                         Node RandomNode = PossibleTargetNodes[RandomNodeNum];

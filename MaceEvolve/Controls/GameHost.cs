@@ -160,7 +160,7 @@ namespace MaceEvolve.Controls
         }
         public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
         {
-            return Creatures.Where(x => x.MX > SuccessBounds.Left && x.MX < SuccessBounds.Right && x.MX > SuccessBounds.Top && x.MX < SuccessBounds.Bottom);
+            return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom);
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
