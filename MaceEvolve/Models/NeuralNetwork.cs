@@ -19,11 +19,11 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Constructors
-        public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+        public NeuralNetwork(List<CreatureInput> Inputs, int MaxProcessNodes, List<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
             : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
-        public NeuralNetwork(IEnumerable<CreatureInput> Inputs, int MaxProcessNodes, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
+        public NeuralNetwork(List<CreatureInput> Inputs, int MaxProcessNodes, List<CreatureAction> Actions, List<Connection> Connections)
             : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), Connections)
         {
         }
@@ -32,35 +32,35 @@ namespace MaceEvolve.Models
         {
         }
         public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, int MinConnections, int MaxConnections, double ConnectionWeightBound)
-            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), MinConnections, MaxConnections, ConnectionWeightBound)
+            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput).ToList(), OutputNodes.Select(x => x.CreatureAction).ToList(), MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
-        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
+        public NeuralNetwork(IEnumerable<Node> Nodes, List<Connection> Connections)
             : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Connections)
         {
         }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<Connection> Connections)
-            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput), OutputNodes.Select(x => x.CreatureAction), Connections)
+        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, List<Connection> Connections)
+            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput).ToList(), OutputNodes.Select(x => x.CreatureAction).ToList(), Connections)
         {
         }
-        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+        public NeuralNetwork(IEnumerable<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
             : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
             : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes), ConnectionWeightBound))
         {
         }
-        public NeuralNetwork(IEnumerable<Node> Nodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
+        public NeuralNetwork(IEnumerable<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
             : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, Connections)
         {
         }
         [JsonConstructor]
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions, IEnumerable<Connection> Connections)
+        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
         {
-            this.Inputs = new List<CreatureInput>(Inputs);
-            this.Actions = new List<CreatureAction>(Actions);
-            this.Connections = new List<Connection>(Connections);
+            this.Inputs = Inputs;
+            this.Actions = Actions;
+            this.Connections = Connections;
 
             Nodes.AddRange(InputNodes);
             Nodes.AddRange(ProcessNodes);

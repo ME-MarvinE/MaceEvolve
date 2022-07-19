@@ -103,7 +103,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs, Globals.AllCreatureActions);
+                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
                 NewCreature.GameHost = this;
                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -145,7 +145,7 @@ namespace MaceEvolve.Controls
 
                 if (_Random.NextDouble() <= SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
                 {
-                    Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs, Globals.AllCreatureActions);
+                    Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
                     NewCreature.GameHost = this;
                     NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                     NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
