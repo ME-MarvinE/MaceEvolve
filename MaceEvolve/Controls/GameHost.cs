@@ -95,18 +95,15 @@ namespace MaceEvolve.Controls
                 });
             }
         }
-        public void NewGeneration()
+        public void NewGenerationSexual()
         {
-            List<Food> FoodList = new List<Food>(Food);
             List<Creature> CreaturesList = new List<Creature>(Creatures);
-            List<Creature> SuccessfulCreatures = CreaturesList.Where(x => x.MX > SuccessBounds.Left && x.MX < SuccessBounds.Right && x.MX > SuccessBounds.Top && x.MX < SuccessBounds.Bottom).ToList();
+            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
             List<Creature> NewCreatures = new List<Creature>();
-
-            List<Creature> RandomCreatures = new List<Creature>();
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creature NewCreature = Creature.SexuallyReproduce(SuccessfulCreatures, Globals.AllCreatureInputs, Globals.AllCreatureActions);
+                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs, Globals.AllCreatureActions);
                 NewCreature.GameHost = this;
                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -125,6 +122,45 @@ namespace MaceEvolve.Controls
             }
 
             Creatures = NewCreatures;
+        }
+        public void NewGenerationAsexual()
+        {
+            List<Creature> CreaturesList = new List<Creature>(Creatures);
+            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
+            List<Creature> NewCreatures = new List<Creature>();
+
+            while (NewCreatures.Count < MaxCreatureAmount && SuccessfulCreatures.Count > 0)
+            {
+                int RandomSuccessfulCreatureNum = _Random.Next(0, SuccessfulCreatures.Count);
+                Creature RandomSuccessfulCreature = SuccessfulCreatures[RandomSuccessfulCreatureNum];
+                double CreatureFitness = Globals.Map(RandomSuccessfulCreature.X, SuccessBounds.Left, SuccessBounds.Right, 1, 0);
+
+                if (_Random.NextDouble() <= CreatureFitness)
+                {
+                    Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs, Globals.AllCreatureActions);
+                    NewCreature.GameHost = this;
+                    NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+                    NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+                    NewCreature.Size = 10;
+                    NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+                    NewCreature.Speed = CreatureSpeed;
+                    NewCreature.Metabolism = 0.1;
+                    NewCreature.Energy = 150;
+                    NewCreature.SightRange = 100;
+
+                    NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+                    NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                    NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
+
+                    NewCreatures.Add(NewCreature);
+                }
+            }
+
+            Creatures = NewCreatures;
+        }
+        public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
+        {
+            return Creatures.Where(x => x.MX > SuccessBounds.Left && x.MX < SuccessBounds.Right && x.MX > SuccessBounds.Top && x.MX < SuccessBounds.Bottom);
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
@@ -195,7 +231,7 @@ namespace MaceEvolve.Controls
             if (SecondsUntilNewGeneration <= 0)
             {
                 SecondsUntilNewGeneration = NewGenerationInterval;
-                NewGeneration();
+                NewGenerationAsexual();
             }
             else
             {

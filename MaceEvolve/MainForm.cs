@@ -34,7 +34,7 @@ namespace MaceEvolve
 
         private void NextGenButton_Click(object sender, EventArgs e)
         {
-            MainGameHost.NewGeneration();
+            MainGameHost.NewGenerationAsexual();
         }
     }
 }

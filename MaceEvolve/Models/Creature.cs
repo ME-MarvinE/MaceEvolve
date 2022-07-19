@@ -146,7 +146,7 @@ namespace MaceEvolve.Models
                 OutputNode.EvaluateValue(Brain);
             }
         }
-        public static Creature SexuallyReproduce(IEnumerable<Creature> Parents, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions)
+        public static Creature Reproduce(IEnumerable<Creature> Parents, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions)
         {
             List<Connection> OffspringConnections = new List<Connection>();
             List<Node> OffspringNodes = new List<Node>();
@@ -238,7 +238,6 @@ namespace MaceEvolve.Models
 
             return new Creature(new NeuralNetwork(OffspringNodes, Inputs, Actions, OffspringConnections));
         }
-
         #region CreatureValues
         //Creature values map from 0 to 1.
         public static double PercentMaxEnergy(Creature Creature)
