@@ -41,9 +41,9 @@ namespace MaceEvolve.Controls
         public int MinCreatureConnections { get; set; } = 16;
         public int MaxCreatureConnections { get; set; } = 32;
         public double CreatureSpeed { get; set; } = 4;
-        public double NewGenerationInterval { get; set; } = 8;
-        public double SecondsUntilNewGeneration { get; set; } = 8;
-        public int MaxCreatureProcessNodes { get; set; } = 2;
+        public double NewGenerationInterval { get; set; } = 16;
+        public double SecondsUntilNewGeneration { get; set; } = 16;
+        public int MaxCreatureProcessNodes { get; set; } = 5;
         public double MutationChance { get; set; } = 0.5;
         public double ConnectionWeightBound { get; set; } = 4;
         #endregion
@@ -103,7 +103,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs, Globals.AllCreatureActions);
+                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
                 NewCreature.GameHost = this;
                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -145,7 +145,7 @@ namespace MaceEvolve.Controls
 
                 if (MostFoodEaten == 0 || _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
                 {
-                    Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs, Globals.AllCreatureActions);
+                    Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
                     NewCreature.GameHost = this;
                     NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                     NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
