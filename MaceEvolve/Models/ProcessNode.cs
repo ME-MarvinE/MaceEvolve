@@ -16,7 +16,7 @@ namespace MaceEvolve.Models
         public override double GetWeightedSum(NeuralNetwork Network)
         {
             double WeightedSum = 0;
-            int MyId = Network.Nodes.IndexOf(this);
+            int MyId = Network.GetNodeId(this);
 
             foreach (var Connection in Network.Connections.Where(x => x.TargetId == MyId))
             {

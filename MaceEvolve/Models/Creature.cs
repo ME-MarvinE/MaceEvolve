@@ -14,7 +14,7 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Properties
-        public NeuralNetwork Brain { get; }
+        public NeuralNetwork Brain { get; set; }
         private double MoveCost { get; set; } = 0.5;
         public Genome Genome;
         public double Energy { get; set; } = 150;
@@ -23,6 +23,7 @@ namespace MaceEvolve.Models
         public double Metabolism { get; set; } = 0.1;
         public List<Food> VisibleFood { get; set; }
         public List<Creature> VisibleCreatures { get; set; }
+        public int FoodEaten { get; set; }
         //public int StomachSize { get; set; } = 5;
         //public List<Food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
@@ -138,13 +139,16 @@ namespace MaceEvolve.Models
                 OutputNode.EvaluateValue(Brain);
             }
         }
-        public static Creature Reproduce(IEnumerable<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions)
+        public static Creature Reproduce(IEnumerable<Creature> Parents, IEnumerable<CreatureInput> Inputs, IEnumerable<CreatureAction> Actions)
         {
             List<Connection> OffspringConnections = new List<Connection>();
             List<Node> OffspringNodes = new List<Node>();
             List<Creature> ParentsList = new List<Creature>(Parents);
             List<Connection> AvailableParentConnections = new List<Connection>();
             Dictionary<Node, Node> ParentNodeToOffSpringNodeMap = new Dictionary<Node, Node>();
+
+            Creature OffSpring = new Creature(new NeuralNetwork(NeuralNetwork.GenerateInputNodes(Inputs), new List<ProcessNode>(), NeuralNetwork.GenerateOutputNodes(Actions), new List<Connection>()));
+            //Creature OffSpring = new Creature(new NeuralNetwork(OffspringNodes, Inputs, Actions, OffspringConnections));
 
             foreach (var Parent in ParentsList)
             {
@@ -228,7 +232,7 @@ namespace MaceEvolve.Models
                 AvailableParentConnections.Remove(RandomParentConnection);
             }
 
-            return new Creature(new NeuralNetwork(OffspringNodes, Inputs, Actions, OffspringConnections));
+            return OffSpring;
         }
         #region CreatureValues
         //Creature values map from 0 to 1.
@@ -281,6 +285,7 @@ namespace MaceEvolve.Models
         {
             Energy -= Food.ServingDigestionCost;
             Food.Servings -= 1;
+            FoodEaten += 1;
             Energy += Food.EnergyPerServing;
         }
         public bool TryEatFoodInRange()

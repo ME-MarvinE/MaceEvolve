@@ -38,8 +38,8 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 15;
-        public int MaxCreatureConnections { get; set; } = 20;
+        public int MinCreatureConnections { get; set; } = 16;
+        public int MaxCreatureConnections { get; set; } = 32;
         public double CreatureSpeed { get; set; } = 4;
         public double NewGenerationInterval { get; set; } = 8;
         public double SecondsUntilNewGeneration { get; set; } = 8;
@@ -103,7 +103,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
+                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs, Globals.AllCreatureActions);
                 NewCreature.GameHost = this;
                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -126,26 +126,26 @@ namespace MaceEvolve.Controls
         public void NewGenerationAsexual()
         {
             List<Creature> CreaturesList = new List<Creature>(Creatures);
-            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
             Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
             List<Creature> NewCreatures = new List<Creature>();
+            double MostFoodEaten = CreaturesList.Max(x => x.FoodEaten);
+            double FoodEaten = CreaturesList.Sum(x => x.FoodEaten);
 
-            foreach (var Creature in SuccessfulCreatures)
+            foreach (var Creature in CreaturesList)
             {
-                double DistanceFromSuccessBoundsCenter = Globals.GetDistanceFrom(Creature.X, Creature.Y, SuccessBounds.Right - SuccessBounds.Width / 2, SuccessBounds.Bottom - SuccessBounds.Height / 2);
-                double MaxDistanceFromCenter = Globals.Hypotenuse(SuccessBounds.Width / 2, SuccessBounds.Height / 2);
-                double CreatureFitness = Globals.Map(DistanceFromSuccessBoundsCenter, 0, MaxDistanceFromCenter, 1, 0);
+                double CreatureFitness = Creature.FoodEaten == 0 ? 0 : Globals.Map(Creature.FoodEaten, 0, MostFoodEaten, 0, 1);
+
                 SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
             }
 
-            while (NewCreatures.Count < MaxCreatureAmount && SuccessfulCreatures.Count > 0)
+            while (NewCreatures.Count < MaxCreatureAmount && CreaturesList.Count > 0)
             {
-                int RandomSuccessfulCreatureNum = _Random.Next(0, SuccessfulCreatures.Count);
-                Creature RandomSuccessfulCreature = SuccessfulCreatures[RandomSuccessfulCreatureNum];
+                int RandomSuccessfulCreatureNum = _Random.Next(0, CreaturesList.Count);
+                Creature RandomSuccessfulCreature = CreaturesList[RandomSuccessfulCreatureNum];
 
-                if (_Random.NextDouble() <= SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
+                if (MostFoodEaten == 0 || _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
                 {
-                    Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
+                    Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs, Globals.AllCreatureActions);
                     NewCreature.GameHost = this;
                     NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                     NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
