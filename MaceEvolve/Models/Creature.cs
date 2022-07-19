@@ -107,7 +107,7 @@ namespace MaceEvolve.Models
         {
             Think();
 
-            List<OutputNode> OrderedOutputNodes = Brain.OutputNodes.OrderBy(x => x.PreviousOutput).ToList();
+            List<OutputNode> OrderedOutputNodes = NeuralNetwork.GetOutputNodes(Brain.Nodes).OrderBy(x => x.PreviousOutput).ToList();
             OutputNode HighestOutputNode = OrderedOutputNodes.LastOrDefault();
 
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
@@ -133,7 +133,7 @@ namespace MaceEvolve.Models
         }
         public void UpdateOutputValues()
         {
-            foreach (var OutputNode in Brain.OutputNodes)
+            foreach (var OutputNode in NeuralNetwork.GetOutputNodes(Brain.Nodes))
             {
                 OutputNode.EvaluateValue(Brain);
             }

@@ -13,9 +13,6 @@ namespace MaceEvolve.Models
         public List<CreatureInput> Inputs { get; } = new List<CreatureInput>();
         public Dictionary<CreatureInput, double> InputValues { get; } = new Dictionary<CreatureInput, double>();
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
-        public List<InputNode> InputNodes { get; } = new List<InputNode>();
-        public List<ProcessNode> ProcessNodes { get; } = new List<ProcessNode>();
-        public List<OutputNode> OutputNodes { get; } = new List<OutputNode>();
         [JsonIgnore]
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
@@ -63,14 +60,11 @@ namespace MaceEvolve.Models
         {
             this.Inputs = new List<CreatureInput>(Inputs);
             this.Actions = new List<CreatureAction>(Actions);
-            this.InputNodes = new List<InputNode>(InputNodes);
-            this.ProcessNodes = new List<ProcessNode>(ProcessNodes);
-            this.OutputNodes = new List<OutputNode>(OutputNodes);
             this.Connections = new List<Connection>(Connections);
 
-            Nodes.AddRange(this.InputNodes);
-            Nodes.AddRange(this.ProcessNodes);
-            Nodes.AddRange(this.OutputNodes);
+            Nodes.AddRange(InputNodes);
+            Nodes.AddRange(ProcessNodes);
+            Nodes.AddRange(OutputNodes);
 
             foreach (var Input in Inputs)
             {
@@ -193,6 +187,18 @@ namespace MaceEvolve.Models
         public static IEnumerable<Node> GetPossibleTargetNodes(IEnumerable<Node> Nodes)
         {
             return Nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
+        }
+        public static IEnumerable<InputNode> GetInputNodes(IEnumerable<Node> Nodes)
+        {
+            return Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>();
+        }
+        public static IEnumerable<ProcessNode> GetProcessNodes(IEnumerable<Node> Nodes)
+        {
+            return Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>();
+        }
+        public static IEnumerable<OutputNode> GetOutputNodes(IEnumerable<Node> Nodes)
+        {
+            return Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>();
         }
         #endregion
     }
