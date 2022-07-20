@@ -56,9 +56,9 @@
             this.lblGenerationCount.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.lblGenerationCount.Location = new System.Drawing.Point(13, 11);
             this.lblGenerationCount.Name = "lblGenerationCount";
-            this.lblGenerationCount.Size = new System.Drawing.Size(78, 32);
+            this.lblGenerationCount.Size = new System.Drawing.Size(75, 32);
             this.lblGenerationCount.TabIndex = 3;
-            this.lblGenerationCount.Text = "Gen 0";
+            this.lblGenerationCount.Text = "Gen 1";
             // 
             // GameHost
             // 

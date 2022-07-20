@@ -31,7 +31,7 @@ namespace MaceEvolve
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            System.Diagnostics.Stopwatch stopwatch3 = new System.Diagnostics.Stopwatch();
+            System.Diagnostics.Stopwatch stopwatch1 = new System.Diagnostics.Stopwatch();
             this.MainGameHost = new MaceEvolve.Controls.GameHost();
             this.StartButton = new System.Windows.Forms.Button();
             this.StopButton = new System.Windows.Forms.Button();
@@ -56,7 +56,7 @@ namespace MaceEvolve
             this.MainGameHost.NewGenerationInterval = 10D;
             this.MainGameHost.SecondsUntilNewGeneration = 10D;
             this.MainGameHost.Size = new System.Drawing.Size(1067, 597);
-            this.MainGameHost.Stopwatch = stopwatch3;
+            this.MainGameHost.Stopwatch = stopwatch1;
             this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(0, 0, 150, 150);
             this.MainGameHost.SuccessfulCreaturesPercentile = 50D;
             this.MainGameHost.TabIndex = 0;
@@ -65,6 +65,7 @@ namespace MaceEvolve
             // 
             // StartButton
             // 
+            this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.StartButton.Location = new System.Drawing.Point(737, 12);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 32);
@@ -75,6 +76,7 @@ namespace MaceEvolve
             // 
             // StopButton
             // 
+            this.StopButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.StopButton.Location = new System.Drawing.Point(818, 12);
             this.StopButton.Name = "StopButton";
             this.StopButton.Size = new System.Drawing.Size(75, 32);
@@ -85,6 +87,7 @@ namespace MaceEvolve
             // 
             // ResetButton
             // 
+            this.ResetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ResetButton.Location = new System.Drawing.Point(899, 12);
             this.ResetButton.Name = "ResetButton";
             this.ResetButton.Size = new System.Drawing.Size(75, 32);
@@ -95,6 +98,7 @@ namespace MaceEvolve
             // 
             // NextGenButton
             // 
+            this.NextGenButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.NextGenButton.Location = new System.Drawing.Point(980, 12);
             this.NextGenButton.Name = "NextGenButton";
             this.NextGenButton.Size = new System.Drawing.Size(75, 32);

@@ -38,17 +38,17 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 32;
-        public int MaxCreatureConnections { get; set; } = 32;
+        public int MinCreatureConnections { get; set; } = 64;
+        public int MaxCreatureConnections { get; set; } = 64;
         public double CreatureSpeed { get; set; } = 2.75;
         public double NewGenerationInterval { get; set; } = 10;
         public double SecondsUntilNewGeneration { get; set; } = 10;
-        public int MaxCreatureProcessNodes { get; set; } = 5;
-        public double MutationChance { get; set; } = 0.2;
+        public int MaxCreatureProcessNodes { get; set; } = 8;
+        public double MutationChance { get; set; } = 0.1;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
-        public double SuccessfulCreaturesPercentile { get; set; } = 50;
-        public int GenerationCount = 0;
+        public double SuccessfulCreaturesPercentile { get; set; } = 75;
+        public int GenerationCount = 1;
         #endregion
 
         #region Constructors
@@ -80,8 +80,8 @@ namespace MaceEvolve.Controls
             Stopwatch.Reset();
             SecondsUntilNewGeneration = NewGenerationInterval;
             Creatures.Clear();
-            Food.Clear();
-            GenerationCount = 0;
+            ResetFood();
+            GenerationCount = 1;
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
@@ -100,22 +100,8 @@ namespace MaceEvolve.Controls
                 });
             }
 
-            for (int i = 0; i < MaxFoodAmount; i++)
-            {
-                Food.Add(new Apple()
-                {
-                    GameHost = this,
-                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
-                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
-                    Servings = 1,
-                    EnergyPerServing = 30,
-                    ServingDigestionCost = 0.05,
-                    Size = 7,
-                    Color = Color.Green
-                });
-            }
-
             lblGenerationCount.Text = $"Gen {GenerationCount}";
+            Invalidate();
         }
         public void NewGenerationSexual()
         {
@@ -164,6 +150,7 @@ namespace MaceEvolve.Controls
             }
 
             Creatures = NewCreatures;
+            ResetFood();
             GenerationCount += 1;
         }
         public void NewGenerationAsexual()
@@ -246,6 +233,7 @@ namespace MaceEvolve.Controls
             }
 
             Creatures = NewCreatures;
+            ResetFood();
             GenerationCount += 1;
         }
         public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
@@ -328,6 +316,25 @@ namespace MaceEvolve.Controls
             else
             {
                 SecondsUntilNewGeneration -= 0.1;
+            }
+        }
+        public void ResetFood()
+        {
+            Food.Clear();
+
+            for (int i = 0; i < MaxFoodAmount; i++)
+            {
+                Food.Add(new Apple()
+                {
+                    GameHost = this,
+                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
+                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
+                    Servings = 1,
+                    EnergyPerServing = 30,
+                    ServingDigestionCost = 0.05,
+                    Size = 7,
+                    Color = Color.Green
+                });
             }
         }
         #endregion
