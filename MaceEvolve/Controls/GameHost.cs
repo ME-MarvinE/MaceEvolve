@@ -38,7 +38,7 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 16;
+        public int MinCreatureConnections { get; set; } = 32;
         public int MaxCreatureConnections { get; set; } = 32;
         public double CreatureSpeed { get; set; } = 2.75;
         public double NewGenerationInterval { get; set; } = 10;
@@ -133,6 +133,19 @@ namespace MaceEvolve.Controls
                 NewCreature.MaxEnergy = MaxCreatureEnergy;
                 NewCreature.SightRange = 100;
 
+                IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
+                IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
+
+                foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
+                {
+                    NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
+                }
+
+                foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
+                {
+                    NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
+                }
+
                 NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
                 NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
                 NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
@@ -192,9 +205,24 @@ namespace MaceEvolve.Controls
                     NewCreature.MaxEnergy = MaxCreatureEnergy;
                     NewCreature.SightRange = 100;
 
-                    NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-                    NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                    IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
+                    IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
+
+                    foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
+                    {
+                        NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, 0));
+                    }
+
+                    foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
+                    {
+                        NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, 0));
+                    }
+
                     NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
+
+                    NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                    NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+
 
                     NewCreatures.Add(NewCreature);
                 }
