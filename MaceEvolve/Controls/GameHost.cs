@@ -83,92 +83,155 @@ namespace MaceEvolve.Controls
             ResetFood();
             GenerationCount = 1;
 
-            for (int i = 0; i < MaxCreatureAmount; i++)
-            {
-                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, MaxCreatureProcessNodes, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound))
-                {
-                    GameHost = this,
-                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
-                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
-                    Size = 10,
-                    Color = Color.FromArgb(255, 64, 64, _Random.Next(256)),
-                    Speed = CreatureSpeed,
-                    Metabolism = 0.1,
-                    Energy = MaxCreatureEnergy,
-                    MaxEnergy = MaxCreatureEnergy,
-                    SightRange = 100
-                });
-            }
+            Creatures.AddRange(GenerateCreatures());
 
             lblGenerationCount.Text = $"Gen {GenerationCount}";
             Invalidate();
         }
-        public void NewGenerationSexual()
+        public List<Creature> NewGenerationSexual()
         {
             List<Creature> CreaturesList = new List<Creature>(Creatures);
             List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
             List<Creature> NewCreatures = new List<Creature>();
 
-            for (int i = 0; i < MaxCreatureAmount; i++)
+            int TotalFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Sum(x => x.FoodEaten);
+            int MostFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Max(x => x.FoodEaten);
+
+            if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
             {
-                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
-                NewCreature.GameHost = this;
-                NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
-                NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
-                NewCreature.Size = 10;
-                NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
-                NewCreature.Speed = CreatureSpeed;
-                NewCreature.Metabolism = 0.1;
-                NewCreature.Energy = MaxCreatureEnergy;
-                NewCreature.MaxEnergy = MaxCreatureEnergy;
-                NewCreature.SightRange = 100;
-
-                IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
-                IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
-                IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
-
-                foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
+                for (int i = 0; i < MaxCreatureAmount; i++)
                 {
-                    NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
+                    Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
+                    NewCreature.GameHost = this;
+                    NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+                    NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+                    NewCreature.Size = 10;
+                    NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+                    NewCreature.Speed = CreatureSpeed;
+                    NewCreature.Metabolism = 0.1;
+                    NewCreature.Energy = MaxCreatureEnergy;
+                    NewCreature.MaxEnergy = MaxCreatureEnergy;
+                    NewCreature.SightRange = 100;
+
+                    IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
+                    IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
+                    IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
+
+                    foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
+                    {
+                        NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
+                    }
+
+                    foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
+                    {
+                        NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
+                    }
+
+                    for (int j = NewCreatureProcessNodes.Count(); j < MaxCreatureProcessNodes; j++)
+                    {
+                        NewCreature.Brain.Nodes.Add(new ProcessNode(0));
+                    }
+
+                    NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+                    NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                    NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
+
+                    NewCreatures.Add(NewCreature);
                 }
-
-                foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
-                {
-                    NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
-                }
-
-                for (int j = NewCreatureProcessNodes.Count(); j < MaxCreatureProcessNodes; j++)
-                {
-                    NewCreature.Brain.Nodes.Add(new ProcessNode(0));
-                }
-
-                NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-                NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
-                NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
-
-                NewCreatures.Add(NewCreature);
             }
 
-            Creatures = NewCreatures;
-            ResetFood();
-            GenerationCount += 1;
+            return NewCreatures;
         }
-        public void NewGenerationAsexual()
+        public List<Creature> NewGenerationAsexual()
         {
             List<Creature> CreaturesList = new List<Creature>(Creatures);
             Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
             List<Creature> NewCreatures = new List<Creature>();
 
-            int TotalFoodEaten = CreaturesList.Count == 0 ? 0 : CreaturesList.Sum(x => x.FoodEaten);
-            int MostFoodEaten = CreaturesList.Count == 0 ? 0 : CreaturesList.Max(x => x.FoodEaten);
+            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList);
+
+            int TotalFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Sum(x => x.FoodEaten);
+            int MostFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Max(x => x.FoodEaten);
+
+            foreach (var Creature in SuccessfulCreatures)
+            {
+                double CreatureFitness = MostFoodEaten == 0 ? 0 : (double)Creature.FoodEaten / MostFoodEaten;
+
+                SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
+            }
+
+            if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
+            {
+                while (NewCreatures.Count < MaxCreatureAmount)
+                {
+                    int RandomSuccessfulCreatureNum = _Random.Next(0, SuccessfulCreatures.Count);
+                    Creature RandomSuccessfulCreature = SuccessfulCreatures[RandomSuccessfulCreatureNum];
+
+                    if (TotalFoodEaten > 0 && _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
+                    {
+                        for (int i = 0; i < RandomSuccessfulCreature.FoodEaten; i++)
+                        {
+                            Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
+                            NewCreature.GameHost = this;
+                            NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+                            NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+                            NewCreature.Size = 10;
+                            NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+                            NewCreature.Speed = CreatureSpeed;
+                            NewCreature.Metabolism = 0.1;
+                            NewCreature.Energy = MaxCreatureEnergy;
+                            NewCreature.MaxEnergy = MaxCreatureEnergy;
+                            NewCreature.SightRange = 100;
+
+                            IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
+                            IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
+                            IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
+
+                            foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
+                            {
+                                NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, 0));
+                            }
+
+                            foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
+                            {
+                                NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, 0));
+                            }
+
+                            for (int j = NewCreatureProcessNodes.Count(); j < MaxCreatureProcessNodes; j++)
+                            {
+                                NewCreature.Brain.Nodes.Add(new ProcessNode(0));
+                            }
+
+                            NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
+
+                            NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                            NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+
+
+                            NewCreatures.Add(NewCreature);
+
+                            if (NewCreatures.Count >= MaxCreatureAmount)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return NewCreatures;
+        }
+        public List<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
+        {
+            //return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom).ToList();
 
             double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
-            int TopPercentileStartingIndex = (int)(CreaturesList.Count * IndexMultiplierForTopPercentile) - 1;
+            int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
 
-            List<Creature> OrderedCreatures = CreaturesList.OrderBy(x => x.FoodEaten).ToList();
+            List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
             List<Creature> SuccessfulCreatures = new List<Creature>();
 
-            for (int i = (int)TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
+            for (int i = TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
             {
                 SuccessfulCreatures.Add(OrderedCreatures[i]);
             }
@@ -178,76 +241,7 @@ namespace MaceEvolve.Controls
                 SuccessfulCreatures = OrderedCreatures;
             }
 
-            foreach (var Creature in SuccessfulCreatures)
-            {
-                double CreatureFitness = MostFoodEaten == 0 ? 0 : (double)Creature.FoodEaten / MostFoodEaten;
-
-                SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
-            }
-
-            while (NewCreatures.Count < MaxCreatureAmount && SuccessfulCreatures.Count > 0)
-            {
-                int RandomSuccessfulCreatureNum = _Random.Next(0, SuccessfulCreatures.Count);
-                Creature RandomSuccessfulCreature = SuccessfulCreatures[RandomSuccessfulCreatureNum];
-
-                if (TotalFoodEaten == 0 || _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
-                {
-                    for (int i = 0; i < RandomSuccessfulCreature.FoodEaten; i++)
-                    {
-                        Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
-                        NewCreature.GameHost = this;
-                        NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
-                        NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
-                        NewCreature.Size = 10;
-                        NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
-                        NewCreature.Speed = CreatureSpeed;
-                        NewCreature.Metabolism = 0.1;
-                        NewCreature.Energy = MaxCreatureEnergy;
-                        NewCreature.MaxEnergy = MaxCreatureEnergy;
-                        NewCreature.SightRange = 100;
-
-                        IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
-                        IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
-                        IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
-
-                        foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
-                        {
-                            NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, 0));
-                        }
-
-                        foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
-                        {
-                            NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, 0));
-                        }
-
-                        for (int j = NewCreatureProcessNodes.Count(); j < MaxCreatureProcessNodes; j++)
-                        {
-                            NewCreature.Brain.Nodes.Add(new ProcessNode(0));
-                        }
-
-                        NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
-
-                        NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
-                        NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-
-
-                        NewCreatures.Add(NewCreature);
-
-                        if (NewCreatures.Count >= MaxCreatureAmount)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            Creatures = NewCreatures;
-            ResetFood();
-            GenerationCount += 1;
-        }
-        public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
-        {
-            return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom);
+            return SuccessfulCreatures;
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
@@ -315,12 +309,22 @@ namespace MaceEvolve.Controls
         {
             Invalidate();
         }
-        private void NewGenerationTimer_Tick(object sender, EventArgs e)
+        public void NewGenerationTimer_Tick(object sender, EventArgs e)
         {
             if (SecondsUntilNewGeneration <= 0)
             {
                 SecondsUntilNewGeneration = NewGenerationInterval;
-                NewGenerationAsexual();
+                Creatures = NewGenerationAsexual();
+
+                if (Creatures.Count > 0)
+                {
+                    ResetFood();
+                    GenerationCount += 1;
+                }
+                else
+                {
+                    Reset();
+                }
             }
             else
             {
@@ -345,6 +349,29 @@ namespace MaceEvolve.Controls
                     Color = Color.Green
                 });
             }
+        }
+        public List<Creature> GenerateCreatures()
+        {
+            List<Creature> Creatures = new List<Creature>();
+
+            for (int i = 0; i < MaxCreatureAmount; i++)
+            {
+                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, MaxCreatureProcessNodes, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound))
+                {
+                    GameHost = this,
+                    X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
+                    Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
+                    Size = 10,
+                    Color = Color.FromArgb(255, 64, 64, _Random.Next(256)),
+                    Speed = CreatureSpeed,
+                    Metabolism = 0.1,
+                    Energy = MaxCreatureEnergy,
+                    MaxEnergy = MaxCreatureEnergy,
+                    SightRange = 100
+                });
+            }
+
+            return Creatures;
         }
         #endregion
     }

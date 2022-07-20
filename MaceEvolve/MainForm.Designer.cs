@@ -42,7 +42,7 @@ namespace MaceEvolve
             // StartButton
             // 
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Location = new System.Drawing.Point(737, 12);
+            this.StartButton.Location = new System.Drawing.Point(454, 12);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 32);
             this.StartButton.TabIndex = 1;
@@ -53,7 +53,7 @@ namespace MaceEvolve
             // StopButton
             // 
             this.StopButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.StopButton.Location = new System.Drawing.Point(818, 12);
+            this.StopButton.Location = new System.Drawing.Point(535, 12);
             this.StopButton.Name = "StopButton";
             this.StopButton.Size = new System.Drawing.Size(75, 32);
             this.StopButton.TabIndex = 1;
@@ -64,7 +64,7 @@ namespace MaceEvolve
             // ResetButton
             // 
             this.ResetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ResetButton.Location = new System.Drawing.Point(899, 12);
+            this.ResetButton.Location = new System.Drawing.Point(616, 12);
             this.ResetButton.Name = "ResetButton";
             this.ResetButton.Size = new System.Drawing.Size(75, 32);
             this.ResetButton.TabIndex = 1;
@@ -75,7 +75,7 @@ namespace MaceEvolve
             // NextGenButton
             // 
             this.NextGenButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.NextGenButton.Location = new System.Drawing.Point(980, 12);
+            this.NextGenButton.Location = new System.Drawing.Point(697, 12);
             this.NextGenButton.Name = "NextGenButton";
             this.NextGenButton.Size = new System.Drawing.Size(75, 32);
             this.NextGenButton.TabIndex = 1;
@@ -95,29 +95,30 @@ namespace MaceEvolve
             this.MainGameHost.MaxCreatureProcessNodes = 8;
             this.MainGameHost.MaxFoodAmount = 350;
             this.MainGameHost.MinCreatureConnections = 32;
-            this.MainGameHost.MutationChance = 0.03D;
+            this.MainGameHost.MutationChance = 0.15D;
             this.MainGameHost.Name = "MainGameHost";
             this.MainGameHost.NewGenerationInterval = 12D;
             this.MainGameHost.SecondsUntilNewGeneration = 12D;
-            this.MainGameHost.Size = new System.Drawing.Size(1067, 597);
+            this.MainGameHost.Size = new System.Drawing.Size(784, 661);
             this.MainGameHost.Stopwatch = stopwatch1;
             this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(0, 0, 150, 150);
             this.MainGameHost.SuccessfulCreaturesPercentile = 10D;
             this.MainGameHost.TabIndex = 2;
             this.MainGameHost.TargetFPS = 60;
-            this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 1067, 597);
+            this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 737, 632);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1067, 597);
+            this.ClientSize = new System.Drawing.Size(784, 661);
             this.Controls.Add(this.NextGenButton);
             this.Controls.Add(this.ResetButton);
             this.Controls.Add(this.StopButton);
             this.Controls.Add(this.StartButton);
             this.Controls.Add(this.MainGameHost);
             this.Name = "MainForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Mace Evolution";
             this.ResumeLayout(false);
 
