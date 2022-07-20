@@ -114,6 +114,8 @@ namespace MaceEvolve.Controls
                     Color = Color.Green
                 });
             }
+
+            lblGenerationCount.Text = $"Gen {GenerationCount}";
         }
         public void NewGenerationSexual()
         {
@@ -284,6 +286,8 @@ namespace MaceEvolve.Controls
                     });
                 }
             }
+
+            lblGenerationCount.Text = $"Gen {GenerationCount}";
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
         {

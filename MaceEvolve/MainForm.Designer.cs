@@ -31,7 +31,7 @@ namespace MaceEvolve
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            System.Diagnostics.Stopwatch stopwatch2 = new System.Diagnostics.Stopwatch();
+            System.Diagnostics.Stopwatch stopwatch3 = new System.Diagnostics.Stopwatch();
             this.MainGameHost = new MaceEvolve.Controls.GameHost();
             this.StartButton = new System.Windows.Forms.Button();
             this.StopButton = new System.Windows.Forms.Button();
@@ -41,20 +41,31 @@ namespace MaceEvolve
             // 
             // MainGameHost
             // 
+            this.MainGameHost.ConnectionWeightBound = 4D;
+            this.MainGameHost.CreatureSpeed = 2.75D;
             this.MainGameHost.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MainGameHost.Location = new System.Drawing.Point(0, 0);
             this.MainGameHost.MaxCreatureAmount = 150;
+            this.MainGameHost.MaxCreatureConnections = 32;
+            this.MainGameHost.MaxCreatureEnergy = 150D;
+            this.MainGameHost.MaxCreatureProcessNodes = 5;
             this.MainGameHost.MaxFoodAmount = 350;
+            this.MainGameHost.MinCreatureConnections = 32;
+            this.MainGameHost.MutationChance = 0.2D;
             this.MainGameHost.Name = "MainGameHost";
+            this.MainGameHost.NewGenerationInterval = 10D;
+            this.MainGameHost.SecondsUntilNewGeneration = 10D;
             this.MainGameHost.Size = new System.Drawing.Size(1067, 597);
-            this.MainGameHost.Stopwatch = stopwatch2;
+            this.MainGameHost.Stopwatch = stopwatch3;
+            this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(0, 0, 150, 150);
+            this.MainGameHost.SuccessfulCreaturesPercentile = 50D;
             this.MainGameHost.TabIndex = 0;
             this.MainGameHost.TargetFPS = 60;
             this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 1067, 597);
             // 
             // StartButton
             // 
-            this.StartButton.Location = new System.Drawing.Point(12, 12);
+            this.StartButton.Location = new System.Drawing.Point(737, 12);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 32);
             this.StartButton.TabIndex = 1;
@@ -64,7 +75,7 @@ namespace MaceEvolve
             // 
             // StopButton
             // 
-            this.StopButton.Location = new System.Drawing.Point(93, 12);
+            this.StopButton.Location = new System.Drawing.Point(818, 12);
             this.StopButton.Name = "StopButton";
             this.StopButton.Size = new System.Drawing.Size(75, 32);
             this.StopButton.TabIndex = 1;
@@ -74,7 +85,7 @@ namespace MaceEvolve
             // 
             // ResetButton
             // 
-            this.ResetButton.Location = new System.Drawing.Point(174, 12);
+            this.ResetButton.Location = new System.Drawing.Point(899, 12);
             this.ResetButton.Name = "ResetButton";
             this.ResetButton.Size = new System.Drawing.Size(75, 32);
             this.ResetButton.TabIndex = 1;
@@ -84,7 +95,7 @@ namespace MaceEvolve
             // 
             // NextGenButton
             // 
-            this.NextGenButton.Location = new System.Drawing.Point(255, 12);
+            this.NextGenButton.Location = new System.Drawing.Point(980, 12);
             this.NextGenButton.Name = "NextGenButton";
             this.NextGenButton.Size = new System.Drawing.Size(75, 32);
             this.NextGenButton.TabIndex = 1;

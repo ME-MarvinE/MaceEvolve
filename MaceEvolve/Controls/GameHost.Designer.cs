@@ -32,6 +32,7 @@
             this.GameTimer = new System.Windows.Forms.Timer(this.components);
             this.DrawTimer = new System.Windows.Forms.Timer(this.components);
             this.NewGenerationTimer = new System.Windows.Forms.Timer(this.components);
+            this.lblGenerationCount = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // GameTimer
@@ -48,16 +49,29 @@
             // 
             this.NewGenerationTimer.Tick += new System.EventHandler(this.NewGenerationTimer_Tick);
             // 
+            // lblGenerationCount
+            // 
+            this.lblGenerationCount.AutoSize = true;
+            this.lblGenerationCount.BackColor = System.Drawing.Color.Transparent;
+            this.lblGenerationCount.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblGenerationCount.Location = new System.Drawing.Point(13, 11);
+            this.lblGenerationCount.Name = "lblGenerationCount";
+            this.lblGenerationCount.Size = new System.Drawing.Size(78, 32);
+            this.lblGenerationCount.TabIndex = 3;
+            this.lblGenerationCount.Text = "Gen 0";
+            // 
             // GameHost
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lblGenerationCount);
             this.DoubleBuffered = true;
             this.Name = "GameHost";
             this.Size = new System.Drawing.Size(446, 285);
             this.Load += new System.EventHandler(this.GameHost_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.GameHost_Paint);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -66,5 +80,6 @@
         private System.Windows.Forms.Timer GameTimer;
         private System.Windows.Forms.Timer DrawTimer;
         private System.Windows.Forms.Timer NewGenerationTimer;
+        private System.Windows.Forms.Label lblGenerationCount;
     }
 }
