@@ -48,6 +48,7 @@ namespace MaceEvolve.Controls
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 50;
+        public int GenerationCount = 0;
         #endregion
 
         #region Constructors
@@ -80,6 +81,7 @@ namespace MaceEvolve.Controls
             SecondsUntilNewGeneration = NewGenerationInterval;
             Creatures.Clear();
             Food.Clear();
+            GenerationCount = 0;
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
@@ -134,6 +136,7 @@ namespace MaceEvolve.Controls
                 NewCreature.SightRange = 100;
 
                 IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
+                IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
                 IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
 
                 foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
@@ -146,6 +149,11 @@ namespace MaceEvolve.Controls
                     NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
                 }
 
+                for (int j = NewCreatureProcessNodes.Count(); j < MaxCreatureProcessNodes; j++)
+                {
+                    NewCreature.Brain.Nodes.Add(new ProcessNode(0));
+                }
+
                 NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
                 NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
                 NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
@@ -154,6 +162,7 @@ namespace MaceEvolve.Controls
             }
 
             Creatures = NewCreatures;
+            GenerationCount += 1;
         }
         public void NewGenerationAsexual()
         {
@@ -206,6 +215,7 @@ namespace MaceEvolve.Controls
                     NewCreature.SightRange = 100;
 
                     IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
+                    IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
                     IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
 
                     foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
@@ -216,6 +226,11 @@ namespace MaceEvolve.Controls
                     foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
                     {
                         NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, 0));
+                    }
+
+                    for (int i = NewCreatureProcessNodes.Count(); i < MaxCreatureProcessNodes; i++)
+                    {
+                        NewCreature.Brain.Nodes.Add(new ProcessNode(0));
                     }
 
                     NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
@@ -229,6 +244,7 @@ namespace MaceEvolve.Controls
             }
 
             Creatures = NewCreatures;
+            GenerationCount += 1;
         }
         public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
         {
