@@ -32,36 +32,12 @@ namespace MaceEvolve
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             System.Diagnostics.Stopwatch stopwatch1 = new System.Diagnostics.Stopwatch();
-            this.MainGameHost = new MaceEvolve.Controls.GameHost();
             this.StartButton = new System.Windows.Forms.Button();
             this.StopButton = new System.Windows.Forms.Button();
             this.ResetButton = new System.Windows.Forms.Button();
             this.NextGenButton = new System.Windows.Forms.Button();
+            this.MainGameHost = new MaceEvolve.Controls.GameHost();
             this.SuspendLayout();
-            // 
-            // MainGameHost
-            // 
-            this.MainGameHost.ConnectionWeightBound = 4D;
-            this.MainGameHost.CreatureSpeed = 2.75D;
-            this.MainGameHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.MainGameHost.Location = new System.Drawing.Point(0, 0);
-            this.MainGameHost.MaxCreatureAmount = 150;
-            this.MainGameHost.MaxCreatureConnections = 32;
-            this.MainGameHost.MaxCreatureEnergy = 150D;
-            this.MainGameHost.MaxCreatureProcessNodes = 5;
-            this.MainGameHost.MaxFoodAmount = 350;
-            this.MainGameHost.MinCreatureConnections = 32;
-            this.MainGameHost.MutationChance = 0.2D;
-            this.MainGameHost.Name = "MainGameHost";
-            this.MainGameHost.NewGenerationInterval = 10D;
-            this.MainGameHost.SecondsUntilNewGeneration = 10D;
-            this.MainGameHost.Size = new System.Drawing.Size(1067, 597);
-            this.MainGameHost.Stopwatch = stopwatch1;
-            this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(0, 0, 150, 150);
-            this.MainGameHost.SuccessfulCreaturesPercentile = 50D;
-            this.MainGameHost.TabIndex = 0;
-            this.MainGameHost.TargetFPS = 60;
-            this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 1067, 597);
             // 
             // StartButton
             // 
@@ -107,6 +83,30 @@ namespace MaceEvolve
             this.NextGenButton.UseVisualStyleBackColor = true;
             this.NextGenButton.Click += new System.EventHandler(this.NextGenButton_Click);
             // 
+            // MainGameHost
+            // 
+            this.MainGameHost.ConnectionWeightBound = 4D;
+            this.MainGameHost.CreatureSpeed = 2.75D;
+            this.MainGameHost.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.MainGameHost.Location = new System.Drawing.Point(0, 0);
+            this.MainGameHost.MaxCreatureAmount = 150;
+            this.MainGameHost.MaxCreatureConnections = 32;
+            this.MainGameHost.MaxCreatureEnergy = 150D;
+            this.MainGameHost.MaxCreatureProcessNodes = 8;
+            this.MainGameHost.MaxFoodAmount = 350;
+            this.MainGameHost.MinCreatureConnections = 32;
+            this.MainGameHost.MutationChance = 0.1D;
+            this.MainGameHost.Name = "MainGameHost";
+            this.MainGameHost.NewGenerationInterval = 10D;
+            this.MainGameHost.SecondsUntilNewGeneration = 10D;
+            this.MainGameHost.Size = new System.Drawing.Size(1067, 597);
+            this.MainGameHost.Stopwatch = stopwatch1;
+            this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(0, 0, 150, 150);
+            this.MainGameHost.SuccessfulCreaturesPercentile = 20D;
+            this.MainGameHost.TabIndex = 2;
+            this.MainGameHost.TargetFPS = 60;
+            this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 1067, 597);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -124,11 +124,10 @@ namespace MaceEvolve
         }
 
         #endregion
-
-        private Controls.GameHost MainGameHost;
         private Button StartButton;
         private Button StopButton;
         private Button ResetButton;
         private Button NextGenButton;
+        private Controls.GameHost MainGameHost;
     }
 }

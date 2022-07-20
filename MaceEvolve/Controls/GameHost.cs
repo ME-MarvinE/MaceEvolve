@@ -38,8 +38,8 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 64;
-        public int MaxCreatureConnections { get; set; } = 64;
+        public int MinCreatureConnections { get; set; } = 32;
+        public int MaxCreatureConnections { get; set; } = 32;
         public double CreatureSpeed { get; set; } = 2.75;
         public double NewGenerationInterval { get; set; } = 10;
         public double SecondsUntilNewGeneration { get; set; } = 10;
@@ -47,7 +47,7 @@ namespace MaceEvolve.Controls
         public double MutationChance { get; set; } = 0.1;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
-        public double SuccessfulCreaturesPercentile { get; set; } = 75;
+        public double SuccessfulCreaturesPercentile { get; set; } = 10;
         public int GenerationCount = 1;
         #endregion
 
@@ -162,7 +162,9 @@ namespace MaceEvolve.Controls
             int TotalFoodEaten = CreaturesList.Count == 0 ? 0 : CreaturesList.Sum(x => x.FoodEaten);
             int MostFoodEaten = CreaturesList.Count == 0 ? 0 : CreaturesList.Max(x => x.FoodEaten);
             double AverageFoodEaten = CreaturesList.Count == 0 ? 0 : (double)TotalFoodEaten / CreaturesList.Count;
-            int TopPercentileStartingIndex = (int)(CreaturesList.Count * (1 - (double)SuccessfulCreaturesPercentile / 100)) - 1;
+
+            double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
+            int TopPercentileStartingIndex = (int)(CreaturesList.Count * IndexMultiplierForTopPercentile) - 1;
 
             List<Creature> OrderedCreatures = CreaturesList.OrderBy(x => x.FoodEaten).ToList();
             List<Creature> SuccessfulCreatures = new List<Creature>();
