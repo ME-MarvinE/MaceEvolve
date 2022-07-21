@@ -131,6 +131,20 @@ namespace MaceEvolve.Models
                 }
             }
         }
+        public static void MutateProcessNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxProcessNodes)
+        {
+            List<ProcessNode> ProcessNodes = GetProcessNodes(Nodes).ToList();
+            int ProcessNodeCount = ProcessNodes.Count;
+            int MaxProcessNodesToAdd = MaxProcessNodes - ProcessNodeCount;
+
+            for (int i = 0; i < MaxProcessNodesToAdd; i++)
+            {
+                if (Globals.Random.NextDouble() <= MutationChancePerNode)
+                {
+                    Nodes.Add(new ProcessNode(Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1)));
+                }
+            }
+        }
         public static void MutateConnections(double MutationChancePerConnection, IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
         {
             List<Node> NodesList = new List<Node>(Nodes);

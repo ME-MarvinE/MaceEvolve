@@ -127,11 +127,7 @@ namespace MaceEvolve.Controls
                         NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
                     }
 
-                    for (int j = NewCreatureProcessNodes.Count(); j < MaxCreatureProcessNodes; j++)
-                    {
-                        NewCreature.Brain.Nodes.Add(new ProcessNode(0));
-                    }
-
+                    NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
                     NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
                     NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
                     NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
@@ -197,16 +193,10 @@ namespace MaceEvolve.Controls
                                 NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, 0));
                             }
 
-                            for (int j = NewCreatureProcessNodes.Count(); j < MaxCreatureProcessNodes; j++)
-                            {
-                                NewCreature.Brain.Nodes.Add(new ProcessNode(0));
-                            }
-
-                            NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
-
+                            NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
                             NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
                             NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-
+                            NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
 
                             NewCreatures.Add(NewCreature);
 
@@ -234,11 +224,6 @@ namespace MaceEvolve.Controls
             for (int i = TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
             {
                 SuccessfulCreatures.Add(OrderedCreatures[i]);
-            }
-
-            if (SuccessfulCreatures.Count == 0)
-            {
-                SuccessfulCreatures = OrderedCreatures;
             }
 
             return SuccessfulCreatures;
