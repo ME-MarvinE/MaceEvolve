@@ -20,51 +20,32 @@ namespace MaceEvolve.Models
 
         #region Constructors
         public NeuralNetwork(List<CreatureInput> Inputs, int MaxProcessNodes, List<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
-            : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), MinConnections, MaxConnections, ConnectionWeightBound)
+            : this(GenerateInputNodes(Inputs).Concat(GenerateProcessNodes(MaxProcessNodes)).Concat(GenerateOutputNodes(Actions)).ToList(), Inputs, Actions, MinConnections, MaxConnections, ConnectionWeightBound)
         {
         }
         public NeuralNetwork(List<CreatureInput> Inputs, int MaxProcessNodes, List<CreatureAction> Actions, List<Connection> Connections)
-            : this(GenerateInputNodes(Inputs), GenerateProcessNodes(MaxProcessNodes), GenerateOutputNodes(Actions), Connections)
+            : this(GenerateInputNodes(Inputs).Concat(GenerateProcessNodes(MaxProcessNodes)).Concat(GenerateOutputNodes(Actions)).ToList(), Inputs, Actions, Connections)
         {
         }
-        public NeuralNetwork(IEnumerable<Node> Nodes, int MinConnections, int MaxConnections, double ConnectionWeightBound)
-            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), MinConnections, MaxConnections, ConnectionWeightBound)
-        {
-        }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, int MinConnections, int MaxConnections, double ConnectionWeightBound)
-            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput).ToList(), OutputNodes.Select(x => x.CreatureAction).ToList(), MinConnections, MaxConnections, ConnectionWeightBound)
-        {
-        }
-        public NeuralNetwork(IEnumerable<Node> Nodes, List<Connection> Connections)
-            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Connections)
-        {
-        }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, List<Connection> Connections)
-            : this(InputNodes, ProcessNodes, OutputNodes, InputNodes.Select(x => x.CreatureInput).ToList(), OutputNodes.Select(x => x.CreatureAction).ToList(), Connections)
-        {
-        }
-        public NeuralNetwork(IEnumerable<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
-            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, MinConnections, MaxConnections, ConnectionWeightBound)
-        {
-        }
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
-            : this(InputNodes, ProcessNodes, OutputNodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, new List<Node>().Concat(InputNodes).Concat(ProcessNodes).Concat(OutputNodes), ConnectionWeightBound))
-        {
-        }
-        public NeuralNetwork(IEnumerable<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
-            : this(Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>(), Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>(), Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>(), Inputs, Actions, Connections)
+        //public NeuralNetwork(IEnumerable<Node> Nodes, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+        //    : this(Nodes, Nodes.Where(x => x.NodeType == NodeType.Input).Select(x => x.CreatureInput.Value).ToList(), Nodes.Where(x => x.NodeType == NodeType.Output).Select(x => x.CreatureAction.Value).ToList(), MinConnections, MaxConnections, ConnectionWeightBound)
+        //{
+        //}
+        //public NeuralNetwork(IEnumerable<Node> Nodes, List<Connection> Connections)
+        //    : this(Nodes, Nodes.Where(x => x.NodeType == NodeType.Input).Select(x => x.CreatureInput.Value).ToList(), Nodes.Where(x => x.NodeType == NodeType.Output).Select(x => x.CreatureAction.Value).ToList(), Connections)
+        //{
+        //}
+        public NeuralNetwork(List<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, int MinConnections, int MaxConnections, double ConnectionWeightBound)
+            : this(Nodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, Nodes, ConnectionWeightBound))
         {
         }
         [JsonConstructor]
-        public NeuralNetwork(IEnumerable<InputNode> InputNodes, IEnumerable<ProcessNode> ProcessNodes, IEnumerable<OutputNode> OutputNodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
+        public NeuralNetwork(List<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
         {
             this.Inputs = Inputs;
             this.Actions = Actions;
             this.Connections = Connections;
-
-            Nodes.AddRange(InputNodes);
-            Nodes.AddRange(ProcessNodes);
-            Nodes.AddRange(OutputNodes);
+            this.Nodes = Nodes;
 
             foreach (var Input in Inputs)
             {
@@ -98,21 +79,21 @@ namespace MaceEvolve.Models
 
             return GeneratedConnections;
         }
-        public static List<InputNode> GenerateInputNodes(IEnumerable<CreatureInput> PossibleInputs)
+        public static List<Node> GenerateInputNodes(IEnumerable<CreatureInput> PossibleInputs)
         {
-            return PossibleInputs.Select(x => new InputNode(x, Globals.Random.NextDouble(-1, 1))).ToList();
+            return PossibleInputs.Select(x => new Node(NodeType.Input, Globals.Random.NextDouble(-1, 1), CreatureInput: x)).ToList();
         }
-        public static List<OutputNode> GenerateOutputNodes(IEnumerable<CreatureAction> PossibleOutputs)
+        public static List<Node> GenerateOutputNodes(IEnumerable<CreatureAction> PossibleOutputs)
         {
-            return PossibleOutputs.Select(x => new OutputNode(x, Globals.Random.NextDouble(-1, 1))).ToList();
+            return PossibleOutputs.Select(x => new Node(NodeType.Output, Globals.Random.NextDouble(-1, 1), CreatureAction: x)).ToList();
         }
-        public static List<ProcessNode> GenerateProcessNodes(int MaxProcessNodes)
+        public static List<Node> GenerateProcessNodes(int MaxProcessNodes)
         {
-            List<ProcessNode> ProcessNodes = new List<ProcessNode>();
+            List<Node> ProcessNodes = new List<Node>();
 
             for (int i = 0; i < MaxProcessNodes; i++)
             {
-                ProcessNodes.Add(new ProcessNode(Globals.Random.NextDouble(-1, 1)));
+                ProcessNodes.Add(new Node(NodeType.Process, Globals.Random.NextDouble(-1, 1)));
             }
 
             return ProcessNodes;
@@ -133,7 +114,7 @@ namespace MaceEvolve.Models
         }
         public static void MutateProcessNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxProcessNodes)
         {
-            List<ProcessNode> ProcessNodes = GetProcessNodes(Nodes).ToList();
+            List<Node> ProcessNodes = Nodes.Where(x => x.NodeType == NodeType.Process).ToList();
             int ProcessNodeCount = ProcessNodes.Count;
             int MaxProcessNodesToAdd = MaxProcessNodes - ProcessNodeCount;
 
@@ -141,7 +122,7 @@ namespace MaceEvolve.Models
             {
                 if (Globals.Random.NextDouble() <= MutationChancePerNode)
                 {
-                    Nodes.Add(new ProcessNode(Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1)));
+                    Nodes.Add(new Node(NodeType.Process, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1)));
                 }
             }
         }
@@ -201,18 +182,6 @@ namespace MaceEvolve.Models
         public static IEnumerable<Node> GetPossibleTargetNodes(IEnumerable<Node> Nodes)
         {
             return Nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
-        }
-        public static IEnumerable<InputNode> GetInputNodes(IEnumerable<Node> Nodes)
-        {
-            return Nodes.Where(x => x.NodeType == NodeType.Input).Cast<InputNode>();
-        }
-        public static IEnumerable<ProcessNode> GetProcessNodes(IEnumerable<Node> Nodes)
-        {
-            return Nodes.Where(x => x.NodeType == NodeType.Process).Cast<ProcessNode>();
-        }
-        public static IEnumerable<OutputNode> GetOutputNodes(IEnumerable<Node> Nodes)
-        {
-            return Nodes.Where(x => x.NodeType == NodeType.Output).Cast<OutputNode>();
         }
         #endregion
     }

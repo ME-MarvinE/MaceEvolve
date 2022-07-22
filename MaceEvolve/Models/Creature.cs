@@ -109,12 +109,12 @@ namespace MaceEvolve.Models
         {
             Think();
 
-            List<OutputNode> OrderedOutputNodes = NeuralNetwork.GetOutputNodes(Brain.Nodes).OrderBy(x => x.PreviousOutput).ToList();
-            OutputNode HighestOutputNode = OrderedOutputNodes.LastOrDefault();
+            List<Node> OrderedOutputNodes = Brain.Nodes.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
+            Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
 
             if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
             {
-                ExecuteAction(HighestOutputNode.CreatureAction);
+                ExecuteAction(HighestOutputNode.CreatureAction.Value);
             }
 
             Energy -= Metabolism;
@@ -135,9 +135,9 @@ namespace MaceEvolve.Models
         }
         public void UpdateOutputValues()
         {
-            foreach (var OutputNode in NeuralNetwork.GetOutputNodes(Brain.Nodes))
+            foreach (var OutputNode in Brain.Nodes.Where(x => x.NodeType == NodeType.Output))
             {
-                OutputNode.EvaluateValue(Brain);
+                OutputNode.GenerateOutput(Brain);
             }
         }
         public static Creature Reproduce(IEnumerable<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions)
@@ -147,7 +147,7 @@ namespace MaceEvolve.Models
             Dictionary<Creature, Dictionary<Node, Node>> ParentToOffSpringNodesMap = new Dictionary<Creature, Dictionary<Node, Node>>();
             //Dictionary<Node, Node> ParentNodeToOffSpringNodeMap = new Dictionary<Node, Node>();
 
-            Creature OffSpring = new Creature(new NeuralNetwork(new List<InputNode>(), new List<ProcessNode>(), new List<OutputNode>(), Inputs, Actions, new List<Connection>()));
+            Creature OffSpring = new Creature(new NeuralNetwork(new List<Node>(), Inputs, Actions, new List<Connection>()));
 
             foreach (var Parent in ParentsList)
             {
@@ -177,22 +177,7 @@ namespace MaceEvolve.Models
                 }
                 else
                 {
-                    Node NodeToAdd;
-
-                    switch (RandomParentConnectionSourceNode.NodeType)
-                    {
-                        case NodeType.Input:
-                            NodeToAdd = new InputNode(((InputNode)RandomParentConnectionSourceNode).CreatureInput, RandomParentConnectionSourceNode.Bias);
-                            break;
-                        case NodeType.Process:
-                            NodeToAdd = new ProcessNode(RandomParentConnectionSourceNode.Bias);
-                            break;
-                        case NodeType.Output:
-                            NodeToAdd = new OutputNode(((OutputNode)RandomParentConnectionSourceNode).CreatureAction, RandomParentConnectionSourceNode.Bias);
-                            break;
-                        default:
-                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParentConnectionSourceNode.NodeType}' is not implemented.");
-                    }
+                    Node NodeToAdd = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
 
                     OffSpring.Brain.Nodes.Add(NodeToAdd);
 
@@ -215,22 +200,7 @@ namespace MaceEvolve.Models
                 }
                 else
                 {
-                    Node NodeToAdd;
-
-                    switch (RandomParentConnectionTargetNode.NodeType)
-                    {
-                        case NodeType.Input:
-                            NodeToAdd = new InputNode(((InputNode)RandomParentConnectionTargetNode).CreatureInput, RandomParentConnectionTargetNode.Bias);
-                            break;
-                        case NodeType.Process:
-                            NodeToAdd = new ProcessNode(RandomParentConnectionTargetNode.Bias);
-                            break;
-                        case NodeType.Output:
-                            NodeToAdd = new OutputNode(((OutputNode)RandomParentConnectionTargetNode).CreatureAction, RandomParentConnectionTargetNode.Bias);
-                            break;
-                        default:
-                            throw new NotImplementedException($"{nameof(NodeType)} '{RandomParentConnectionTargetNode.NodeType}' is not implemented.");
-                    }
+                    Node NodeToAdd = new Node(RandomParentConnectionTargetNode.NodeType, RandomParentConnectionTargetNode.Bias, RandomParentConnectionTargetNode.CreatureInput, RandomParentConnectionTargetNode.CreatureAction);
 
                     OffSpring.Brain.Nodes.Add(NodeToAdd);
 

@@ -113,18 +113,18 @@ namespace MaceEvolve.Controls
                     NewCreature.MaxEnergy = MaxCreatureEnergy;
                     NewCreature.SightRange = 100;
 
-                    IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
-                    IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
-                    IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
+                    IEnumerable<Node> NewCreatureInputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Input);
+                    IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
+                    IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
 
                     foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
                     {
-                        NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
+                        NewCreature.Brain.Nodes.Add(new Node(NodeType.Input, 0, InputToAdd));
                     }
 
                     foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
                     {
-                        NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, Globals.Map(_Random.NextDouble(), 0, 1, -1, 1)));
+                        NewCreature.Brain.Nodes.Add(new Node(NodeType.Output, 0, CreatureAction: ActionToAdd));
                     }
 
                     NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
@@ -179,18 +179,18 @@ namespace MaceEvolve.Controls
                             NewCreature.MaxEnergy = MaxCreatureEnergy;
                             NewCreature.SightRange = 100;
 
-                            IEnumerable<InputNode> NewCreatureInputNodes = NeuralNetwork.GetInputNodes(NewCreature.Brain.Nodes);
-                            IEnumerable<ProcessNode> NewCreatureProcessNodes = NeuralNetwork.GetProcessNodes(NewCreature.Brain.Nodes);
-                            IEnumerable<OutputNode> NewCreatureOutputNodes = NeuralNetwork.GetOutputNodes(NewCreature.Brain.Nodes);
+                            IEnumerable<Node> NewCreatureInputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Input);
+                            IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
+                            IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
 
                             foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
                             {
-                                NewCreature.Brain.Nodes.Add(new InputNode(InputToAdd, 0));
+                                NewCreature.Brain.Nodes.Add(new Node(NodeType.Input, 0, InputToAdd));
                             }
 
                             foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
                             {
-                                NewCreature.Brain.Nodes.Add(new OutputNode(ActionToAdd, 0));
+                                NewCreature.Brain.Nodes.Add(new Node(NodeType.Output, 0, CreatureAction: ActionToAdd));
                             }
 
                             NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
