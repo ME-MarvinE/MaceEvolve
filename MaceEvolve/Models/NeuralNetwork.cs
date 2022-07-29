@@ -3,15 +3,19 @@ using MaceEvolve.Extensions;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace MaceEvolve.Models
 {
     public class NeuralNetwork
     {
+        #region Fields
+        private Dictionary<CreatureInput, double> _InputValues = new Dictionary<CreatureInput, double>();
+        #endregion
+
         #region Properties
-        public List<CreatureInput> Inputs { get; } = new List<CreatureInput>();
-        public Dictionary<CreatureInput, double> InputValues { get; } = new Dictionary<CreatureInput, double>();
+        public ReadOnlyDictionary<CreatureInput, double> InputValues { get; }
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
         [JsonIgnore]
         public List<Node> Nodes { get; } = new List<Node>();
@@ -42,19 +46,32 @@ namespace MaceEvolve.Models
         [JsonConstructor]
         public NeuralNetwork(List<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
         {
-            this.Inputs = Inputs;
             this.Actions = Actions;
             this.Connections = Connections;
             this.Nodes = Nodes;
 
             foreach (var Input in Inputs)
             {
-                InputValues.Add(Input, 0);
+                _InputValues.Add(Input, 0);
             }
+
+            InputValues = new ReadOnlyDictionary<CreatureInput, double>(_InputValues);
         }
         #endregion
 
         #region Methods
+        public void UpdateInputValue(CreatureInput CreatureInput, double Value)
+        {
+            if (InputValues.ContainsKey(CreatureInput))
+            {
+                _InputValues[CreatureInput] = Value;
+            }
+            else
+            {
+                _InputValues.Add(CreatureInput, Value);
+            }
+            
+        }
         public static List<Connection> GenerateRandomConnections(int MinConnections, int MaxConnections, IEnumerable<Node> Nodes, double WeightBound)
         {
             List<Connection> GeneratedConnections = new List<Connection>();

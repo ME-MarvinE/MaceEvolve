@@ -126,12 +126,12 @@ namespace MaceEvolve.Models
         }
         public void UpdateInputValues()
         {
-            Brain.InputValues[CreatureInput.PercentMaxEnergy] = PercentMaxEnergy(this);
-            Brain.InputValues[CreatureInput.VerticalProximityToFood] = VerticalProximityToFood(this);
-            Brain.InputValues[CreatureInput.HorizontalProximityToFood] = HorizontalProximityToFood(this);
-            Brain.InputValues[CreatureInput.ProximityToCreature] = ProximityToCreature(this);
-            Brain.InputValues[CreatureInput.VerticalWorldBoundProximity] = VerticalWorldBoundProximity(this);
-            Brain.InputValues[CreatureInput.HorizontalWorldBoundProximity] = HorizontalWorldBoundProximity(this);
+            Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy(this));
+            Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(this));
+            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood(this));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreature, ProximityToCreature(this));
+            Brain.UpdateInputValue(CreatureInput.VerticalWorldBoundProximity, VerticalWorldBoundProximity(this));
+            Brain.UpdateInputValue(CreatureInput.HorizontalWorldBoundProximity, HorizontalWorldBoundProximity(this));
         }
         public void UpdateOutputValues()
         {
