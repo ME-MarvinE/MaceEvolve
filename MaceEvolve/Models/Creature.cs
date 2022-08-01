@@ -135,7 +135,7 @@ namespace MaceEvolve.Models
         }
         public void UpdateOutputValues()
         {
-            foreach (var OutputNode in Brain.Nodes.Where(x => x.NodeType == NodeType.Output))
+            foreach (var OutputNode in Brain.Nodes.Where(x => x.NodeType == NodeType.Output && x.CreatureAction != null && Brain.Actions.Contains(x.CreatureAction.Value)))
             {
                 OutputNode.GenerateOutput(Brain);
             }

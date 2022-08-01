@@ -46,9 +46,10 @@ namespace MaceEvolve.Models
         [JsonConstructor]
         public NeuralNetwork(List<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
         {
-            this.Actions = Actions;
-            this.Connections = Connections;
-            this.Nodes = Nodes;
+            if (Inputs == null) { throw new ArgumentNullException(nameof(Inputs)); }
+            this.Actions = Actions ?? throw new ArgumentNullException(nameof(Actions));
+            this.Connections = Connections ?? throw new ArgumentNullException(nameof(Connections));
+            this.Nodes = Nodes ?? throw new ArgumentNullException(nameof(Nodes));
 
             foreach (var Input in Inputs)
             {
