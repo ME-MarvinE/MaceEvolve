@@ -110,6 +110,7 @@ namespace MaceEvolve.Controls
             }
 
             SuccessfulCreatures = SuccessfulCreatures.Where(x => SuccessfulCreaturesFitnesses[x] > 0).ToList();
+            SuccessfulCreaturesFitnesses = SuccessfulCreaturesFitnesses.Where(x => x.Value > 0).ToDictionary(x => x.Key, x => x.Value);
 
             if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
             {
@@ -164,6 +165,7 @@ namespace MaceEvolve.Controls
             }
 
             SuccessfulCreatures = SuccessfulCreatures.Where(x => SuccessfulCreaturesFitnesses[x] > 0).ToList();
+            SuccessfulCreaturesFitnesses = SuccessfulCreaturesFitnesses.Where(x => x.Value > 0).ToDictionary(x => x.Key, x => x.Value);
 
             if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
             {

@@ -261,11 +261,11 @@ namespace MaceEvolve.Models
         }
         public static double VerticalWorldBoundProximity(Creature Creature)
         {
-            return Globals.Map(Creature.X, Creature.GameHost.WorldBounds.Top, Creature.GameHost.WorldBounds.Bottom, -1, 1);
+            return Globals.Map(Creature.Y, Creature.GameHost.WorldBounds.Top, Creature.GameHost.WorldBounds.Bottom, 0, 1);
         }
         public static double HorizontalWorldBoundProximity(Creature Creature)
         {
-            return Globals.Map(Creature.X, Creature.GameHost.WorldBounds.Left, Creature.GameHost.WorldBounds.Right, -1, 1);
+            return Globals.Map(Creature.X, Creature.GameHost.WorldBounds.Left, Creature.GameHost.WorldBounds.Right, 0, 1);
         }
         #endregion
 
