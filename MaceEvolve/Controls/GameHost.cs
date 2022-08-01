@@ -2,6 +2,7 @@
 using MaceEvolve.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -44,11 +45,13 @@ namespace MaceEvolve.Controls
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
         public int MaxCreatureProcessNodes { get; set; } = 8;
-        public double MutationChance { get; set; } = 0.15;
+        public double MutationChance { get; set; } = 0.1;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
         public int GenerationCount = 1;
+        public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs.AsReadOnly();
+        public ReadOnlyCollection<CreatureAction> PossibleCreatureActions{ get; } = Globals.AllCreatureActions.AsReadOnly();
         #endregion
 
         #region Constructors
@@ -101,7 +104,7 @@ namespace MaceEvolve.Controls
             {
                 for (int i = 0; i < MaxCreatureAmount; i++)
                 {
-                    Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
+                    Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
                     NewCreature.GameHost = this;
                     NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                     NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -117,16 +120,12 @@ namespace MaceEvolve.Controls
                     IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
                     IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
 
-                    foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
-                    {
-                        NewCreature.Brain.Nodes.Add(new Node(NodeType.Input, 0, InputToAdd));
-                    }
-
-                    foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
+                    foreach (var ActionToAdd in PossibleCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
                     {
                         NewCreature.Brain.Nodes.Add(new Node(NodeType.Output, 0, CreatureAction: ActionToAdd));
                     }
 
+                    NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
                     NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
                     NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
                     NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
@@ -167,7 +166,7 @@ namespace MaceEvolve.Controls
                     {
                         for (int i = 0; i < RandomSuccessfulCreature.FoodEaten; i++)
                         {
-                            Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, Globals.AllCreatureInputs.ToList(), Globals.AllCreatureActions.ToList());
+                            Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
                             NewCreature.GameHost = this;
                             NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                             NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -183,16 +182,12 @@ namespace MaceEvolve.Controls
                             IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
                             IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
 
-                            foreach (var InputToAdd in Globals.AllCreatureInputs.Where(x => !NewCreatureInputNodes.Any(y => y.CreatureInput == x)))
-                            {
-                                NewCreature.Brain.Nodes.Add(new Node(NodeType.Input, 0, InputToAdd));
-                            }
-
                             foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
                             {
                                 NewCreature.Brain.Nodes.Add(new Node(NodeType.Output, 0, CreatureAction: ActionToAdd));
                             }
 
+                            NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
                             NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
                             NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
                             NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
@@ -341,7 +336,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creatures.Add(new Creature(new NeuralNetwork(Globals.AllCreatureInputs, MaxCreatureProcessNodes, Globals.AllCreatureActions, MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound))
+                Creatures.Add(new Creature(new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList(), MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound))
                 {
                     GameHost = this,
                     X = _Random.Next(WorldBounds.Left + WorldBounds.Width),

@@ -51,11 +51,7 @@ namespace MaceEvolve.Models
             this.Connections = Connections ?? throw new ArgumentNullException(nameof(Connections));
             this.Nodes = Nodes ?? throw new ArgumentNullException(nameof(Nodes));
 
-            foreach (var Input in Inputs)
-            {
-                _InputValues.Add(Input, 0);
-            }
-
+            _InputValues = Inputs.ToDictionary(x => x, x => 0d);
             InputValues = new ReadOnlyDictionary<CreatureInput, double>(_InputValues);
         }
         #endregion
@@ -130,11 +126,30 @@ namespace MaceEvolve.Models
                 }
             }
         }
+        public static void MutateInputNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxInputNodes, IEnumerable<CreatureInput> PossibleInputs)
+        {
+
+            List<Node> InputNodes = Nodes.Where(x => x.NodeType == NodeType.Input).ToList();
+            int MaxInputNodesToAdd = MaxInputNodes - InputNodes.Count;
+            List<CreatureInput> PossibleInputsToAdd = PossibleInputs.Where(x => !InputNodes.Any(y => y.CreatureInput == x)).ToList();
+
+
+            if (PossibleInputsToAdd.Count > 0)
+            {
+                for (int i = 0; i < MaxInputNodesToAdd; i++)
+                {
+                    if (Globals.Random.NextDouble() <= MutationChancePerNode)
+                    {
+                        CreatureInput RandomPossibleInput = PossibleInputsToAdd[Globals.Random.Next(PossibleInputsToAdd.Count)];
+                        Nodes.Add(new Node(NodeType.Input, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureInput: RandomPossibleInput));
+                    }
+                }
+            }
+        }
         public static void MutateProcessNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxProcessNodes)
         {
             List<Node> ProcessNodes = Nodes.Where(x => x.NodeType == NodeType.Process).ToList();
-            int ProcessNodeCount = ProcessNodes.Count;
-            int MaxProcessNodesToAdd = MaxProcessNodes - ProcessNodeCount;
+            int MaxProcessNodesToAdd = MaxProcessNodes - ProcessNodes.Count;
 
             for (int i = 0; i < MaxProcessNodesToAdd; i++)
             {
