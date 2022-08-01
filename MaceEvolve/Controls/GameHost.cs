@@ -94,11 +94,22 @@ namespace MaceEvolve.Controls
         public List<Creature> NewGenerationSexual()
         {
             List<Creature> CreaturesList = new List<Creature>(Creatures);
-            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
+            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
             List<Creature> NewCreatures = new List<Creature>();
+
+            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
 
             int TotalFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Sum(x => x.FoodEaten);
             int MostFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Max(x => x.FoodEaten);
+
+            foreach (var Creature in SuccessfulCreatures)
+            {
+                double CreatureFitness = MostFoodEaten == 0 ? 0 : (double)Creature.FoodEaten / MostFoodEaten;
+
+                SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
+            }
+
+            SuccessfulCreatures = SuccessfulCreatures.Where(x => SuccessfulCreaturesFitnesses[x] > 0).ToList();
 
             if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
             {
@@ -151,6 +162,8 @@ namespace MaceEvolve.Controls
 
                 SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
             }
+
+            SuccessfulCreatures = SuccessfulCreatures.Where(x => SuccessfulCreaturesFitnesses[x] > 0).ToList();
 
             if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
             {
