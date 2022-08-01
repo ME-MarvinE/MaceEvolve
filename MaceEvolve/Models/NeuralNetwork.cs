@@ -159,6 +159,26 @@ namespace MaceEvolve.Models
                 }
             }
         }
+        public static void MutateOutputNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxOutputNodes, IEnumerable<CreatureAction> PossibleActions)
+        {
+
+            List<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output).ToList();
+            int MaxOutputNodesToAdd = MaxOutputNodes - OutputNodes.Count;
+            List<CreatureAction> PossibleOutputsToAdd = PossibleActions.Where(x => !OutputNodes.Any(y => y.CreatureAction == x)).ToList();
+
+
+            if (PossibleOutputsToAdd.Count > 0)
+            {
+                for (int i = 0; i < MaxOutputNodesToAdd; i++)
+                {
+                    if (Globals.Random.NextDouble() <= MutationChancePerNode)
+                    {
+                        CreatureAction RandomPossibleAction = PossibleOutputsToAdd[Globals.Random.Next(PossibleOutputsToAdd.Count)];
+                        Nodes.Add(new Node(NodeType.Output, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureAction: RandomPossibleAction));
+                    }
+                }
+            }
+        }
         public static void MutateConnections(double MutationChancePerConnection, IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
         {
             List<Node> NodesList = new List<Node>(Nodes);

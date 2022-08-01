@@ -120,16 +120,13 @@ namespace MaceEvolve.Controls
                     IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
                     IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
 
-                    foreach (var ActionToAdd in PossibleCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
-                    {
-                        NewCreature.Brain.Nodes.Add(new Node(NodeType.Output, 0, CreatureAction: ActionToAdd));
-                    }
-
+                    //Order matters.
+                    NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
                     NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
                     NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
-                    NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+                    NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
                     NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
-                    NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
+                    NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
 
                     NewCreatures.Add(NewCreature);
                 }
@@ -182,16 +179,13 @@ namespace MaceEvolve.Controls
                             IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
                             IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
 
-                            foreach (var ActionToAdd in Globals.AllCreatureActions.Where(x => !NewCreatureOutputNodes.Any(y => y.CreatureAction == x)))
-                            {
-                                NewCreature.Brain.Nodes.Add(new Node(NodeType.Output, 0, CreatureAction: ActionToAdd));
-                            }
-
+                            //Order matters.
+                            NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
                             NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
                             NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
+                            NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
                             NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
                             NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-                            NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
 
                             NewCreatures.Add(NewCreature);
 
