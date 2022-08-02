@@ -45,7 +45,7 @@ namespace MaceEvolve.Controls
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
         public int MaxCreatureProcessNodes { get; set; } = 8;
-        public double MutationChance { get; set; } = 0.1;
+        public double MutationChance { get; set; } = 0.05;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
@@ -114,34 +114,49 @@ namespace MaceEvolve.Controls
 
             if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
             {
-                for (int i = 0; i < MaxCreatureAmount; i++)
+                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+                NewCreature.GameHost = this;
+                NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+                NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+                NewCreature.Size = 10;
+                NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+                NewCreature.Speed = CreatureSpeed;
+                NewCreature.Metabolism = 0.1;
+                NewCreature.Energy = MaxCreatureEnergy;
+                NewCreature.MaxEnergy = MaxCreatureEnergy;
+                NewCreature.SightRange = 100;
+
+                switch (_Random.Next(6))
                 {
-                    Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
-                    NewCreature.GameHost = this;
-                    NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
-                    NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
-                    NewCreature.Size = 10;
-                    NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
-                    NewCreature.Speed = CreatureSpeed;
-                    NewCreature.Metabolism = 0.1;
-                    NewCreature.Energy = MaxCreatureEnergy;
-                    NewCreature.MaxEnergy = MaxCreatureEnergy;
-                    NewCreature.SightRange = 100;
+                    case 0:
+                        NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
+                        break;
 
-                    IEnumerable<Node> NewCreatureInputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Input);
-                    IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
-                    IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
+                    case 1:
+                        NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
+                        break;
 
-                    //Order matters.
-                    NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
-                    NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
-                    NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
-                    NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
-                    NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
-                    NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+                    case 2:
+                        NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
+                        break;
 
-                    NewCreatures.Add(NewCreature);
+                    case 3:
+                        NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
+                        break;
+
+                    case 4:
+                        NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                        break;
+
+                    case 5:
+                        NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+                        break;
+
+                    default:
+                        throw new NotImplementedException("Random mutation not implemented.");
                 }
+
+                NewCreatures.Add(NewCreature);
             }
 
             return NewCreatures;
@@ -164,9 +179,6 @@ namespace MaceEvolve.Controls
                 SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
             }
 
-            SuccessfulCreatures = SuccessfulCreatures.Where(x => SuccessfulCreaturesFitnesses[x] > 0).ToList();
-            SuccessfulCreaturesFitnesses = SuccessfulCreaturesFitnesses.Where(x => x.Value > 0).ToDictionary(x => x.Key, x => x.Value);
-
             if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
             {
                 while (NewCreatures.Count < MaxCreatureAmount)
@@ -176,38 +188,53 @@ namespace MaceEvolve.Controls
 
                     if (TotalFoodEaten > 0 && _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
                     {
-                        for (int i = 0; i < RandomSuccessfulCreature.FoodEaten; i++)
+                        Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+                        NewCreature.GameHost = this;
+                        NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+                        NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+                        NewCreature.Size = 10;
+                        NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+                        NewCreature.Speed = CreatureSpeed;
+                        NewCreature.Metabolism = 0.1;
+                        NewCreature.Energy = MaxCreatureEnergy;
+                        NewCreature.MaxEnergy = MaxCreatureEnergy;
+                        NewCreature.SightRange = 100;
+
+                        switch (_Random.Next(6))
                         {
-                            Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
-                            NewCreature.GameHost = this;
-                            NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
-                            NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
-                            NewCreature.Size = 10;
-                            NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
-                            NewCreature.Speed = CreatureSpeed;
-                            NewCreature.Metabolism = 0.1;
-                            NewCreature.Energy = MaxCreatureEnergy;
-                            NewCreature.MaxEnergy = MaxCreatureEnergy;
-                            NewCreature.SightRange = 100;
-
-                            IEnumerable<Node> NewCreatureInputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Input);
-                            IEnumerable<Node> NewCreatureProcessNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Process);
-                            IEnumerable<Node> NewCreatureOutputNodes = NewCreature.Brain.Nodes.Where(x => x.NodeType == NodeType.Output);
-
-                            //Order matters.
-                            NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
-                            NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
-                            NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
-                            NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
-                            NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
-                            NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-
-                            NewCreatures.Add(NewCreature);
-
-                            if (NewCreatures.Count >= MaxCreatureAmount)
-                            {
+                            case 0:
+                                NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
                                 break;
-                            }
+
+                            case 1:
+                                NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
+                                break;
+
+                            case 2:
+                                NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
+                                break;
+
+                            case 3:
+                                NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
+                                break;
+
+                            case 4:
+                                NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
+                                break;
+
+                            case 5:
+                                NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
+                                break;
+
+                            default:
+                                throw new NotImplementedException("Random mutation not implemented.");
+                        }
+
+                        NewCreatures.Add(NewCreature);
+
+                        if (NewCreatures.Count >= MaxCreatureAmount)
+                        {
+                            break;
                         }
                     }
                 }
@@ -227,7 +254,10 @@ namespace MaceEvolve.Controls
 
             for (int i = TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
             {
-                SuccessfulCreatures.Add(OrderedCreatures[i]);
+                if (OrderedCreatures[i].FoodEaten > 0)
+                {
+                    SuccessfulCreatures.Add(OrderedCreatures[i]);
+                }
             }
 
             return SuccessfulCreatures;
