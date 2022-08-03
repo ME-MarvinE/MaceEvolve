@@ -42,45 +42,57 @@ namespace MaceEvolve
             // StartButton
             // 
             this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.StartButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.StartButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.StartButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.StartButton.Location = new System.Drawing.Point(454, 12);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 32);
             this.StartButton.TabIndex = 1;
             this.StartButton.Text = "Start";
-            this.StartButton.UseVisualStyleBackColor = true;
+            this.StartButton.UseVisualStyleBackColor = false;
             this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
             // 
             // StopButton
             // 
             this.StopButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.StopButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.StopButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.StopButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.StopButton.Location = new System.Drawing.Point(535, 12);
             this.StopButton.Name = "StopButton";
             this.StopButton.Size = new System.Drawing.Size(75, 32);
             this.StopButton.TabIndex = 1;
             this.StopButton.Text = "Stop";
-            this.StopButton.UseVisualStyleBackColor = true;
+            this.StopButton.UseVisualStyleBackColor = false;
             this.StopButton.Click += new System.EventHandler(this.StopButton_Click);
             // 
             // ResetButton
             // 
             this.ResetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ResetButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.ResetButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.ResetButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.ResetButton.Location = new System.Drawing.Point(616, 12);
             this.ResetButton.Name = "ResetButton";
             this.ResetButton.Size = new System.Drawing.Size(75, 32);
             this.ResetButton.TabIndex = 1;
             this.ResetButton.Text = "Reset";
-            this.ResetButton.UseVisualStyleBackColor = true;
+            this.ResetButton.UseVisualStyleBackColor = false;
             this.ResetButton.Click += new System.EventHandler(this.ResetButton_Click);
             // 
             // NextGenButton
             // 
             this.NextGenButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.NextGenButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.NextGenButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.NextGenButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.NextGenButton.Location = new System.Drawing.Point(697, 12);
             this.NextGenButton.Name = "NextGenButton";
             this.NextGenButton.Size = new System.Drawing.Size(75, 32);
             this.NextGenButton.TabIndex = 1;
             this.NextGenButton.Text = "Next Gen";
-            this.NextGenButton.UseVisualStyleBackColor = true;
+            this.NextGenButton.UseVisualStyleBackColor = false;
             this.NextGenButton.Click += new System.EventHandler(this.NextGenButton_Click);
             // 
             // MainGameHost
@@ -90,20 +102,20 @@ namespace MaceEvolve
             this.MainGameHost.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MainGameHost.Location = new System.Drawing.Point(0, 0);
             this.MainGameHost.MaxCreatureAmount = 150;
-            this.MainGameHost.MaxCreatureConnections = 16;
+            this.MainGameHost.MaxCreatureConnections = 32;
             this.MainGameHost.MaxCreatureEnergy = 150D;
-            this.MainGameHost.MaxCreatureProcessNodes = 3;
+            this.MainGameHost.MaxCreatureProcessNodes = 8;
             this.MainGameHost.MaxFoodAmount = 350;
-            this.MainGameHost.MinCreatureConnections = 16;
+            this.MainGameHost.MinCreatureConnections = 32;
             this.MainGameHost.MutationChance = 0.1D;
             this.MainGameHost.Name = "MainGameHost";
             this.MainGameHost.NewGenerationInterval = 12D;
             this.MainGameHost.SecondsUntilNewGeneration = 12D;
             this.MainGameHost.Size = new System.Drawing.Size(784, 661);
             this.MainGameHost.Stopwatch = stopwatch1;
-            this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(392, 330, 150, 150);
+            this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(0, 0, 150, 150);
             this.MainGameHost.SuccessfulCreaturesPercentile = 10D;
-            this.MainGameHost.TabIndex = 3;
+            this.MainGameHost.TabIndex = 2;
             this.MainGameHost.TargetFPS = 60;
             this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 784, 661);
             // 
@@ -111,6 +123,7 @@ namespace MaceEvolve
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.ClientSize = new System.Drawing.Size(784, 661);
             this.Controls.Add(this.NextGenButton);
             this.Controls.Add(this.ResetButton);
