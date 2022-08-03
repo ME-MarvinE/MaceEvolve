@@ -207,23 +207,13 @@ namespace MaceEvolve.Controls
         public List<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
         {
             //return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom).ToList();
-            return Creatures.Where(x => x.FoodEaten > 0).ToList();
+            //return Creatures.Where(x => x.FoodEaten > 0).ToList();
 
-            //double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
-            //int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
+            double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
+            int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
 
-            //List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
-            //List<Creature> SuccessfulCreatures = new List<Creature>();
-
-            //for (int i = TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
-            //{
-            //    if (OrderedCreatures[i].FoodEaten > 0)
-            //    {
-            //        SuccessfulCreatures.Add(OrderedCreatures[i]);
-            //    }
-            //}
-
-            //return SuccessfulCreatures;
+            List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
+            return Creatures.OrderBy(x => x.FoodEaten).SkipWhile(x => OrderedCreatures.IndexOf(x) < TopPercentileStartingIndex).Where(x => x.FoodEaten > 0).ToList();
         }
         public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double InputNodeCountMutationChance, double ProcessNodeCountMutationChance, double OutputNodeCountMutationChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance)
         {
