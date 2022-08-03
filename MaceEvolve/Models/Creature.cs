@@ -79,11 +79,6 @@ namespace MaceEvolve.Models
         {
             if (Energy > 0)
             {
-                FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
-                CreatureList = new List<Creature>(GameHost.Creatures);
-                VisibleFood = GetVisibleFood(FoodList).ToList();
-                VisibleCreatures = GetVisibleCreatures(CreatureList).ToList();
-
                 Live();
 
                 if (Energy <= 0)
@@ -126,6 +121,11 @@ namespace MaceEvolve.Models
         }
         public void UpdateInputValues()
         {
+            FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
+            CreatureList = new List<Creature>(GameHost.Creatures);
+            VisibleFood = GetVisibleFood(FoodList).ToList();
+            VisibleCreatures = GetVisibleCreatures(CreatureList).ToList();
+
             Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy(this));
             Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(this));
             Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood(this));
@@ -238,7 +238,7 @@ namespace MaceEvolve.Models
         {
             Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
 
-            if (ClosestFood == null) { return 0; }
+            if (ClosestFood == null) { return 1; }
 
             double HorizontalDistanceToFood = Globals.GetDistanceFrom(Creature.X, Creature.Y, ClosestFood.X, Creature.Y);
 
@@ -248,7 +248,7 @@ namespace MaceEvolve.Models
         {
             Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
 
-            if (ClosestFood == null) { return 0; }
+            if (ClosestFood == null) { return 1; }
 
             double VerticalDistanceToFood = Globals.GetDistanceFrom(Creature.X, Creature.Y, Creature.X, ClosestFood.Y);
 

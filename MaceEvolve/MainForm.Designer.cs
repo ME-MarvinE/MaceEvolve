@@ -90,20 +90,20 @@ namespace MaceEvolve
             this.MainGameHost.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MainGameHost.Location = new System.Drawing.Point(0, 0);
             this.MainGameHost.MaxCreatureAmount = 150;
-            this.MainGameHost.MaxCreatureConnections = 32;
+            this.MainGameHost.MaxCreatureConnections = 16;
             this.MainGameHost.MaxCreatureEnergy = 150D;
-            this.MainGameHost.MaxCreatureProcessNodes = 8;
+            this.MainGameHost.MaxCreatureProcessNodes = 3;
             this.MainGameHost.MaxFoodAmount = 350;
-            this.MainGameHost.MinCreatureConnections = 32;
-            this.MainGameHost.MutationChance = 0.15D;
+            this.MainGameHost.MinCreatureConnections = 16;
+            this.MainGameHost.MutationChance = 0.1D;
             this.MainGameHost.Name = "MainGameHost";
             this.MainGameHost.NewGenerationInterval = 12D;
             this.MainGameHost.SecondsUntilNewGeneration = 12D;
             this.MainGameHost.Size = new System.Drawing.Size(784, 661);
             this.MainGameHost.Stopwatch = stopwatch1;
-            this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(0, 0, 150, 150);
+            this.MainGameHost.SuccessBounds = new System.Drawing.Rectangle(392, 330, 150, 150);
             this.MainGameHost.SuccessfulCreaturesPercentile = 10D;
-            this.MainGameHost.TabIndex = 2;
+            this.MainGameHost.TabIndex = 3;
             this.MainGameHost.TargetFPS = 60;
             this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 784, 661);
             // 

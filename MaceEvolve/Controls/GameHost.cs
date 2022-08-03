@@ -175,27 +175,28 @@ namespace MaceEvolve.Controls
                 {
                     Creature SuccessfulCreature = CreatureFitnessPair.Key;
 
-                    if (TotalFoodEaten > 0 && _Random.NextDouble() < SuccessfulCreaturesFitnesses[SuccessfulCreature])
+                    if (_Random.NextDouble() <= CreatureFitnessPair.Value && NewCreatures.Count < MaxCreatureAmount)
                     {
-                        Creature NewCreature = Creature.Reproduce(new List<Creature>() { SuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
-                        NewCreature.GameHost = this;
-                        NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
-                        NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
-                        NewCreature.Size = 10;
-                        NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
-                        NewCreature.Speed = CreatureSpeed;
-                        NewCreature.Metabolism = 0.1;
-                        NewCreature.Energy = MaxCreatureEnergy;
-                        NewCreature.MaxEnergy = MaxCreatureEnergy;
-                        NewCreature.SightRange = 100;
-
-                        bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance);
-
-                        NewCreatures.Add(NewCreature);
-
-                        if (NewCreatures.Count >= MaxCreatureAmount)
+                        for (int i = 0; i < SuccessfulCreature.FoodEaten; i++)
                         {
-                            break;
+                            if (NewCreatures.Count < MaxCreatureAmount)
+                            {
+                                Creature NewCreature = Creature.Reproduce(new List<Creature>() { SuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+                                NewCreature.GameHost = this;
+                                NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+                                NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+                                NewCreature.Size = 10;
+                                NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+                                NewCreature.Speed = CreatureSpeed;
+                                NewCreature.Metabolism = 0.1;
+                                NewCreature.Energy = MaxCreatureEnergy;
+                                NewCreature.MaxEnergy = MaxCreatureEnergy;
+                                NewCreature.SightRange = 100;
+
+                                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance / 2, MutationChance / 2, MutationChance);
+
+                                NewCreatures.Add(NewCreature);
+                            }
                         }
                     }
                 }
@@ -206,22 +207,23 @@ namespace MaceEvolve.Controls
         public List<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
         {
             //return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom).ToList();
+            return Creatures.Where(x => x.FoodEaten > 0).ToList();
 
-            double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
-            int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
+            //double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
+            //int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
 
-            List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
-            List<Creature> SuccessfulCreatures = new List<Creature>();
+            //List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
+            //List<Creature> SuccessfulCreatures = new List<Creature>();
 
-            for (int i = TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
-            {
-                if (OrderedCreatures[i].FoodEaten > 0)
-                {
-                    SuccessfulCreatures.Add(OrderedCreatures[i]);
-                }
-            }
+            //for (int i = TopPercentileStartingIndex; i < OrderedCreatures.Count; i++)
+            //{
+            //    if (OrderedCreatures[i].FoodEaten > 0)
+            //    {
+            //        SuccessfulCreatures.Add(OrderedCreatures[i]);
+            //    }
+            //}
 
-            return SuccessfulCreatures;
+            //return SuccessfulCreatures;
         }
         public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double InputNodeCountMutationChance, double ProcessNodeCountMutationChance, double OutputNodeCountMutationChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance)
         {
