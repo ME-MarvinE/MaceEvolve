@@ -116,115 +116,151 @@ namespace MaceEvolve.Models
         {
             return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(this));
         }
-        public static void MutateNodeBiases(double MutationChancePerNode, IEnumerable<Node> Nodes)
+        public static bool MutateNodeBias(double MutationChance, Node Node)
         {
-            foreach (var Node in Nodes)
+            if (Globals.Random.NextDouble() <= MutationChance)
             {
-                if (Globals.Random.NextDouble() <= MutationChancePerNode)
-                {
-                    Node.Bias = Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1);
-                }
+                Node.Bias = Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1);
+                return true;
             }
+
+            return false;
         }
-        public static void MutateInputNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxInputNodes, IEnumerable<CreatureInput> PossibleInputs)
+        public static bool MutateInputNodeCount(double MutationChance, IList<Node> Nodes, IEnumerable<CreatureInput> PossibleInputs)
         {
-
-            List<Node> InputNodes = Nodes.Where(x => x.NodeType == NodeType.Input).ToList();
-            int MaxInputNodesToAdd = MaxInputNodes - InputNodes.Count;
+            int RandomNodeNum = Globals.Random.Next(Nodes.Count);
+            Node RandomNode = Nodes[RandomNodeNum];
+            IEnumerable<Node> InputNodes = Nodes.Where(x => x.NodeType == NodeType.Input);
             List<CreatureInput> PossibleInputsToAdd = PossibleInputs.Where(x => !InputNodes.Any(y => y.CreatureInput == x)).ToList();
-
 
             if (PossibleInputsToAdd.Count > 0)
             {
-                for (int i = 0; i < MaxInputNodesToAdd; i++)
+                if (Globals.Random.NextDouble() <= MutationChance)
                 {
-                    if (Globals.Random.NextDouble() <= MutationChancePerNode)
-                    {
-                        CreatureInput RandomPossibleInput = PossibleInputsToAdd[Globals.Random.Next(PossibleInputsToAdd.Count)];
-                        Nodes.Add(new Node(NodeType.Input, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureInput: RandomPossibleInput));
-                    }
+                    CreatureInput RandomPossibleInput = PossibleInputsToAdd[Globals.Random.Next(PossibleInputsToAdd.Count)];
+                    Nodes.Add(new Node(NodeType.Input, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureInput: RandomPossibleInput));
+                    return true;
                 }
             }
-        }
-        public static void MutateProcessNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxProcessNodes)
-        {
-            List<Node> ProcessNodes = Nodes.Where(x => x.NodeType == NodeType.Process).ToList();
-            int MaxProcessNodesToAdd = MaxProcessNodes - ProcessNodes.Count;
 
-            for (int i = 0; i < MaxProcessNodesToAdd; i++)
+            return false;
+        }
+        public static bool MutateProcessNodeCount(double MutationChance, IList<Node> Nodes)
+        {
+            if (Globals.Random.NextDouble() <= MutationChance)
             {
-                if (Globals.Random.NextDouble() <= MutationChancePerNode)
-                {
-                    Nodes.Add(new Node(NodeType.Process, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1)));
-                }
+                Nodes.Add(new Node(NodeType.Process, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1)));
+                return true;
             }
+
+            return false;
         }
-        public static void MutateOutputNodeCount(double MutationChancePerNode, IList<Node> Nodes, int MaxOutputNodes, IEnumerable<CreatureAction> PossibleActions)
+        public static bool MutateOutputNodeCount(double MutationChance, IList<Node> Nodes, IEnumerable<CreatureAction> PossibleActions)
         {
 
-            List<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output).ToList();
-            int MaxOutputNodesToAdd = MaxOutputNodes - OutputNodes.Count;
+            IEnumerable<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output).ToList();
             List<CreatureAction> PossibleOutputsToAdd = PossibleActions.Where(x => !OutputNodes.Any(y => y.CreatureAction == x)).ToList();
-
 
             if (PossibleOutputsToAdd.Count > 0)
             {
-                for (int i = 0; i < MaxOutputNodesToAdd; i++)
+                if (Globals.Random.NextDouble() <= MutationChance)
                 {
-                    if (Globals.Random.NextDouble() <= MutationChancePerNode)
-                    {
-                        CreatureAction RandomPossibleAction = PossibleOutputsToAdd[Globals.Random.Next(PossibleOutputsToAdd.Count)];
-                        Nodes.Add(new Node(NodeType.Output, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureAction: RandomPossibleAction));
-                    }
+                    CreatureAction RandomPossibleAction = PossibleOutputsToAdd[Globals.Random.Next(PossibleOutputsToAdd.Count)];
+                    Nodes.Add(new Node(NodeType.Output, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureAction: RandomPossibleAction));
+                    return true;
                 }
             }
+
+            return false;
         }
-        public static void MutateConnections(double MutationChancePerConnection, IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
+        public static bool MutateConnectionTarget(double MutationChance, IList<Node> Nodes, Connection Connection)
         {
-            List<Node> NodesList = new List<Node>(Nodes);
+            List<Node> PossibleTargetNodes = GetPossibleTargetNodes(Nodes).ToList();
 
-            List<Node> PossibleSourceNodes = GetPossibleSourceNodes(NodesList).ToList();
-            List<Node> PossibleTargetNodes = GetPossibleTargetNodes(NodesList).ToList();
-
-            foreach (var Connection in Connections)
+            if (Globals.Random.NextDouble() <= MutationChance)
             {
-                if (Globals.Random.NextDouble() <= MutationChancePerConnection)
+                if (PossibleTargetNodes.Count > 0)
                 {
-                    int RandomNum = Globals.Random.Next(3);
+                    int RandomNodeNum = Globals.Random.Next(PossibleTargetNodes.Count);
+                    Node RandomNode = PossibleTargetNodes[RandomNodeNum];
 
-                    if (PossibleSourceNodes.Count > 0 && (RandomNum == 0 || RandomNum == 2))
-                    {
-                        int RandomNodeNum = Globals.Random.Next(PossibleSourceNodes.Count);
-                        Node RandomNode = PossibleSourceNodes[RandomNodeNum];
-
-                        Connection.SourceId = GetNodeId(RandomNode, NodesList);
-                    }
-
-                    if (PossibleTargetNodes.Count > 0 && (RandomNum == 1 || RandomNum == 2))
-                    {
-                        int RandomNodeNum = Globals.Random.Next(PossibleTargetNodes.Count);
-                        Node RandomNode = PossibleTargetNodes[RandomNodeNum];
-
-                        Connection.TargetId = GetNodeId(RandomNode, NodesList);
-                    }
+                    Connection.TargetId = GetNodeId(RandomNode, Nodes);
+                    return true;
                 }
             }
+
+            return false;
         }
-        public static void MutateConnectionWeights(double MutationChancePerConnection, IEnumerable<Connection> Connections, double ConnectionWeightBound)
+        public static bool MutateConnectionSource(double MutationChance, IList<Node> Nodes, Connection Connection)
         {
-            foreach (var Connection in Connections)
+            List<Node> PossibleSourceNodes = GetPossibleSourceNodes(Nodes).ToList();
+
+            if (Globals.Random.NextDouble() <= MutationChance)
             {
-                if (Globals.Random.NextDouble() <= MutationChancePerConnection)
+                if (PossibleSourceNodes.Count > 0)
                 {
-                    Connection.Weight = Globals.Map(Globals.Random.NextDouble(), 0, 1, -ConnectionWeightBound, ConnectionWeightBound);
+                    int RandomNodeNum = Globals.Random.Next(PossibleSourceNodes.Count);
+                    Node RandomNode = PossibleSourceNodes[RandomNodeNum];
+
+                    Connection.SourceId = GetNodeId(RandomNode, Nodes);
+                    return true;
                 }
             }
+
+            return false;
+        }
+        //public static void MutateConnections(double MutationChance, IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
+        //{
+        //    List<Node> NodesList = new List<Node>(Nodes);
+
+        //    List<Node> PossibleSourceNodes = GetPossibleSourceNodes(NodesList).ToList();
+        //    List<Node> PossibleTargetNodes = GetPossibleTargetNodes(NodesList).ToList();
+
+        //    foreach (var Connection in Connections)
+        //    {
+        //        if (Globals.Random.NextDouble() <= MutationChance)
+        //        {
+        //            int RandomNum = Globals.Random.Next(3);
+
+        //            if (PossibleSourceNodes.Count > 0 && (RandomNum == 0 || RandomNum == 2))
+        //            {
+        //                int RandomNodeNum = Globals.Random.Next(PossibleSourceNodes.Count);
+        //                Node RandomNode = PossibleSourceNodes[RandomNodeNum];
+
+        //                Connection.SourceId = GetNodeId(RandomNode, NodesList);
+        //            }
+
+        //            if (PossibleTargetNodes.Count > 0 && (RandomNum == 1 || RandomNum == 2))
+        //            {
+        //                int RandomNodeNum = Globals.Random.Next(PossibleTargetNodes.Count);
+        //                Node RandomNode = PossibleTargetNodes[RandomNodeNum];
+
+        //                Connection.TargetId = GetNodeId(RandomNode, NodesList);
+        //            }
+        //        }
+        //    }
+        //}
+        public static bool MutateConnectionWeight(double MutationChance, Connection Connection, double ConnectionWeightBound)
+        {
+            if (Globals.Random.NextDouble() <= MutationChance)
+            {
+                Connection.Weight = Globals.Map(Globals.Random.NextDouble(), 0, 1, -ConnectionWeightBound, ConnectionWeightBound);
+                return true;
+            }
+
+            return false;
+        }
+        public static bool MutateConnection(Connection Connection, IList<Node> Nodes, double SourceMutationChance, double TargetMutationChance, double WeightMutationChance, double WeightBound)
+        {
+            return MutateConnectionSource(SourceMutationChance, Nodes, Connection) ||
+                MutateConnectionTarget(TargetMutationChance, Nodes, Connection) ||
+                MutateConnectionWeight(WeightMutationChance, Connection, WeightBound);
         }
         public int GetNodeId(Node Node)
         {
             return GetNodeId(Node, Nodes);
         }
-        public static int GetNodeId(Node Node, List<Node> Nodes)
+        public static int GetNodeId(Node Node, IList<Node> Nodes)
         {
             return Nodes.IndexOf(Node);
         }

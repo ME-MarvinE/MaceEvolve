@@ -105,7 +105,7 @@ namespace MaceEvolve
             this.MainGameHost.SuccessfulCreaturesPercentile = 10D;
             this.MainGameHost.TabIndex = 2;
             this.MainGameHost.TargetFPS = 60;
-            this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 737, 632);
+            this.MainGameHost.WorldBounds = new System.Drawing.Rectangle(0, 0, 784, 661);
             // 
             // MainForm
             // 

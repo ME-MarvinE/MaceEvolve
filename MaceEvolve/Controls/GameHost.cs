@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace MaceEvolve.Controls
@@ -45,13 +46,13 @@ namespace MaceEvolve.Controls
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
         public int MaxCreatureProcessNodes { get; set; } = 8;
-        public double MutationChance { get; set; } = 0.05;
+        public double MutationChance { get; set; } = 0.1;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
         public int GenerationCount = 1;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs.AsReadOnly();
-        public ReadOnlyCollection<CreatureAction> PossibleCreatureActions{ get; } = Globals.AllCreatureActions.AsReadOnly();
+        public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions.AsReadOnly();
         #endregion
 
         #region Constructors
@@ -126,35 +127,10 @@ namespace MaceEvolve.Controls
                 NewCreature.MaxEnergy = MaxCreatureEnergy;
                 NewCreature.SightRange = 100;
 
-                switch (_Random.Next(6))
-                {
-                    case 0:
-                        NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
-                        break;
+                Node RandomNode = NewCreature.Brain.Nodes[_Random.Next(NewCreature.Brain.Nodes.Count)];
+                Connection RandomConnection = NewCreature.Brain.Connections[_Random.Next(NewCreature.Brain.Connections.Count)];
 
-                    case 1:
-                        NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
-                        break;
-
-                    case 2:
-                        NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
-                        break;
-
-                    case 3:
-                        NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
-                        break;
-
-                    case 4:
-                        NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
-                        break;
-
-                    case 5:
-                        NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-                        break;
-
-                    default:
-                        throw new NotImplementedException("Random mutation not implemented.");
-                }
+                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance);
 
                 NewCreatures.Add(NewCreature);
             }
@@ -200,35 +176,7 @@ namespace MaceEvolve.Controls
                         NewCreature.MaxEnergy = MaxCreatureEnergy;
                         NewCreature.SightRange = 100;
 
-                        switch (_Random.Next(6))
-                        {
-                            case 0:
-                                NeuralNetwork.MutateNodeBiases(MutationChance, NewCreature.Brain.Nodes);
-                                break;
-
-                            case 1:
-                                NeuralNetwork.MutateInputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureInputs);
-                                break;
-
-                            case 2:
-                                NeuralNetwork.MutateProcessNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes);
-                                break;
-
-                            case 3:
-                                NeuralNetwork.MutateOutputNodeCount(MutationChance, NewCreature.Brain.Nodes, MaxCreatureProcessNodes, PossibleCreatureActions);
-                                break;
-
-                            case 4:
-                                NeuralNetwork.MutateConnections(MutationChance, NewCreature.Brain.Nodes, NewCreature.Brain.Connections);
-                                break;
-
-                            case 5:
-                                NeuralNetwork.MutateConnectionWeights(MutationChance, NewCreature.Brain.Connections, ConnectionWeightBound);
-                                break;
-
-                            default:
-                                throw new NotImplementedException("Random mutation not implemented.");
-                        }
+                        bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance);
 
                         NewCreatures.Add(NewCreature);
 
@@ -261,6 +209,18 @@ namespace MaceEvolve.Controls
             }
 
             return SuccessfulCreatures;
+        }
+        public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double InputNodeCountMutationChance, double ProcessNodeCountMutationChance, double OutputNodeCountMutationChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance)
+        {
+            Node RandomNode = Network.Nodes[_Random.Next(Network.Nodes.Count)];
+            Connection RandomConnection = Network.Connections[Globals.Random.Next(Network.Connections.Count)];
+
+            //Order matters.
+            return NeuralNetwork.MutateNodeBias(RandomNodeBiasMutationChance, RandomNode) ||
+                NeuralNetwork.MutateInputNodeCount(InputNodeCountMutationChance, Network.Nodes, PossibleCreatureInputs) ||
+                NeuralNetwork.MutateProcessNodeCount(ProcessNodeCountMutationChance, Network.Nodes) ||
+                NeuralNetwork.MutateOutputNodeCount(OutputNodeCountMutationChance, Network.Nodes, PossibleCreatureActions) ||
+                NeuralNetwork.MutateConnection(RandomConnection, Network.Nodes, RandomConnectionSourceMutationChance, RandomConnectionTargetMutationChance, RandomConnectionWeightMutationChance, ConnectionWeightBound);
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
