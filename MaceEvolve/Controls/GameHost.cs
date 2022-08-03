@@ -46,7 +46,8 @@ namespace MaceEvolve.Controls
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
         public int MaxCreatureProcessNodes { get; set; } = 8;
-        public double MutationChance { get; set; } = 0.1;
+        public double MutationChance { get; set; } = 1;
+        public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
@@ -135,7 +136,10 @@ namespace MaceEvolve.Controls
             Node RandomNode = NewCreature.Brain.Nodes[_Random.Next(NewCreature.Brain.Nodes.Count)];
             Connection RandomConnection = NewCreature.Brain.Connections[_Random.Next(NewCreature.Brain.Connections.Count)];
 
-            bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance);
+            for (int j = 0; j < MutationAttempts; j++)
+            {
+                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance, MutationChance, MutationChance, MutationChance / 2, MutationChance / 2, MutationChance * 2);
+            }
 
             NewCreatures.Add(NewCreature);
 
@@ -193,7 +197,10 @@ namespace MaceEvolve.Controls
                                 NewCreature.MaxEnergy = MaxCreatureEnergy;
                                 NewCreature.SightRange = 100;
 
-                                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance / 2, MutationChance / 2, MutationChance);
+                                for (int j = 0; j < MutationAttempts; j++)
+                                {
+                                    bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance, MutationChance, MutationChance, MutationChance / 2, MutationChance / 2, MutationChance * 2);
+                                }
 
                                 NewCreatures.Add(NewCreature);
                             }
@@ -307,7 +314,9 @@ namespace MaceEvolve.Controls
                 }
                 else
                 {
+                    Rectangle OldWorldBounds = new Rectangle(WorldBounds.Location, WorldBounds.Size);
                     Reset();
+                    WorldBounds = OldWorldBounds;
                 }
             }
             else
