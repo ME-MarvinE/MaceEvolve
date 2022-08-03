@@ -100,40 +100,44 @@ namespace MaceEvolve.Controls
 
             List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
 
-            int TotalFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Sum(x => x.FoodEaten);
-            int MostFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Max(x => x.FoodEaten);
+            if (SuccessfulCreatures.Count == 0)
+            {
+                return NewCreatures;
+            }
+
+            int TotalFoodEaten = SuccessfulCreatures.Sum(x => x.FoodEaten);
+            int MostFoodEaten = SuccessfulCreatures.Max(x => x.FoodEaten);
+
+            if (TotalFoodEaten == 0 || MostFoodEaten == 0)
+            {
+                return NewCreatures;
+            }
 
             foreach (var Creature in SuccessfulCreatures)
             {
-                double CreatureFitness = MostFoodEaten == 0 ? 0 : (double)Creature.FoodEaten / MostFoodEaten;
+                double CreatureFitness = (double)Creature.FoodEaten / MostFoodEaten;
 
                 SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
             }
 
-            SuccessfulCreatures = SuccessfulCreatures.Where(x => SuccessfulCreaturesFitnesses[x] > 0).ToList();
-            SuccessfulCreaturesFitnesses = SuccessfulCreaturesFitnesses.Where(x => x.Value > 0).ToDictionary(x => x.Key, x => x.Value);
+            Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+            NewCreature.GameHost = this;
+            NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
+            NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
+            NewCreature.Size = 10;
+            NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
+            NewCreature.Speed = CreatureSpeed;
+            NewCreature.Metabolism = 0.1;
+            NewCreature.Energy = MaxCreatureEnergy;
+            NewCreature.MaxEnergy = MaxCreatureEnergy;
+            NewCreature.SightRange = 100;
 
-            if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
-            {
-                Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
-                NewCreature.GameHost = this;
-                NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
-                NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
-                NewCreature.Size = 10;
-                NewCreature.Color = Color.FromArgb(255, 64, 64, _Random.Next(256));
-                NewCreature.Speed = CreatureSpeed;
-                NewCreature.Metabolism = 0.1;
-                NewCreature.Energy = MaxCreatureEnergy;
-                NewCreature.MaxEnergy = MaxCreatureEnergy;
-                NewCreature.SightRange = 100;
+            Node RandomNode = NewCreature.Brain.Nodes[_Random.Next(NewCreature.Brain.Nodes.Count)];
+            Connection RandomConnection = NewCreature.Brain.Connections[_Random.Next(NewCreature.Brain.Connections.Count)];
 
-                Node RandomNode = NewCreature.Brain.Nodes[_Random.Next(NewCreature.Brain.Nodes.Count)];
-                Connection RandomConnection = NewCreature.Brain.Connections[_Random.Next(NewCreature.Brain.Connections.Count)];
+            bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance);
 
-                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance, MutationChance);
-
-                NewCreatures.Add(NewCreature);
-            }
+            NewCreatures.Add(NewCreature);
 
             return NewCreatures;
         }
@@ -145,26 +149,35 @@ namespace MaceEvolve.Controls
 
             List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList);
 
-            int TotalFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Sum(x => x.FoodEaten);
-            int MostFoodEaten = SuccessfulCreatures.Count == 0 ? 0 : SuccessfulCreatures.Max(x => x.FoodEaten);
+            if (SuccessfulCreatures.Count == 0)
+            {
+                return NewCreatures;
+            }
+
+            int TotalFoodEaten = SuccessfulCreatures.Sum(x => x.FoodEaten);
+            int MostFoodEaten = SuccessfulCreatures.Max(x => x.FoodEaten);
+
+            if (TotalFoodEaten == 0 || MostFoodEaten == 0)
+            {
+                return NewCreatures;
+            }
 
             foreach (var Creature in SuccessfulCreatures)
             {
-                double CreatureFitness = MostFoodEaten == 0 ? 0 : (double)Creature.FoodEaten / MostFoodEaten;
+                double CreatureFitness = (double)Creature.FoodEaten / MostFoodEaten;
 
                 SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
             }
 
-            if (SuccessfulCreatures.Count > 0 && TotalFoodEaten > 0)
+            while (NewCreatures.Count < MaxCreatureAmount)
             {
-                while (NewCreatures.Count < MaxCreatureAmount)
+                foreach (var CreatureFitnessPair in SuccessfulCreaturesFitnesses.OrderByDescending(x => x.Value))
                 {
-                    int RandomSuccessfulCreatureNum = _Random.Next(0, SuccessfulCreatures.Count);
-                    Creature RandomSuccessfulCreature = SuccessfulCreatures[RandomSuccessfulCreatureNum];
+                    Creature SuccessfulCreature = CreatureFitnessPair.Key;
 
-                    if (TotalFoodEaten > 0 && _Random.NextDouble() < SuccessfulCreaturesFitnesses[RandomSuccessfulCreature])
+                    if (TotalFoodEaten > 0 && _Random.NextDouble() < SuccessfulCreaturesFitnesses[SuccessfulCreature])
                     {
-                        Creature NewCreature = Creature.Reproduce(new List<Creature>() { RandomSuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+                        Creature NewCreature = Creature.Reproduce(new List<Creature>() { SuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
                         NewCreature.GameHost = this;
                         NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                         NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
