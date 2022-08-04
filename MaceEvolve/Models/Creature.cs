@@ -240,7 +240,7 @@ namespace MaceEvolve.Models
 
             if (ClosestFood == null) { return 1; }
 
-            double HorizontalDistanceToFood = Globals.GetDistanceFrom(Creature.X, Creature.Y, ClosestFood.X, Creature.Y);
+            double HorizontalDistanceToFood = Globals.GetDistanceFrom(Creature.MX, Creature.MY, ClosestFood.MX, Creature.MY);
 
             return Globals.Map(HorizontalDistanceToFood, 0, Creature.SightRange, 0, 1);
         }
@@ -250,7 +250,7 @@ namespace MaceEvolve.Models
 
             if (ClosestFood == null) { return 1; }
 
-            double VerticalDistanceToFood = Globals.GetDistanceFrom(Creature.X, Creature.Y, Creature.X, ClosestFood.Y);
+            double VerticalDistanceToFood = Globals.GetDistanceFrom(Creature.MX, Creature.MY, Creature.MX, ClosestFood.MY);
 
             return Globals.Map(VerticalDistanceToFood, 0, Creature.SightRange, 0, 1);
         }

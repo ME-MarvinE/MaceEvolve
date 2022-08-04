@@ -46,7 +46,7 @@ namespace MaceEvolve.Controls
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
         public int MaxCreatureProcessNodes { get; set; } = 8;
-        public double MutationChance { get; set; } = 1;
+        public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;

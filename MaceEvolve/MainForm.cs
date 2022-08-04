@@ -1,20 +1,16 @@
+using MaceEvolve.Controls;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaceEvolve
 {
     public partial class MainForm : Form
     {
+        public GameHost MainGameHost = new GameHost() { Dock = DockStyle.Fill };
         public MainForm()
         {
             InitializeComponent();
+            Controls.Add(MainGameHost);
         }
 
         private void StartButton_Click(object sender, EventArgs e)
