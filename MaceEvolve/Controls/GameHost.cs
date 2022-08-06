@@ -96,30 +96,15 @@ namespace MaceEvolve.Controls
         public List<Creature> NewGenerationSexual()
         {
             List<Creature> CreaturesList = new List<Creature>(Creatures);
-            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
+            IEnumerable<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList);
+            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = GetFitnesses(SuccessfulCreatures);
+
+            if (!SuccessfulCreaturesFitnesses.Any())
+            {
+                return new List<Creature>();
+            }
+
             List<Creature> NewCreatures = new List<Creature>();
-
-            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList).ToList();
-
-            if (SuccessfulCreatures.Count == 0)
-            {
-                return NewCreatures;
-            }
-
-            int TotalFoodEaten = SuccessfulCreatures.Sum(x => x.FoodEaten);
-            int MostFoodEaten = SuccessfulCreatures.Max(x => x.FoodEaten);
-
-            if (TotalFoodEaten == 0 || MostFoodEaten == 0)
-            {
-                return NewCreatures;
-            }
-
-            foreach (var Creature in SuccessfulCreatures)
-            {
-                double CreatureFitness = (double)Creature.FoodEaten / MostFoodEaten;
-
-                SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
-            }
 
             Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
             NewCreature.GameHost = this;
@@ -148,30 +133,15 @@ namespace MaceEvolve.Controls
         public List<Creature> NewGenerationAsexual()
         {
             List<Creature> CreaturesList = new List<Creature>(Creatures);
-            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
+            IEnumerable<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList);
+            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = GetFitnesses(SuccessfulCreatures);
+
+            if (!SuccessfulCreaturesFitnesses.Any())
+            {
+                return new List<Creature>();
+            }
+
             List<Creature> NewCreatures = new List<Creature>();
-
-            List<Creature> SuccessfulCreatures = GetSuccessfulCreatures(CreaturesList);
-
-            if (SuccessfulCreatures.Count == 0)
-            {
-                return NewCreatures;
-            }
-
-            int TotalFoodEaten = SuccessfulCreatures.Sum(x => x.FoodEaten);
-            int MostFoodEaten = SuccessfulCreatures.Max(x => x.FoodEaten);
-
-            if (TotalFoodEaten == 0 || MostFoodEaten == 0)
-            {
-                return NewCreatures;
-            }
-
-            foreach (var Creature in SuccessfulCreatures)
-            {
-                double CreatureFitness = (double)Creature.FoodEaten / MostFoodEaten;
-
-                SuccessfulCreaturesFitnesses.Add(Creature, CreatureFitness);
-            }
 
             while (NewCreatures.Count < MaxCreatureAmount)
             {
@@ -211,8 +181,15 @@ namespace MaceEvolve.Controls
 
             return NewCreatures;
         }
-        public List<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
+        public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> Creatures)
         {
+            if (Creatures == null) { throw new ArgumentNullException(); }
+
+            if (!Creatures.Any())
+            {
+                return new List<Creature>();
+            }
+
             //return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom).ToList();
             //return Creatures.Where(x => x.FoodEaten > 0).ToList();
 
@@ -220,7 +197,29 @@ namespace MaceEvolve.Controls
             int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
 
             List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
-            return Creatures.OrderBy(x => x.FoodEaten).SkipWhile(x => OrderedCreatures.IndexOf(x) < TopPercentileStartingIndex).Where(x => x.FoodEaten > 0).ToList();
+            return OrderedCreatures.SkipWhile(x => OrderedCreatures.IndexOf(x) < TopPercentileStartingIndex).Where(x => x.FoodEaten > 0);
+        }
+        public Dictionary<Creature, double> GetFitnesses(IEnumerable<Creature> Creatures)
+        {
+            if (Creatures == null) { throw new ArgumentNullException(); }
+
+            if (!Creatures.Any())
+            {
+                return new Dictionary<Creature, double>();
+            }
+
+            int MostFoodEaten = Creatures.Max(x => x.FoodEaten);
+
+            if (MostFoodEaten == 0)
+            {
+                return new Dictionary<Creature, double>();
+            }
+
+            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = Creatures.ToDictionary(
+                x => x,
+                x => (double)x.FoodEaten / MostFoodEaten);
+
+            return SuccessfulCreaturesFitnesses;
         }
         public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double InputNodeCountMutationChance, double ProcessNodeCountMutationChance, double OutputNodeCountMutationChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance)
         {
