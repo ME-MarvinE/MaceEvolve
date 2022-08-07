@@ -31,15 +31,6 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Constructors
-        public Creature()
-            : this(new Genome())
-        {
-        }
-        public Creature(Genome Genome)
-            : this(new NeuralNetwork(Globals.AllCreatureInputs, 5, Globals.AllCreatureActions, 10, 50, 4))
-        {
-            this.Genome = Genome;
-        }
         public Creature(NeuralNetwork Brain)
         {
             this.Brain = Brain;

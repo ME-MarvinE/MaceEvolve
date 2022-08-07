@@ -52,8 +52,8 @@ namespace MaceEvolve.Controls
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
         public int GenerationCount = 1;
-        public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs.AsReadOnly();
-        public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions.AsReadOnly();
+        public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
+        public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         #endregion
 
         #region Constructors
@@ -117,9 +117,6 @@ namespace MaceEvolve.Controls
             NewCreature.Energy = MaxCreatureEnergy;
             NewCreature.MaxEnergy = MaxCreatureEnergy;
             NewCreature.SightRange = 100;
-
-            Node RandomNode = NewCreature.Brain.Nodes[_Random.Next(NewCreature.Brain.Nodes.Count)];
-            Connection RandomConnection = NewCreature.Brain.Connections[_Random.Next(NewCreature.Brain.Connections.Count)];
 
             for (int j = 0; j < MutationAttempts; j++)
             {

@@ -43,7 +43,6 @@ namespace MaceEvolve.Models
             : this(Nodes, Inputs, Actions, GenerateRandomConnections(MinConnections, MaxConnections, Nodes, ConnectionWeightBound))
         {
         }
-        [JsonConstructor]
         public NeuralNetwork(List<Node> Nodes, List<CreatureInput> Inputs, List<CreatureAction> Actions, List<Connection> Connections)
         {
             if (Inputs == null) { throw new ArgumentNullException(nameof(Inputs)); }
