@@ -117,7 +117,8 @@ namespace MaceEvolve.Models
             Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy(this));
             Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(this));
             Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood(this));
-            Brain.UpdateInputValue(CreatureInput.ProximityToCreature, ProximityToCreature(this));
+            Brain.UpdateInputValue(CreatureInput.VerticalProximityToCreature, VerticalProximityToCreature(this));
+            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature(this));
             Brain.UpdateInputValue(CreatureInput.VerticalWorldBoundProximity, VerticalWorldBoundProximity(this));
             Brain.UpdateInputValue(CreatureInput.HorizontalWorldBoundProximity, HorizontalWorldBoundProximity(this));
         }
@@ -212,15 +213,27 @@ namespace MaceEvolve.Models
         {
             return Globals.Map(Creature.Energy, 0, Creature.MaxEnergy, 0, 1);
         }
-        public static double ProximityToCreature(Creature Creature)
+        public static double HorizontalProximityToCreature(Creature Creature)
         {
-            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault(x => x != Creature);
+            //Visible creatures does not contain itself. No need to filter.
+            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault();
 
             if (ClosestCreature == null) { return 1; }
 
-            double DistanceFromCreature = Globals.GetDistanceFrom(Creature.X, Creature.Y, ClosestCreature.X, ClosestCreature.Y);
+            double HorizontalDistanceToCreature = Globals.GetDistanceFrom(Creature.MX, Creature.MY, ClosestCreature.MX, Creature.MY);
 
-            return Globals.Map(DistanceFromCreature, 0, Creature.SightRange, 0, 1);
+            return Globals.Map(HorizontalDistanceToCreature, 0, Creature.SightRange, 0, 1);
+        }
+        public static double VerticalProximityToCreature(Creature Creature)
+        {
+            //Visible creatures does not contain itself. No need to filter.
+            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault();
+
+            if (ClosestCreature == null) { return 1; }
+
+            double VerticalDistanceToCreature = Globals.GetDistanceFrom(Creature.MX, Creature.MY, Creature.MX, ClosestCreature.MY);
+
+            return Globals.Map(VerticalDistanceToCreature, 0, Creature.SightRange, 0, 1);
         }
         public static double HorizontalProximityToFood(Creature Creature)
         {
