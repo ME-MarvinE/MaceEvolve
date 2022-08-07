@@ -8,13 +8,12 @@ namespace MaceEvolve.Models
 {
     public class Creature : GameObject
     {
-        #region Fields
-        private List<Food> FoodList { get; set; }
-        private List<Creature> CreatureList { get; set; }
-        #endregion
-
         #region Properties
         public NeuralNetwork Brain { get; set; }
+        private IEnumerable<Food> ExistingFood { get; set; }
+        private IEnumerable<Creature> ExistingCreatures { get; set; }
+        public IEnumerable<Food> VisibleFood { get; set; }
+        public IEnumerable<Creature> VisibleCreatures { get; set; }
         private double MoveCost { get; set; } = 0.5;
         public Genome Genome;
         public double Energy { get; set; } = 150;
@@ -22,8 +21,6 @@ namespace MaceEvolve.Models
         public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
-        public List<Food> VisibleFood { get; set; }
-        public List<Creature> VisibleCreatures { get; set; }
         public int FoodEaten { get; set; }
         //public int StomachSize { get; set; } = 5;
         //public List<Food> StomachContents { get; set; } = 5;
@@ -112,10 +109,10 @@ namespace MaceEvolve.Models
         }
         public void UpdateInputValues()
         {
-            FoodList = GameHost.Food.Where(x => x.Servings > 0).ToList();
-            CreatureList = new List<Creature>(GameHost.Creatures);
-            VisibleFood = GetVisibleFood(FoodList).ToList();
-            VisibleCreatures = GetVisibleCreatures(CreatureList).ToList();
+            ExistingFood = GameHost.Food.Where(x => x.Servings > 0);
+            ExistingCreatures = new List<Creature>(GameHost.Creatures);
+            VisibleFood = GetVisibleFood(ExistingFood).ToList();
+            VisibleCreatures = GetVisibleCreatures(ExistingCreatures);
 
             Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy(this));
             Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(this));
