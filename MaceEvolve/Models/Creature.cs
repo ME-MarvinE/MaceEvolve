@@ -81,7 +81,7 @@ namespace MaceEvolve.Models
         }
         public IEnumerable<Creature> GetVisibleCreatures(IEnumerable<Creature> Creatures)
         {
-            return Creatures.Where(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y) <= SightRange).OrderBy(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y));
+            return Creatures.Where(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y) <= SightRange).OrderBy(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y)).Where(x => x != this);
         }
         public void Die()
         {
@@ -214,9 +214,9 @@ namespace MaceEvolve.Models
         }
         public static double ProximityToCreature(Creature Creature)
         {
-            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault();
+            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault(x => x != Creature);
 
-            if (ClosestCreature == null) { return 0; }
+            if (ClosestCreature == null) { return 1; }
 
             double DistanceFromCreature = Globals.GetDistanceFrom(Creature.X, Creature.Y, ClosestCreature.X, ClosestCreature.Y);
 
