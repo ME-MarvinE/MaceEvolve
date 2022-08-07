@@ -75,13 +75,9 @@ namespace MaceEvolve.Models
                 }
             }
         }
-        public IEnumerable<Food> GetVisibleFood(IEnumerable<Food> Food)
+        public static IEnumerable<T> GetVisibleGameObjects<T>(Creature Creature, IEnumerable<T> GameObjects) where T : GameObject
         {
-            return Food.Where(Food => Globals.GetDistanceFrom(X, Y, Food.X, Food.Y) <= SightRange).OrderBy(Food => Globals.GetDistanceFrom(X, Y, Food.X, Food.Y));
-        }
-        public IEnumerable<Creature> GetVisibleCreatures(IEnumerable<Creature> Creatures)
-        {
-            return Creatures.Where(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y) <= SightRange).OrderBy(Creature => Globals.GetDistanceFrom(X, Y, Creature.X, Creature.Y)).Where(x => x != this);
+            return GameObjects.Where(g => Globals.GetDistanceFrom(Creature.X, Creature.Y, g.X, g.Y) <= Creature.SightRange && g != Creature).OrderBy(g => Globals.GetDistanceFrom(Creature.X, Creature.Y, g.X, g.Y));
         }
         public void Die()
         {
@@ -110,9 +106,9 @@ namespace MaceEvolve.Models
         public void UpdateInputValues()
         {
             ExistingFood = GameHost.Food.Where(x => x.Servings > 0);
-            ExistingCreatures = new List<Creature>(GameHost.Creatures);
-            VisibleFood = GetVisibleFood(ExistingFood).ToList();
-            VisibleCreatures = GetVisibleCreatures(ExistingCreatures);
+            ExistingCreatures = GameHost.Creatures;
+            VisibleFood = GetVisibleGameObjects(this, ExistingFood);
+            VisibleCreatures = GetVisibleGameObjects(this, ExistingCreatures);
 
             Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy(this));
             Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(this));
@@ -208,7 +204,7 @@ namespace MaceEvolve.Models
             return OffSpring;
         }
         #region CreatureValues
-        //Creature values map from 0 to 1.
+        //f values map from 0 to 1.
         public static double PercentMaxEnergy(Creature Creature)
         {
             return Globals.Map(Creature.Energy, 0, Creature.MaxEnergy, 0, 1);
