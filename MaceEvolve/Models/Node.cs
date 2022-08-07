@@ -13,6 +13,7 @@ namespace MaceEvolve.Models
         public bool Evaluating { get; private set; }
         public CreatureInput? CreatureInput { get; set; }
         public CreatureAction? CreatureAction { get; set; }
+        public int OutputCount = 0;
         #endregion
 
         #region Constructors
@@ -35,6 +36,8 @@ namespace MaceEvolve.Models
 
             PreviousOutput = Output;
             Evaluating = false;
+
+            OutputCount += 1;
 
             return Output;
         }
