@@ -66,7 +66,7 @@ namespace MaceEvolve.Models
             {
                 _InputValues.Add(CreatureInput, Value);
             }
-            
+
         }
         public static List<Connection> GenerateRandomConnections(int MinConnections, int MaxConnections, IEnumerable<Node> Nodes, double WeightBound)
         {
@@ -120,57 +120,104 @@ namespace MaceEvolve.Models
             if (Globals.Random.NextDouble() <= MutationChance)
             {
                 Node.Bias = Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1);
+
                 return true;
             }
 
             return false;
         }
-        public static bool MutateInputNodeCount(double MutationChance, IList<Node> Nodes, IEnumerable<CreatureInput> PossibleInputs)
+        public static Node GetInputNodeToAdd(double AddNodeChance, IList<Node> Nodes, IEnumerable<CreatureInput> PossibleInputs)
         {
-            int RandomNodeNum = Globals.Random.Next(Nodes.Count);
-            Node RandomNode = Nodes[RandomNodeNum];
-            IEnumerable<Node> InputNodes = Nodes.Where(x => x.NodeType == NodeType.Input);
-            List<CreatureInput> PossibleInputsToAdd = PossibleInputs.Where(x => !InputNodes.Any(y => y.CreatureInput == x)).ToList();
-
-            if (PossibleInputsToAdd.Count > 0)
+            if (Globals.Random.NextDouble() <= AddNodeChance)
             {
-                if (Globals.Random.NextDouble() <= MutationChance)
+                IEnumerable<Node> InputNodes = Nodes.Where(x => x.NodeType == NodeType.Input);
+                //Possible inputs are any that aren't already present in the creature.
+                List<CreatureInput> PossibleInputsToAdd = PossibleInputs.Where(x => !InputNodes.Any(y => y.CreatureInput == x)).ToList();
+
+                if (PossibleInputsToAdd.Count > 0)
                 {
                     CreatureInput RandomPossibleInput = PossibleInputsToAdd[Globals.Random.Next(PossibleInputsToAdd.Count)];
-                    Nodes.Add(new Node(NodeType.Input, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureInput: RandomPossibleInput));
-                    return true;
+                    Node NewNode = new Node(NodeType.Input, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureInput: RandomPossibleInput);
+                    Nodes.Add(NewNode);
+
+                    return NewNode;
                 }
             }
 
-            return false;
+            return null;
         }
-        public static bool MutateProcessNodeCount(double MutationChance, IList<Node> Nodes)
+        public static Node GetInputNodeToRemove(double RemoveNodeChance, IEnumerable<Node> Nodes)
         {
-            if (Globals.Random.NextDouble() <= MutationChance)
+            if (Globals.Random.NextDouble() <= RemoveNodeChance)
             {
-                Nodes.Add(new Node(NodeType.Process, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1)));
-                return true;
-            }
+                List<Node> InputNodes = Nodes.Where(x => x.NodeType == NodeType.Input).ToList();
 
-            return false;
-        }
-        public static bool MutateOutputNodeCount(double MutationChance, IList<Node> Nodes, IEnumerable<CreatureAction> PossibleActions)
-        {
-
-            IEnumerable<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output).ToList();
-            List<CreatureAction> PossibleOutputsToAdd = PossibleActions.Where(x => !OutputNodes.Any(y => y.CreatureAction == x)).ToList();
-
-            if (PossibleOutputsToAdd.Count > 0)
-            {
-                if (Globals.Random.NextDouble() <= MutationChance)
+                if (InputNodes.Count > 0)
                 {
-                    CreatureAction RandomPossibleAction = PossibleOutputsToAdd[Globals.Random.Next(PossibleOutputsToAdd.Count)];
-                    Nodes.Add(new Node(NodeType.Output, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureAction: RandomPossibleAction));
-                    return true;
+                    return InputNodes[Globals.Random.Next(InputNodes.Count)];
                 }
             }
 
-            return false;
+            return null;
+        }
+        public static Node GetProcessNodeToAdd(double AddNodeChance)
+        {
+            if (Globals.Random.NextDouble() <= AddNodeChance)
+            {
+                Node NewNode = new Node(NodeType.Process, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1));
+
+                return NewNode;
+            }
+
+            return null;
+        }
+        public static Node GetProcessNodeToRemove(double RemoveNodeChance, IEnumerable<Node> Nodes)
+        {
+            if (Globals.Random.NextDouble() <= RemoveNodeChance)
+            {
+                List<Node> ProcessNodes = Nodes.Where(x => x.NodeType == NodeType.Process).ToList();
+
+                if (ProcessNodes.Count > 0)
+                {
+                    return ProcessNodes[Globals.Random.Next(ProcessNodes.Count)];
+                }
+            }
+
+            return null;
+        }
+        public static Node GetOutputNodeToAdd(double AddNodeChance, IList<Node> Nodes, IEnumerable<CreatureAction> PossibleActions)
+        {
+            if (Globals.Random.NextDouble() <= AddNodeChance)
+            {
+                IEnumerable<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output);
+                //Possible outputs are any that aren't already present in the creature.
+                List<CreatureAction> PossibleActionsToAdd = PossibleActions.Where(x => !OutputNodes.Any(y => y.CreatureAction == x)).ToList();
+
+                if (PossibleActionsToAdd.Count > 0)
+                {
+                    CreatureAction RandomPossibleAction = PossibleActionsToAdd[Globals.Random.Next(PossibleActionsToAdd.Count)];
+                    Node NewNode = new Node(NodeType.Output, Globals.Map(Globals.Random.NextDouble(), 0, 1, -1, 1), CreatureAction: RandomPossibleAction);
+                    Nodes.Add(NewNode);
+
+                    return NewNode;
+                }
+            }
+
+            return null;
+        }
+        public static Node GetOutputNodeToRemove(double RemoveNodeChance, IEnumerable<Node> Nodes)
+        {
+            if (Globals.Random.NextDouble() <= RemoveNodeChance)
+            {
+                List<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output).ToList();
+
+                if (OutputNodes.Count > 0)
+                {
+                    return OutputNodes[Globals.Random.Next(OutputNodes.Count)];
+                }
+            }
+
+            return null;
         }
         public static bool MutateConnectionTarget(double MutationChance, IList<Node> Nodes, Connection Connection)
         {
@@ -202,48 +249,19 @@ namespace MaceEvolve.Models
                     Node RandomNode = PossibleSourceNodes[RandomNodeNum];
 
                     Connection.SourceId = GetNodeId(RandomNode, Nodes);
+
                     return true;
                 }
             }
 
             return false;
         }
-        //public static void MutateConnections(double MutationChance, IEnumerable<Node> Nodes, IEnumerable<Connection> Connections)
-        //{
-        //    List<Node> NodesList = new List<Node>(Nodes);
-
-        //    List<Node> PossibleSourceNodes = GetPossibleSourceNodes(NodesList).ToList();
-        //    List<Node> PossibleTargetNodes = GetPossibleTargetNodes(NodesList).ToList();
-
-        //    foreach (var Connection in Connections)
-        //    {
-        //        if (Globals.Random.NextDouble() <= MutationChance)
-        //        {
-        //            int RandomNum = Globals.Random.Next(3);
-
-        //            if (PossibleSourceNodes.Count > 0 && (RandomNum == 0 || RandomNum == 2))
-        //            {
-        //                int RandomNodeNum = Globals.Random.Next(PossibleSourceNodes.Count);
-        //                Node RandomNode = PossibleSourceNodes[RandomNodeNum];
-
-        //                Connection.SourceId = GetNodeId(RandomNode, NodesList);
-        //            }
-
-        //            if (PossibleTargetNodes.Count > 0 && (RandomNum == 1 || RandomNum == 2))
-        //            {
-        //                int RandomNodeNum = Globals.Random.Next(PossibleTargetNodes.Count);
-        //                Node RandomNode = PossibleTargetNodes[RandomNodeNum];
-
-        //                Connection.TargetId = GetNodeId(RandomNode, NodesList);
-        //            }
-        //        }
-        //    }
-        //}
         public static bool MutateConnectionWeight(double MutationChance, Connection Connection, double ConnectionWeightBound)
         {
             if (Globals.Random.NextDouble() <= MutationChance)
             {
                 Connection.Weight = Globals.Map(Globals.Random.NextDouble(), 0, 1, -ConnectionWeightBound, ConnectionWeightBound);
+
                 return true;
             }
 
@@ -255,6 +273,30 @@ namespace MaceEvolve.Models
                 MutateConnectionTarget(TargetMutationChance, Nodes, Connection) ||
                 MutateConnectionWeight(WeightMutationChance, Connection, WeightBound);
         }
+        public static void RemoveConnectionsToNode(int NodeIdToRemoveConnectionsFrom, IList<Connection> Connections)
+        {
+            List<Connection> ConnectionsToCheck = Connections.ToList();
+
+            foreach (var Connection in ConnectionsToCheck)
+            {
+                if (Connection.SourceId == NodeIdToRemoveConnectionsFrom || Connection.TargetId == NodeIdToRemoveConnectionsFrom)
+                {
+                    Connections.Remove(Connection);
+                }
+            }
+        }
+        public static void RemoveConnectionsToNodes(IEnumerable<int> NodeIdsToRemoveConnectionsFrom, IList<Connection> Connections)
+        {
+            List<Connection> ConnectionsToCheck = Connections.ToList();
+
+            foreach (var Connection in ConnectionsToCheck)
+            {
+                if (NodeIdsToRemoveConnectionsFrom.Any(x => x == Connection.SourceId || x == Connection.TargetId))
+                {
+                    Connections.Remove(Connection);
+                }
+            }
+        }
         public int GetNodeId(Node Node)
         {
             return GetNodeId(Node, Nodes);
@@ -262,6 +304,25 @@ namespace MaceEvolve.Models
         public static int GetNodeId(Node Node, IList<Node> Nodes)
         {
             return Nodes.IndexOf(Node);
+        }
+        public void RemoveNodeAndConnections(Node Node)
+        {
+            int NodeId = GetNodeId(Node);
+
+            RemoveConnectionsToNode(NodeId, Connections);
+
+            foreach (var Connection in Connections)
+            {
+                if (Connection.SourceId > NodeId)
+                {
+                    Connection.SourceId -= 1;
+                }
+
+                if (Connection.TargetId > NodeId)
+                {
+                    Connection.TargetId -= 1;
+                }
+            }
         }
         public static IEnumerable<Node> GetPossibleSourceNodes(IEnumerable<Node> Nodes)
         {

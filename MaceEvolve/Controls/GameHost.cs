@@ -118,9 +118,9 @@ namespace MaceEvolve.Controls
             NewCreature.MaxEnergy = MaxCreatureEnergy;
             NewCreature.SightRange = 100;
 
-            for (int j = 0; j < MutationAttempts; j++)
+            for (int i = 0; i < MutationAttempts; i++)
             {
-                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance, MutationChance, MutationChance, MutationChance / 2, MutationChance / 2, MutationChance * 2);
+                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance * 2);
             }
 
             NewCreatures.Add(NewCreature);
@@ -166,7 +166,7 @@ namespace MaceEvolve.Controls
 
                                 for (int j = 0; j < MutationAttempts; j++)
                                 {
-                                    bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance, MutationChance, MutationChance, MutationChance / 2, MutationChance / 2, MutationChance * 2);
+                                    bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance / 2, MutationChance * 2);
                                 }
 
                                 NewCreatures.Add(NewCreature);
@@ -218,17 +218,65 @@ namespace MaceEvolve.Controls
 
             return SuccessfulCreaturesFitnesses;
         }
-        public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double InputNodeCountMutationChance, double ProcessNodeCountMutationChance, double OutputNodeCountMutationChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance)
+        public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double AddInputNodeMutationChance, double RemoveInputNodeMutationChance, double AddProcessNodeMutationChance, double RemoveProcessNodeMutationChance, double AddOutputNodeMutationChance, double RemoveOutputNodeMutationChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance)
         {
-            Node RandomNode = Network.Nodes[_Random.Next(Network.Nodes.Count)];
-            Connection RandomConnection = Network.Connections[Globals.Random.Next(Network.Connections.Count)];
+            Node InputNodeToAdd = NeuralNetwork.GetInputNodeToAdd(AddInputNodeMutationChance, Network.Nodes, PossibleCreatureInputs);
+            Node ProcessNodeToAdd = NeuralNetwork.GetProcessNodeToAdd(AddProcessNodeMutationChance);
+            Node OutputNodeToAdd = NeuralNetwork.GetOutputNodeToAdd(AddOutputNodeMutationChance, Network.Nodes, PossibleCreatureActions);
 
-            //Order matters.
-            return NeuralNetwork.MutateNodeBias(RandomNodeBiasMutationChance, RandomNode) ||
-                NeuralNetwork.MutateInputNodeCount(InputNodeCountMutationChance, Network.Nodes, PossibleCreatureInputs) ||
-                NeuralNetwork.MutateProcessNodeCount(ProcessNodeCountMutationChance, Network.Nodes) ||
-                NeuralNetwork.MutateOutputNodeCount(OutputNodeCountMutationChance, Network.Nodes, PossibleCreatureActions) ||
-                NeuralNetwork.MutateConnection(RandomConnection, Network.Nodes, RandomConnectionSourceMutationChance, RandomConnectionTargetMutationChance, RandomConnectionWeightMutationChance, ConnectionWeightBound);
+            //Get the nodes to remove before adding the new ones so that the new ones don't get voided.
+            Node InputNodeToRemove = NeuralNetwork.GetInputNodeToRemove(RemoveInputNodeMutationChance, Network.Nodes);
+            Node ProcessNodeToRemove = NeuralNetwork.GetProcessNodeToRemove(RemoveProcessNodeMutationChance, Network.Nodes);
+            Node OutputNodeToRemove = NeuralNetwork.GetOutputNodeToRemove(RemoveOutputNodeMutationChance, Network.Nodes);
+
+            //Add nodes before mutating them so that the nodes are considered for mutation.
+            if (InputNodeToAdd != null)
+            {
+                Network.Nodes.Add(InputNodeToAdd);
+            }
+            if (ProcessNodeToAdd != null)
+            {
+                Network.Nodes.Add(ProcessNodeToAdd);
+            }
+            if (OutputNodeToAdd != null)
+            {
+                Network.Nodes.Add(OutputNodeToAdd);
+            }
+
+            //Remove nodes before mutating them so that the mutations are not voided.
+            if (InputNodeToRemove != null)
+            {
+                Network.RemoveNodeAndConnections(InputNodeToRemove);
+            }
+            if (ProcessNodeToRemove != null)
+            {
+                Network.RemoveNodeAndConnections(ProcessNodeToRemove);
+            }
+            if (OutputNodeToRemove != null)
+            {
+                Network.RemoveNodeAndConnections(OutputNodeToRemove);
+            }
+
+            //Mutate a random connection.
+            bool RandomConnectionChanged = false;
+
+            if (Network.Connections.Count > 0)
+            {
+                Connection RandomConnection = Network.Connections[Globals.Random.Next(Network.Connections.Count)];
+                RandomConnectionChanged = NeuralNetwork.MutateConnection(RandomConnection, Network.Nodes, RandomConnectionSourceMutationChance, RandomConnectionTargetMutationChance, RandomConnectionWeightMutationChance, ConnectionWeightBound);
+            }
+
+
+            //Mutate a random node.
+            bool RandomNodeBiasChanged = false;
+
+            if (Network.Connections.Count > 0)
+            {
+                Node RandomNode = Network.Nodes[_Random.Next(Network.Nodes.Count)];
+                RandomNodeBiasChanged = NeuralNetwork.MutateNodeBias(RandomNodeBiasMutationChance, RandomNode);
+            }
+
+            return RandomNodeBiasChanged || InputNodeToAdd != null || InputNodeToRemove != null || ProcessNodeToAdd != null || ProcessNodeToRemove != null || OutputNodeToAdd != null || OutputNodeToRemove != null || RandomConnectionChanged;
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
