@@ -120,8 +120,13 @@ namespace MaceEvolve.Models
         }
         public void UpdateOutputValues()
         {
-            foreach (var OutputNode in Brain.Nodes.Where(x => x.NodeType == NodeType.Output && x.CreatureAction != null && Brain.Actions.Contains(x.CreatureAction.Value)))
+            foreach (var OutputNode in Brain.Nodes.Where(x => x.NodeType == NodeType.Output && Brain.Actions.Contains(x.CreatureAction.Value)))
             {
+                if (OutputNode.CreatureAction == null)
+                {
+                    throw new InvalidOperationException($"Output node contains a {nameof(Node.CreatureAction)} of null.");
+                }
+
                 OutputNode.GenerateOutput(Brain);
             }
         }

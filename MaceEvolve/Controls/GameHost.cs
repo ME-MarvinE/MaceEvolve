@@ -47,7 +47,7 @@ namespace MaceEvolve.Controls
         public double SecondsUntilNewGeneration { get; set; } = 12;
         public int MaxCreatureProcessNodes { get; set; } = 8;
         public double MutationChance { get; set; } = 0.1;
-        public double MutationAttempts { get; set; } = 10;
+        public double MutationAttempts { get; set; } = 1;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
@@ -223,7 +223,7 @@ namespace MaceEvolve.Controls
             Node NodeToAdd = NeuralNetwork.GetNodeToAdd(CreateRandomNodeChance, CreateRandomNodeChance, CreateRandomNodeChance, Network.Nodes, PossibleCreatureInputs, PossibleCreatureActions);
 
             //Get a node to remove before adding the new one so that the new one doesn't get voided.
-            Node NodeToRemove = NeuralNetwork.GetNodeToRemove(RemoveRandomNodeChance, RemoveRandomNodeChance, RemoveRandomNodeChance, Network.Nodes);
+            Node NodeToRemove = NeuralNetwork.GetNodeToRemove(0, RemoveRandomNodeChance, RemoveRandomNodeChance, Network.Nodes);
 
             //Add node before mutating them so that the nodes are considered for mutation.
             if (NodeToAdd != null)
