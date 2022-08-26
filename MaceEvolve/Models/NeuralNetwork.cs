@@ -219,6 +219,51 @@ namespace MaceEvolve.Models
 
             return null;
         }
+        public static Node GetNodeToAdd(double InputNodeChance, double ProcessNodeChance, double OutputNodeChance, IList<Node> Nodes, IEnumerable<CreatureInput> PossibleInputs, IEnumerable<CreatureAction> PossibleActions)
+        {
+            double TotalChance = InputNodeChance + ProcessNodeChance + OutputNodeChance;
+
+            if (TotalChance > 0)
+            {
+                if (Globals.Random.NextDouble() <= InputNodeChance / TotalChance)
+                {
+                    return GetInputNodeToAdd(1, Nodes, PossibleInputs);
+                }
+                else if (Globals.Random.NextDouble() <= ProcessNodeChance / TotalChance)
+                {
+                    return GetProcessNodeToAdd(1);
+                }
+                else if (Globals.Random.NextDouble() <= OutputNodeChance / TotalChance)
+                {
+                    return GetOutputNodeToAdd(1, Nodes, PossibleActions);
+                }
+            }
+
+            return null;
+        }
+
+        public static Node GetNodeToRemove(double InputNodeChance, double ProcessNodeChance, double OutputNodeChance, IEnumerable<Node> Nodes)
+        {
+            double TotalChance = InputNodeChance + ProcessNodeChance + OutputNodeChance;
+
+            if (TotalChance > 0)
+            {
+                if (Globals.Random.NextDouble() <= InputNodeChance / TotalChance)
+                {
+                    return GetInputNodeToRemove(1, Nodes);
+                }
+                else if (Globals.Random.NextDouble() <= ProcessNodeChance / TotalChance)
+                {
+                    return GetProcessNodeToRemove(1, Nodes);
+                }
+                else if (Globals.Random.NextDouble() <= OutputNodeChance / TotalChance)
+                {
+                    return GetOutputNodeToRemove(1, Nodes);
+                }
+            }
+
+            return null;
+        }
         public static bool MutateConnectionTarget(double MutationChance, IList<Node> Nodes, Connection Connection)
         {
             List<Node> PossibleTargetNodes = GetPossibleTargetNodes(Nodes).ToList();
