@@ -369,6 +369,40 @@ namespace MaceEvolve.Models
                 }
             }
         }
+        public List<List<Connection>> GetConnectionStructure()
+        {
+            List<List<Connection>> ConnectionPaths = new List<List<Connection>>();
+
+            foreach (var Connection in Connections)
+            {
+                Node TargetNode = Nodes[Connection.TargetId];
+
+                if (TargetNode.NodeType == NodeType.Output)
+                {
+                    ConnectionPaths.Add(new List<Connection>() { Connection });
+                }
+            }
+
+            for (int i = 0; i < ConnectionPaths.Count; i++)
+            {
+                List<Connection> ConnectionPath = ConnectionPaths[i];
+                List<Connection> SourceConnections = Connections.Where(x => !ConnectionPath.Any(y => y.TargetId == x.SourceId) && x.TargetId == ConnectionPath.Last().SourceId).ToList();
+                if (SourceConnections.Count > 1)
+                {
+                    for (int j = 1; j < SourceConnections.Count; j++)
+                    {
+                        List<Connection> NewConnectionStructure = ConnectionPath.ToList();
+                        NewConnectionStructure.Add(SourceConnections[j]);
+
+                        ConnectionPaths.Add(NewConnectionStructure);
+                    }
+
+                    ConnectionPath.Add(SourceConnections[0]);
+                }
+            }
+
+            return ConnectionPaths;
+        }
         public static IEnumerable<Node> GetPossibleSourceNodes(IEnumerable<Node> Nodes)
         {
             return Nodes.Where(x => x.NodeType == NodeType.Input || x.NodeType == NodeType.Process);

@@ -139,9 +139,9 @@ namespace MaceEvolve.Models
 
             Creature OffSpring = new Creature(new NeuralNetwork(new List<Node>(), Inputs, Actions, new List<Connection>()));
 
-            int AverageNumberOfParentConnections = (int)Parents.Average(x => x.Brain.Connections.Count);
+            double AverageNumberOfParentConnections = Parents.Average(x => x.Brain.Connections.Count);
 
-            if (AverageNumberOfParentConnections < 1)
+            if (AverageNumberOfParentConnections > 0 && AverageNumberOfParentConnections < 1)
             {
                 AverageNumberOfParentConnections = 1;
             }
@@ -150,60 +150,64 @@ namespace MaceEvolve.Models
             {
                 Creature RandomParent = ParentsList[_Random.Next(ParentsList.Count)];
                 List<Connection> RandomParentConnections = AvailableParentConnections[RandomParent];
-                Connection RandomParentConnection = RandomParentConnections[_Random.Next(RandomParentConnections.Count)];
-                Node RandomParentConnectionSourceNode = RandomParent.Brain.Nodes[RandomParentConnection.SourceId];
-                Node RandomParentConnectionTargetNode = RandomParent.Brain.Nodes[RandomParentConnection.TargetId];
 
-                Connection ConnectionToAdd = new Connection() { Weight = RandomParentConnection.Weight };
-
-                if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionSourceNode))
+                if (RandomParentConnections.Count > 0)
                 {
-                    ConnectionToAdd.SourceId = OffSpring.Brain.GetNodeId(ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionSourceNode]);
-                }
-                else
-                {
-                    Node NodeToAdd = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
+                    Connection RandomParentConnection = RandomParentConnections[_Random.Next(RandomParentConnections.Count)];
+                    Node RandomParentConnectionSourceNode = RandomParent.Brain.Nodes[RandomParentConnection.SourceId];
+                    Node RandomParentConnectionTargetNode = RandomParent.Brain.Nodes[RandomParentConnection.TargetId];
 
-                    OffSpring.Brain.Nodes.Add(NodeToAdd);
+                    Connection ConnectionToAdd = new Connection() { Weight = RandomParentConnection.Weight };
 
-                    if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
+                    if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionSourceNode))
                     {
-                        ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<Node, Node>());
+                        ConnectionToAdd.SourceId = OffSpring.Brain.GetNodeId(ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionSourceNode]);
+                    }
+                    else
+                    {
+                        Node NodeToAdd = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
+
+                        OffSpring.Brain.Nodes.Add(NodeToAdd);
+
+                        if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
+                        {
+                            ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<Node, Node>());
+                        }
+
+                        if (!ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionSourceNode))
+                        {
+                            ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionSourceNode, NodeToAdd);
+                        }
+
+                        ConnectionToAdd.SourceId = OffSpring.Brain.GetNodeId(NodeToAdd);
                     }
 
-                    if (!ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionSourceNode))
+                    if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionTargetNode))
                     {
-                        ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionSourceNode, NodeToAdd);
+                        ConnectionToAdd.TargetId = OffSpring.Brain.GetNodeId(ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionTargetNode]);
+                    }
+                    else
+                    {
+                        Node NodeToAdd = new Node(RandomParentConnectionTargetNode.NodeType, RandomParentConnectionTargetNode.Bias, RandomParentConnectionTargetNode.CreatureInput, RandomParentConnectionTargetNode.CreatureAction);
+
+                        OffSpring.Brain.Nodes.Add(NodeToAdd);
+
+                        if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
+                        {
+                            ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<Node, Node>());
+                        }
+
+                        if (!ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionTargetNode))
+                        {
+                            ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionTargetNode, NodeToAdd);
+                        }
+
+                        ConnectionToAdd.TargetId = OffSpring.Brain.GetNodeId(NodeToAdd);
                     }
 
-                    ConnectionToAdd.SourceId = OffSpring.Brain.GetNodeId(NodeToAdd);
+                    OffSpring.Brain.Connections.Add(ConnectionToAdd);
+                    AvailableParentConnections[RandomParent].Remove(RandomParentConnection);
                 }
-
-                if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionTargetNode))
-                {
-                    ConnectionToAdd.TargetId = OffSpring.Brain.GetNodeId(ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionTargetNode]);
-                }
-                else
-                {
-                    Node NodeToAdd = new Node(RandomParentConnectionTargetNode.NodeType, RandomParentConnectionTargetNode.Bias, RandomParentConnectionTargetNode.CreatureInput, RandomParentConnectionTargetNode.CreatureAction);
-
-                    OffSpring.Brain.Nodes.Add(NodeToAdd);
-
-                    if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
-                    {
-                        ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<Node, Node>());
-                    }
-
-                    if (!ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionTargetNode))
-                    {
-                        ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionTargetNode, NodeToAdd);
-                    }
-
-                    ConnectionToAdd.TargetId = OffSpring.Brain.GetNodeId(NodeToAdd);
-                }
-
-                OffSpring.Brain.Connections.Add(ConnectionToAdd);
-                AvailableParentConnections[RandomParent].Remove(RandomParentConnection);
             }
 
             return OffSpring;
