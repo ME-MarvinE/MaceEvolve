@@ -65,6 +65,10 @@ namespace MaceEvolve
         {
             return 1 / (1 + Math.Exp(-Num));
         }
+        public static double ReLU(double Num)
+        {
+            return Math.Max(0, Num);
+        }
         public static double SigmoidDerivative(double Num)
         {
             return Num * (1 - Num);

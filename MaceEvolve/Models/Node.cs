@@ -32,7 +32,7 @@ namespace MaceEvolve.Models
             Evaluating = true;
 
             double WeightedSum = GetWeightedSum(Network);
-            double Output = Globals.Sigmoid(WeightedSum + Bias);
+            double Output = Globals.ReLU(WeightedSum + Bias);
 
             PreviousOutput = Output;
             Evaluating = false;
