@@ -40,8 +40,8 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 32;
-        public int MaxCreatureConnections { get; set; } = 32;
+        public int MinCreatureConnections { get; set; } = 4;
+        public int MaxCreatureConnections { get; set; } = 64;
         public double CreatureSpeed { get; set; } = 2.75;
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
@@ -120,7 +120,7 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MutationAttempts; i++)
             {
-                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance / 2, MutationChance / 10, MutationChance / 2, MutationChance / 2, MutationChance * 2);
+                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, 0, 0, MutationChance / 2, MutationChance / 2, MutationChance * 2, MutationChance, MutationChance);
             }
 
             NewCreatures.Add(NewCreature);
@@ -166,7 +166,7 @@ namespace MaceEvolve.Controls
 
                                 for (int j = 0; j < MutationAttempts; j++)
                                 {
-                                    bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, MutationChance / 2, 0, MutationChance / 2, MutationChance / 2, MutationChance * 2);
+                                    bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, 0, 0, MutationChance / 2, MutationChance / 2, MutationChance * 2, MutationChance, MutationChance);
                                 }
 
                                 NewCreatures.Add(NewCreature);
@@ -218,7 +218,7 @@ namespace MaceEvolve.Controls
 
             return SuccessfulCreaturesFitnesses;
         }
-        public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double CreateRandomNodeChance, double RemoveRandomNodeChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance)
+        public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double CreateRandomNodeChance, double RemoveRandomNodeChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance, double CreateRandomConnectionChance, double RemoveRandomConnectionChance)
         {
             Node NodeToAdd = NeuralNetwork.GetNodeToAdd(CreateRandomNodeChance, CreateRandomNodeChance, CreateRandomNodeChance, Network.Nodes, PossibleCreatureInputs, PossibleCreatureActions);
 
@@ -244,6 +244,16 @@ namespace MaceEvolve.Controls
             {
                 Connection RandomConnection = Network.Connections[Globals.Random.Next(Network.Connections.Count)];
                 RandomConnectionChanged = NeuralNetwork.MutateConnection(RandomConnection, Network.Nodes, RandomConnectionSourceMutationChance, RandomConnectionTargetMutationChance, RandomConnectionWeightMutationChance, ConnectionWeightBound);
+
+                if (Network.Connections.Count > MinCreatureConnections && _Random.NextDouble() <= RemoveRandomConnectionChance)
+                {
+                    Network.Connections.Remove(Network.Connections[_Random.Next(Network.Connections.Count)]);
+                }
+            }
+
+            if (Network.Connections.Count < MaxCreatureConnections && _Random.NextDouble() <= CreateRandomConnectionChance)
+            {
+                Network.Connections.Add(NeuralNetwork.GenerateRandomConnections(1, 1, Network.Nodes, ConnectionWeightBound).First());
             }
 
             //Mutate a random node.
