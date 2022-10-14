@@ -19,14 +19,6 @@ namespace MaceEvolve
         #endregion
 
         #region Methods
-        public static double ToPositive(double Num1)
-        {
-            return Math.Sqrt(Math.Pow(Num1, 2));
-        }
-        public static int ToPositive(int Num1)
-        {
-            return (int)ToPositive((double)Num1);
-        }
         public static int Map(int Num, int Min1, int Max1, int Min2, int Max2, bool WithinBounds = true)
         {
             var NewValue = (Num - Min1) / (Max1 - Min1) * (Max2 - Min2) + Min2;
@@ -83,7 +75,7 @@ namespace MaceEvolve
         }
         public static double GetDistanceFrom(double X, double Y, double TargetX, double TargetY)
         {
-            return Globals.ToPositive(X - TargetX) + Globals.ToPositive(Y - TargetY);
+            return Math.Abs(X - TargetX) + Math.Abs(Y - TargetY);
         }
         public static double Hypotenuse(int A, int B)
         {
