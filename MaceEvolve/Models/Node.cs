@@ -7,13 +7,14 @@ namespace MaceEvolve.Models
     public class Node
     {
         #region Properties
-        public double PreviousOutput { get; protected set; } = 0;
         public virtual NodeType NodeType { get; }
         public double Bias { get; set; }
-        public bool Evaluating { get; private set; }
         public CreatureInput? CreatureInput { get; set; }
         public CreatureAction? CreatureAction { get; set; }
-        public int OutputCount = 0;
+        public double PreviousOutput { get; protected set; } = 0;
+        public int CachedOutputCount { get; set; } = 0;
+        public int UncachedOutputCount { get; set; } = 0;
+        public bool Evaluating { get; private set; }
         #endregion
 
         #region Constructors
@@ -31,13 +32,27 @@ namespace MaceEvolve.Models
         {
             Evaluating = true;
 
-            double WeightedSum = GetWeightedSum(Network);
-            double Output = Globals.ReLU(WeightedSum + Bias);
+            double Output;
+
+            if (Network.EvaluatedNodes.TryGetValue(this, out double CachedOutput))
+            {
+                Output = CachedOutput;
+
+                CachedOutputCount += 1;
+            }
+            else
+            {
+                double WeightedSum = GetWeightedSum(Network);
+
+                Output = Globals.Sigmoid(WeightedSum + Bias);
+
+                Network.EvaluatedNodes.Add(this, Output);
+
+                UncachedOutputCount += 1;
+            }
 
             PreviousOutput = Output;
             Evaluating = false;
-
-            OutputCount += 1;
 
             return Output;
         }
@@ -60,14 +75,23 @@ namespace MaceEvolve.Models
                         throw new InvalidOperationException($"Node type is {NodeType} but {nameof(CreatureAction)} is null.");
                     }
 
-                    foreach (var Connection in Network.Connections)
+                    for (int i = 0; i < Network.Connections.Count; i++)
                     {
+                        Connection Connection = Network.Connections[i];
+
                         if (Connection.TargetId == MyId)
                         {
                             double SourceNodeOutput;
                             Node ConnectionSourceNode = Network.Nodes[Connection.SourceId];
 
-                            SourceNodeOutput = ConnectionSourceNode.Evaluating ? ConnectionSourceNode.PreviousOutput : ConnectionSourceNode.GenerateOutput(Network);
+                            if (ConnectionSourceNode.Evaluating)
+                            {
+                                SourceNodeOutput = ConnectionSourceNode.PreviousOutput;
+                            }
+                            else
+                            {
+                                SourceNodeOutput = ConnectionSourceNode.GenerateOutput(Network);
+                            }
 
                             WeightedSum += SourceNodeOutput * Connection.Weight;
                         }

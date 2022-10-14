@@ -120,6 +120,8 @@ namespace MaceEvolve.Models
         }
         public void UpdateOutputValues()
         {
+            Brain.EvaluatedNodes.Clear();
+
             foreach (var Node in Brain.Nodes)
             {
                 if (Node.NodeType == NodeType.Output)

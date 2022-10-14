@@ -20,6 +20,7 @@ namespace MaceEvolve.Models
         [JsonIgnore]
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
+        public Dictionary<Node, double> EvaluatedNodes { get; set; } = new Dictionary<Node, double>();
         #endregion
 
         #region Constructors
