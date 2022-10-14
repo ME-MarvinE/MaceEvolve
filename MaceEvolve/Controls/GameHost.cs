@@ -18,6 +18,7 @@ namespace MaceEvolve.Controls
         #region Fields
         protected static Random _Random = new Random();
         private int _TargetFPS = 10;
+        private int _TargetTPS = 10;
         #endregion
 
         #region Properties
@@ -38,6 +39,18 @@ namespace MaceEvolve.Controls
                 DrawTimer.Interval = 1000 / TargetFPS;
             }
         }
+        public int TargetTPS
+        {
+            get
+            {
+                return _TargetTPS;
+            }
+            set
+            {
+                _TargetTPS = value;
+                GameTimer.Interval = 1000 / _TargetTPS;
+            }
+        }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
@@ -51,7 +64,7 @@ namespace MaceEvolve.Controls
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
-        public int GenerationCount = 1;
+        public int GenerationCount { get; set; } = 1;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         #endregion
@@ -326,7 +339,8 @@ namespace MaceEvolve.Controls
         private void GameHost_Load(object sender, EventArgs e)
         {
             DoubleBuffered = true;
-            TargetFPS = 60;
+            TargetTPS = 60;
+            TargetFPS = TargetTPS;
             Reset();
         }
         private void DrawTimer_Tick(object sender, EventArgs e)
