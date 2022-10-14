@@ -60,21 +60,17 @@ namespace MaceEvolve.Models
                         throw new InvalidOperationException($"Node type is {NodeType} but {nameof(CreatureAction)} is null.");
                     }
 
-                    foreach (var Connection in Network.Connections.Where(x => x.TargetId == MyId))
+                    foreach (var Connection in Network.Connections)
                     {
-                        double SourceNodeOutput;
-                        Node ConnectionSourceNode = Network.Nodes[Connection.SourceId];
+                        if (Connection.TargetId == MyId)
+                        {
+                            double SourceNodeOutput;
+                            Node ConnectionSourceNode = Network.Nodes[Connection.SourceId];
 
-                        if (Connection.SourceId == MyId)
-                        {
-                            SourceNodeOutput = PreviousOutput;
-                        }
-                        else
-                        {
                             SourceNodeOutput = ConnectionSourceNode.Evaluating ? ConnectionSourceNode.PreviousOutput : ConnectionSourceNode.GenerateOutput(Network);
-                        }
 
-                        WeightedSum += SourceNodeOutput * Connection.Weight;
+                            WeightedSum += SourceNodeOutput * Connection.Weight;
+                        }
                     }
 
                     return WeightedSum;

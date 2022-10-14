@@ -120,14 +120,19 @@ namespace MaceEvolve.Models
         }
         public void UpdateOutputValues()
         {
-            foreach (var OutputNode in Brain.Nodes.Where(x => x.NodeType == NodeType.Output && Brain.Actions.Contains(x.CreatureAction.Value)))
+            foreach (var Node in Brain.Nodes)
             {
-                if (OutputNode.CreatureAction == null)
+                if (Node.NodeType == NodeType.Output)
                 {
-                    throw new InvalidOperationException($"Output node contains a {nameof(Node.CreatureAction)} of null.");
+                    if (Node.CreatureAction == null)
+                    {
+                        throw new InvalidOperationException($"Output node contains a {nameof(Models.Node.CreatureAction)} of null.");
+                    }
+                    else if (Brain.Actions.Contains(Node.CreatureAction.Value))
+                    {
+                        Node.GenerateOutput(Brain);
+                    }
                 }
-
-                OutputNode.GenerateOutput(Brain);
             }
         }
         public static Creature Reproduce(IEnumerable<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions)
