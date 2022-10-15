@@ -36,7 +36,7 @@ namespace MaceEvolve.Models
 
             if (Network.EvaluatedNodes.TryGetValue(this, out double CachedOutput))
             {
-                Output = CachedOutput;
+                Output = PreviousOutput;
 
                 CachedOutputCount += 1;
             }
@@ -44,7 +44,7 @@ namespace MaceEvolve.Models
             {
                 double WeightedSum = GetWeightedSum(Network);
 
-                Output = Globals.Sigmoid(WeightedSum + Bias);
+                Output = Globals.ReLU(WeightedSum + Bias);
 
                 Network.EvaluatedNodes.Add(this, Output);
 

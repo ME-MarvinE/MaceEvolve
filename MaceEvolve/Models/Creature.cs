@@ -10,10 +10,6 @@ namespace MaceEvolve.Models
     {
         #region Properties
         public NeuralNetwork Brain { get; set; }
-        private IEnumerable<Food> ExistingFood { get; set; }
-        private IEnumerable<Creature> ExistingCreatures { get; set; }
-        public IEnumerable<Food> VisibleFood { get; set; }
-        public IEnumerable<Creature> VisibleCreatures { get; set; }
         private double MoveCost { get; set; } = 0.5;
         public Genome Genome;
         public double Energy { get; set; } = 150;
@@ -25,6 +21,8 @@ namespace MaceEvolve.Models
         //public int StomachSize { get; set; } = 5;
         //public List<Food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
+        public CreatureStepInfo CurrentStepInfo { get; private set; }
+
         #endregion
 
         #region Constructors
@@ -69,15 +67,22 @@ namespace MaceEvolve.Models
             {
                 Live();
 
-                if (Energy <= 0)
+                if (Energy < 0)
                 {
                     Die();
                 }
             }
         }
-        public static IEnumerable<T> GetVisibleGameObjects<T>(Creature Creature, IEnumerable<T> GameObjects) where T : GameObject
+        public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> GameObjects) where T : GameObject
         {
-            return GameObjects.Where(g => Globals.GetDistanceFrom(Creature.X, Creature.Y, g.X, g.Y) <= Creature.SightRange && g != Creature).OrderBy(g => Globals.GetDistanceFrom(Creature.X, Creature.Y, g.X, g.Y));
+            if (typeof(T) == typeof(Creature))
+            {
+                return GameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange && x != this);
+            }
+            else
+            {
+                return GameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange);
+            }
         }
         public void Die()
         {
@@ -86,7 +91,11 @@ namespace MaceEvolve.Models
         }
         public void Live()
         {
-            Think();
+            CurrentStepInfo = new CreatureStepInfo();
+
+            UpdateCurrentStepInfo();
+            UpdateInputValues();
+            UpdateOutputValues();
 
             List<Node> OrderedOutputNodes = Brain.Nodes.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
             Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
@@ -98,25 +107,24 @@ namespace MaceEvolve.Models
 
             Energy -= Metabolism;
         }
-        public void Think()
+        public void UpdateCurrentStepInfo()
         {
-            UpdateInputValues();
-            UpdateOutputValues();
+            CurrentStepInfo.ExistingFood = GameHost.Food.Where(x => x.Servings > 0).ToList();
+            CurrentStepInfo.ExistingCreatures = GameHost.Creatures.ToList();
+            CurrentStepInfo.VisibleFood = GetVisibleGameObjects(CurrentStepInfo.ExistingFood).ToList();
+            CurrentStepInfo.VisibleCreatures = GetVisibleGameObjects(CurrentStepInfo.ExistingCreatures).ToList();
+            CurrentStepInfo.VisibleFoodOrderedByDistance = CurrentStepInfo.VisibleFood.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
+            CurrentStepInfo.VisibleCreaturesOrderedByDistance = CurrentStepInfo.VisibleCreatures.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
         }
         public void UpdateInputValues()
         {
-            ExistingFood = GameHost.Food.Where(x => x.Servings > 0);
-            ExistingCreatures = GameHost.Creatures;
-            VisibleFood = GetVisibleGameObjects(this, ExistingFood);
-            VisibleCreatures = GetVisibleGameObjects(this, ExistingCreatures);
-
-            Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy(this));
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(this));
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood(this));
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToCreature, VerticalProximityToCreature(this));
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature(this));
-            Brain.UpdateInputValue(CreatureInput.VerticalWorldBoundProximity, VerticalWorldBoundProximity(this));
-            Brain.UpdateInputValue(CreatureInput.HorizontalWorldBoundProximity, HorizontalWorldBoundProximity(this));
+            Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy());
+            Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood());
+            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood());
+            Brain.UpdateInputValue(CreatureInput.VerticalProximityToCreature, VerticalProximityToCreature());
+            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature());
+            Brain.UpdateInputValue(CreatureInput.VerticalWorldBoundProximity, VerticalWorldBoundProximity());
+            Brain.UpdateInputValue(CreatureInput.HorizontalWorldBoundProximity, HorizontalWorldBoundProximity());
         }
         public void UpdateOutputValues()
         {
@@ -219,61 +227,74 @@ namespace MaceEvolve.Models
 
             return OffSpring;
         }
+
         #region CreatureValues
-        //f values map from 0 to 1.
-        public static double PercentMaxEnergy(Creature Creature)
+        //x values map from 0 to 1.
+        public double PercentMaxEnergy()
         {
-            return Globals.Map(Creature.Energy, 0, Creature.MaxEnergy, 0, 1);
+            return Globals.Map(Energy, 0, MaxEnergy, 0, 1);
         }
-        public static double HorizontalProximityToCreature(Creature Creature)
+        public double HorizontalProximityToCreature()
         {
+            if (CurrentStepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            {
+                return 1;
+            }
+
             //Visible creatures does not contain itself. No need to filter.
-            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault();
+            Creature ClosestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
 
-            if (ClosestCreature == null) { return 1; }
+            double HorizontalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, ClosestCreature.MX, MY);
 
-            double HorizontalDistanceToCreature = Globals.GetDistanceFrom(Creature.MX, Creature.MY, ClosestCreature.MX, Creature.MY);
-
-            return Globals.Map(HorizontalDistanceToCreature, 0, Creature.SightRange, 0, 1);
+            return Globals.Map(HorizontalDistanceToCreature, 0, SightRange, 0, 1);
         }
-        public static double VerticalProximityToCreature(Creature Creature)
+        public double VerticalProximityToCreature()
         {
+            if (CurrentStepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            {
+                return 1;
+            }
+
             //Visible creatures does not contain itself. No need to filter.
-            Creature ClosestCreature = Creature.VisibleCreatures.FirstOrDefault();
+            Creature ClosestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
 
-            if (ClosestCreature == null) { return 1; }
+            double VerticalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, MX, ClosestCreature.MY);
 
-            double VerticalDistanceToCreature = Globals.GetDistanceFrom(Creature.MX, Creature.MY, Creature.MX, ClosestCreature.MY);
-
-            return Globals.Map(VerticalDistanceToCreature, 0, Creature.SightRange, 0, 1);
+            return Globals.Map(VerticalDistanceToCreature, 0, SightRange, 0, 1);
         }
-        public static double HorizontalProximityToFood(Creature Creature)
+        public double HorizontalProximityToFood()
         {
-            Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
+            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            {
+                return 1;
+            }
 
-            if (ClosestFood == null) { return 1; }
+            Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
 
-            double HorizontalDistanceToFood = Globals.GetDistanceFrom(Creature.MX, Creature.MY, ClosestFood.MX, Creature.MY);
+            double HorizontalDistanceToFood = Globals.GetDistanceFrom(MX, MY, ClosestFood.MX, MY);
 
-            return Globals.Map(HorizontalDistanceToFood, 0, Creature.SightRange, 0, 1);
+            return Globals.Map(HorizontalDistanceToFood, 0, SightRange, 0, 1);
         }
-        public static double VerticalProximityToFood(Creature Creature)
+        public double VerticalProximityToFood()
         {
-            Food ClosestFood = Creature.VisibleFood.FirstOrDefault();
+            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            {
+                return 1;
+            }
 
-            if (ClosestFood == null) { return 1; }
+            Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
 
-            double VerticalDistanceToFood = Globals.GetDistanceFrom(Creature.MX, Creature.MY, Creature.MX, ClosestFood.MY);
+            double VerticalDistanceToFood = Globals.GetDistanceFrom(MX, MY, MX, ClosestFood.MY);
 
-            return Globals.Map(VerticalDistanceToFood, 0, Creature.SightRange, 0, 1);
+            return Globals.Map(VerticalDistanceToFood, 0, SightRange, 0, 1);
         }
-        public static double VerticalWorldBoundProximity(Creature Creature)
+        public double VerticalWorldBoundProximity()
         {
-            return Globals.Map(Creature.Y, Creature.GameHost.WorldBounds.Top, Creature.GameHost.WorldBounds.Bottom, 0, 1);
+            return Globals.Map(Y, GameHost.WorldBounds.Top, GameHost.WorldBounds.Bottom, 0, 1);
         }
-        public static double HorizontalWorldBoundProximity(Creature Creature)
+        public double HorizontalWorldBoundProximity()
         {
-            return Globals.Map(Creature.X, Creature.GameHost.WorldBounds.Left, Creature.GameHost.WorldBounds.Right, 0, 1);
+            return Globals.Map(X, GameHost.WorldBounds.Left, GameHost.WorldBounds.Right, 0, 1);
         }
         #endregion
 
@@ -287,15 +308,21 @@ namespace MaceEvolve.Models
         }
         public bool TryEatFoodInRange()
         {
-            Food ClosestFood = VisibleFood.FirstOrDefault();
-
-            if (ClosestFood != null && Globals.GetDistanceFrom(X, Y, ClosestFood.X, ClosestFood.Y) <= Size / 2)
+            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
-                Eat(ClosestFood);
-                return true;
+                return false;
             }
 
-            return false;
+            Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+
+            if (Globals.GetDistanceFrom(X, Y, ClosestFood.X, ClosestFood.Y) > Size / 2)
+            {
+                return false;
+            }
+
+            Eat(ClosestFood);
+
+            return true;
         }
         public void MoveForward()
         {
@@ -337,12 +364,12 @@ namespace MaceEvolve.Models
             }
             Energy -= MoveCost;
         }
-        public void Move()
+        public void MoveTowardsClosestFood()
         {
-            Food ClosestFood = VisibleFood.FirstOrDefault();
-
-            if (ClosestFood != null)
+            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count > 0)
             {
+                Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+
                 double XDifference = X - ClosestFood.X;
                 double YDifference = Y - ClosestFood.Y;
 
