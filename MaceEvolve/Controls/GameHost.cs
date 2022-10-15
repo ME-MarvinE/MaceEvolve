@@ -8,7 +8,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace MaceEvolve.Controls
@@ -25,7 +24,7 @@ namespace MaceEvolve.Controls
         public List<Creature> Creatures { get; set; } = new List<Creature>();
         public List<Food> Food { get; set; } = new List<Food>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
-        public int MaxCreatureAmount { get; set; } = 150;
+        public int MaxCreatureAmount { get; set; } = 300;
         public int MaxFoodAmount { get; set; } = 350;
         public int TargetFPS
         {
@@ -53,12 +52,12 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 4;
-        public int MaxCreatureConnections { get; set; } = 64;
-        public double CreatureSpeed { get; set; } = 2.75;
+        public int MinCreatureConnections { get; set; } = 8;
+        public int MaxCreatureConnections { get; set; } = 128;
+        public double CreatureSpeed { get; set; }
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
-        public int MaxCreatureProcessNodes { get; set; } = 8;
+        public int MaxCreatureProcessNodes { get; set; } = 3;
         public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
@@ -67,6 +66,7 @@ namespace MaceEvolve.Controls
         public int GenerationCount { get; set; } = 1;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
+        public bool UseSuccessBounds { get; set; }
         #endregion
 
         #region Constructors
@@ -94,7 +94,11 @@ namespace MaceEvolve.Controls
         public void Reset()
         {
             WorldBounds = new Rectangle(Bounds.Location, Bounds.Size);
-            SuccessBounds = new Rectangle(WorldBounds.Location, new Size(150, 150));
+
+            Point MiddleOfWorldBounds = Globals.Middle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height);
+            //SuccessBounds = new Rectangle(WorldBounds.Location.X, WorldBounds.Location.Y, 150, 150);
+            SuccessBounds = new Rectangle(WorldBounds.X, MiddleOfWorldBounds.Y - 75, 150, 150);
+
             Stopwatch.Reset();
             SecondsUntilNewGeneration = NewGenerationInterval;
             Creatures.Clear();
@@ -161,7 +165,9 @@ namespace MaceEvolve.Controls
 
                     if (_Random.NextDouble() <= CreatureFitnessPair.Value && NewCreatures.Count < MaxCreatureAmount)
                     {
-                        for (int i = 0; i < SuccessfulCreature.FoodEaten; i++)
+                        int ChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(CreatureFitnessPair.Value, 0, 1, 0, MaxCreatureAmount / 10) : SuccessfulCreature.FoodEaten;
+
+                        for (int i = 0; i < ChildrenToCreate; i++)
                         {
                             if (NewCreatures.Count < MaxCreatureAmount)
                             {
@@ -200,14 +206,20 @@ namespace MaceEvolve.Controls
                 return new List<Creature>();
             }
 
-            //return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom).ToList();
-            //return Creatures.Where(x => x.FoodEaten > 0).ToList();
+            if (UseSuccessBounds)
+            {
+                return Creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom).ToList();
+            }
+            else
+            {
+                //return Creatures.Where(x => x.FoodEaten > 0).ToList();
 
-            double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
-            int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
+                double IndexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
+                int TopPercentileStartingIndex = (int)(Creatures.Count() * IndexMultiplierForTopPercentile) - 1;
 
-            List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
-            return OrderedCreatures.SkipWhile(x => OrderedCreatures.IndexOf(x) < TopPercentileStartingIndex).Where(x => x.FoodEaten > 0);
+                List<Creature> OrderedCreatures = Creatures.OrderBy(x => x.FoodEaten).ToList();
+                return OrderedCreatures.SkipWhile(x => OrderedCreatures.IndexOf(x) < TopPercentileStartingIndex).Where(x => x.FoodEaten > 0);
+            }
         }
         public Dictionary<Creature, double> GetFitnesses(IEnumerable<Creature> Creatures)
         {
@@ -218,16 +230,33 @@ namespace MaceEvolve.Controls
                 return new Dictionary<Creature, double>();
             }
 
-            int MostFoodEaten = Creatures.Max(x => x.FoodEaten);
+            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = new Dictionary<Creature, double>();
 
-            if (MostFoodEaten == 0)
+            if (UseSuccessBounds)
             {
-                return new Dictionary<Creature, double>();
-            }
+                Point MiddleOfSuccessBounds = Globals.Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
 
-            Dictionary<Creature, double> SuccessfulCreaturesFitnesses = Creatures.ToDictionary(
-                x => x,
-                x => (double)x.FoodEaten / MostFoodEaten);
+                foreach (var Creature in Creatures)
+                {
+                    double DistanceFromMiddle = Globals.GetDistanceFrom(Creature.MX, Creature.MY, MiddleOfSuccessBounds.X, MiddleOfSuccessBounds.Y);
+                    double SuccessBoundsHypotenuse = Globals.Hypotenuse(SuccessBounds.Width, SuccessBounds.Height);
+
+                    SuccessfulCreaturesFitnesses.Add(Creature, Globals.Map(DistanceFromMiddle, 0, SuccessBoundsHypotenuse, 1, 0)); ;
+                }
+            }
+            else
+            {
+                int MostFoodEaten = Creatures.Max(x => x.FoodEaten);
+
+                if (MostFoodEaten == 0)
+                {
+                    return new Dictionary<Creature, double>();
+                }
+
+                SuccessfulCreaturesFitnesses = Creatures.ToDictionary(
+                    x => x,
+                    x => (double)x.FoodEaten / MostFoodEaten);
+            }
 
             return SuccessfulCreaturesFitnesses;
         }
@@ -341,6 +370,7 @@ namespace MaceEvolve.Controls
             DoubleBuffered = true;
             TargetTPS = 60;
             TargetFPS = TargetTPS;
+            CreatureSpeed = UseSuccessBounds ? 3.5 : 2.75;
             Reset();
         }
         private void DrawTimer_Tick(object sender, EventArgs e)

@@ -1,11 +1,9 @@
 ﻿using MaceEvolve.Enums;
 using MaceEvolve.Models;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MaceEvolve
 {
@@ -84,6 +82,14 @@ namespace MaceEvolve
         public static double Hypotenuse(int A, int B)
         {
             return Math.Sqrt(Math.Pow(A, 2) + Math.Pow(B, 2));
+        }
+        public static Point Middle(int X, int Y, int Width, int Height)
+        {
+            return new Point(X + Width / 2, Y + Height / 2);
+        }
+        public static Point Middle(double X, double Y, double Width, double Height)
+        {
+            return new Point((int)(X + Width / 2),(int)(Y + Height / 2));
         }
         #endregion
     }
