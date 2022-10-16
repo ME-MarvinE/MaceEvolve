@@ -70,6 +70,7 @@
             this.Size = new System.Drawing.Size(446, 285);
             this.Load += new System.EventHandler(this.GameHost_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.GameHost_Paint);
+            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.GameHost_MouseClick);
             this.ResumeLayout(false);
             this.PerformLayout();
 

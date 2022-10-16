@@ -67,6 +67,8 @@ namespace MaceEvolve.Controls
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
+        public Creature SelectedCreature { get; set; }
+        public Color? SelectedCreaturePreviousColor { get; set; }
         #endregion
 
         #region Constructors
@@ -442,6 +444,35 @@ namespace MaceEvolve.Controls
             }
 
             return Creatures;
+        }
+        private void GameHost_MouseClick(object sender, MouseEventArgs e)
+        {
+            Point MouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
+            IEnumerable<Creature> CreaturesOrderedByDistanceToMouse = Creatures.OrderBy(x => Globals.GetDistanceFrom(MouseLocation.X, MouseLocation.Y, x.MX, x.MY));
+
+            Creature NewSelectedCreature = CreaturesOrderedByDistanceToMouse.FirstOrDefault();
+
+            if (SelectedCreature == null)
+            {
+                if (NewSelectedCreature != null)
+                {
+                    SelectedCreature = NewSelectedCreature;
+                    SelectedCreaturePreviousColor = NewSelectedCreature.Color;
+                }
+            }
+            else
+            {
+                SelectedCreature.Color = SelectedCreaturePreviousColor.Value;
+                SelectedCreature = NewSelectedCreature;
+                SelectedCreaturePreviousColor = NewSelectedCreature?.Color;
+
+                if (NewSelectedCreature != null)
+                {
+                    NewSelectedCreature.Color = Color.White;
+                }
+            }
+
+            Invalidate();
         }
         #endregion
     }
