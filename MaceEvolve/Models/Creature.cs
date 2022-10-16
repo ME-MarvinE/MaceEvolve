@@ -299,7 +299,7 @@ namespace MaceEvolve.Models
 
             Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
 
-            if (Globals.GetDistanceFrom(X, Y, ClosestFood.X, ClosestFood.Y) > Size / 2)
+            if (Globals.GetDistanceFrom(MX, MY, ClosestFood.MX, ClosestFood.MY) > Size / 2)
             {
                 return false;
             }

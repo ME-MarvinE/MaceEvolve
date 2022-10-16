@@ -1,13 +1,11 @@
 ﻿using MaceEvolve.Enums;
 using MaceEvolve.Extensions;
-using Microsoft.VisualBasic.Devices;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
-using System.Xml;
+using System.Xml.Linq;
 
 namespace MaceEvolve.Models
 {
@@ -23,7 +21,9 @@ namespace MaceEvolve.Models
         [JsonIgnore]
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
+
         public Dictionary<Node, double> PreviousNodeOutputs = new Dictionary<Node, double>();
+        public List<NeuralNetworkStepInfo> PreviousStepInfo = new List<NeuralNetworkStepInfo>();
         #endregion
 
         #region Constructors
@@ -426,7 +426,6 @@ namespace MaceEvolve.Models
 
             if (OutputNodesOnly)
             {
-
                 List<Node> NodeQueue = OutputNodes.ToList();
 
                 while (NodeQueue.Count > 0)
@@ -480,6 +479,129 @@ namespace MaceEvolve.Models
                             {
                                 NodeQueue.Remove(CurrentNode);
                             }
+                        }
+                    }
+
+                }
+
+                PreviousNodeOutputs = EvaluatedNodes.ToDictionary(x => IdToNodeDict[x.Key], x => x.Value);
+                return EvaluatedNodes;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public Dictionary<int, double> LoggedStep(bool OutputNodesOnly)
+        {
+            PreviousNodeOutputs.Clear();
+            PreviousStepInfo.Clear();
+
+            Dictionary<Node, int> NodeToIdDict = Nodes.ToDictionary(x => x, x => GetNodeId(x));
+            Dictionary<int, Node> IdToNodeDict = NodeToIdDict.ToDictionary(x => x.Value, x => x.Key);
+
+            foreach (var Node in Nodes)
+            {
+                PreviousStepInfo.Add(new NeuralNetworkStepInfo()
+                {
+                    NodeId = NodeToIdDict[Node],
+                    Bias = Node.Bias,
+                    CreatureAction = Node.CreatureAction,
+                    CreatureInput = Node.CreatureInput,
+                    NodeType = Node.NodeType
+                });
+            }
+
+            foreach (var Connection in Connections)
+            {
+                NeuralNetworkStepInfo SourceStepInfo = PreviousStepInfo.First(x => x.NodeId == Connection.SourceId);
+                NeuralNetworkStepInfo TargetStepInfo = PreviousStepInfo.First(x => x.NodeId == Connection.TargetId);
+
+                if (!SourceStepInfo.ConnectionsFrom.Contains(Connection))
+                {
+                    SourceStepInfo.ConnectionsFrom.Add(Connection);
+                }
+
+                if (!TargetStepInfo.ConnectionsTo.Contains(Connection))
+                {
+                    TargetStepInfo.ConnectionsTo.Add(Connection);
+                }
+            }
+
+            List<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output).ToList();
+            Dictionary<int, double> EvaluatedNodes = new Dictionary<int, double>();
+
+            if (OutputNodesOnly)
+            {
+                List<Node> NodeQueue = OutputNodes.ToList();
+
+                while (NodeQueue.Count > 0)
+                {
+                    Node CurrentNode = NodeQueue[NodeQueue.Count - 1];
+                    int CurrentNodeId = NodeToIdDict[CurrentNode];
+                    NeuralNetworkStepInfo CurrentNodeStepInfo = PreviousStepInfo.First(x => x.NodeId == CurrentNodeId);
+
+                    if (CurrentNode.NodeType == NodeType.Input)
+                    {
+                        if (CurrentNode.CreatureInput == null) { throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureInput)} is null."); }
+                        EvaluatedNodes.Add(CurrentNodeId, InputValues[CurrentNode.CreatureInput.Value]);
+
+                        NodeQueue.Remove(CurrentNode);
+                    }
+                    else if (EvaluatedNodes.TryGetValue(CurrentNodeId, out double CachedOutput))
+                    {
+                        NodeQueue.Remove(CurrentNode);
+                    }
+                    else
+                    {
+                        double CurrentNodeWeightedSum = 0;
+                        double CurrentNodeOutput = 0;
+                        bool ChildNodeNeedsEvaluating = false;
+
+                        foreach (var Connection in Connections)
+                        {
+                            if (Connection.TargetId == CurrentNodeId)
+                            {
+                                if (Connection.SourceId == CurrentNodeId)
+                                {
+                                    if (PreviousNodeOutputs.TryGetValue(CurrentNode, out double PreviousSourceNodeOutput))
+                                    {
+                                        CurrentNodeWeightedSum += PreviousSourceNodeOutput;
+                                        CurrentNodeStepInfo.PreviousValueUsedCount += 1;
+                                    }
+                                    else
+                                    {
+                                        CurrentNodeWeightedSum += 0;
+                                    }
+                                }
+                                else if (EvaluatedNodes.TryGetValue(Connection.SourceId, out double CachedSourceNodeOutput))
+                                {
+                                    CurrentNodeWeightedSum += CachedSourceNodeOutput;
+                                }
+                                else if (!NodeQueue.Contains(IdToNodeDict[Connection.SourceId]))
+                                {
+                                    NodeQueue.Add(IdToNodeDict[Connection.SourceId]);
+                                    ChildNodeNeedsEvaluating = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!ChildNodeNeedsEvaluating)
+                        {
+                            CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum + CurrentNode.Bias);
+                            CurrentNodeStepInfo.PreviousOutput = CurrentNodeOutput;
+
+                            EvaluatedNodes.Add(CurrentNodeId, CurrentNodeOutput);
+
+                            if (NodeQueue.Contains(CurrentNode))
+                            {
+                                NodeQueue.Remove(CurrentNode);
+                            }
+                        }
+                        else
+                        {
+                            CurrentNodeStepInfo.FailedEvaluationCount += 1;
                         }
                     }
 
