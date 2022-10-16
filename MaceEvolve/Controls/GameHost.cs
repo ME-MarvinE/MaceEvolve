@@ -106,6 +106,7 @@ namespace MaceEvolve.Controls
             Creatures.Clear();
             ResetFood();
             GenerationCount = 1;
+            SelectedCreature = null;
 
             Creatures.AddRange(GenerateCreatures());
 
@@ -389,6 +390,7 @@ namespace MaceEvolve.Controls
                 if (Creatures.Count > 0)
                 {
                     ResetFood();
+                    SelectedCreature = null;
                     GenerationCount += 1;
                 }
                 else

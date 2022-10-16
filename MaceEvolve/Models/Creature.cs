@@ -95,12 +95,16 @@ namespace MaceEvolve.Models
         }
         public void Live()
         {
+            if (GameHost.SelectedCreature == this)
+            {
+                bool IsSelected = true;
+            }
             CurrentStepInfo = new CreatureStepInfo();
 
             UpdateCurrentStepInfo();
             UpdateInputValues();
 
-            Dictionary<int, double> NodeIdToOutputDict = Brain.Step(true);
+            Dictionary<int, double> NodeIdToOutputDict = Brain.LoggedStep(true);
             Dictionary<Node, double> NodeOutputsDict = NodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.Nodes[x.Key], x => x.Value);
             Node HighestOutputNode = NodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 
@@ -293,6 +297,11 @@ namespace MaceEvolve.Models
         }
         public bool TryEatFoodInRange()
         {
+            if (GameHost.SelectedCreature == this)
+            {
+                bool IsSelected = true;
+            }
+
             if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
                 return false;
