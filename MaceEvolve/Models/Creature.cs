@@ -1,4 +1,5 @@
-﻿using MaceEvolve.Enums;
+﻿using MaceEvolve.Controls;
+using MaceEvolve.Enums;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -147,12 +148,12 @@ namespace MaceEvolve.Models
 
             while (OffSpring.Brain.Connections.Count < AverageNumberOfParentConnections)
             {
-                Creature RandomParent = ParentsList[_Random.Next(ParentsList.Count)];
+                Creature RandomParent = ParentsList[Globals.Random.Next(ParentsList.Count)];
                 List<Connection> RandomParentConnections = AvailableParentConnections[RandomParent];
 
                 if (RandomParentConnections.Count > 0)
                 {
-                    Connection RandomParentConnection = RandomParentConnections[_Random.Next(RandomParentConnections.Count)];
+                    Connection RandomParentConnection = RandomParentConnections[Globals.Random.Next(RandomParentConnections.Count)];
                     Node RandomParentConnectionSourceNode = RandomParent.Brain.Nodes[RandomParentConnection.SourceId];
                     Node RandomParentConnectionTargetNode = RandomParent.Brain.Nodes[RandomParentConnection.TargetId];
 
@@ -311,7 +312,7 @@ namespace MaceEvolve.Models
         public void MoveForward()
         {
             Y -= Speed;
-            if (Y < GameHost.WorldBounds.Top)
+            if (MY < GameHost.WorldBounds.Top)
             {
                 Y += Speed;
                 //Y += GameHost.WorldBounds.Height;
@@ -321,7 +322,7 @@ namespace MaceEvolve.Models
         public void MoveBackward()
         {
             Y += Speed;
-            if (Y > GameHost.WorldBounds.Bottom)
+            if (MY > GameHost.WorldBounds.Bottom)
             {
                 Y -= Speed;
                 //Y -= GameHost.WorldBounds.Height;
@@ -331,7 +332,7 @@ namespace MaceEvolve.Models
         public void MoveLeft()
         {
             X -= Speed;
-            if (X < GameHost.WorldBounds.Left)
+            if (MX < GameHost.WorldBounds.Left)
             {
                 X += Speed;
                 //X += GameHost.WorldBounds.Width;
@@ -341,7 +342,7 @@ namespace MaceEvolve.Models
         public void MoveRight()
         {
             X += Speed;
-            if (X > GameHost.WorldBounds.Right)
+            if (MX > GameHost.WorldBounds.Right)
             {
                 X -= Speed;
                 //X -= GameHost.WorldBounds.Width;

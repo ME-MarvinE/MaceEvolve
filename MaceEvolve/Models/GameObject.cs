@@ -12,8 +12,7 @@ namespace MaceEvolve.Models
     public abstract class GameObject
     {
         #region Fields
-        protected static Random _Random = new Random();
-        private Rectangle _Rectangle = new Rectangle(0,0,0,0);
+        private Rectangle _Rectangle = new Rectangle(0, 0, 0, 0);
         public Color _Color = Color.Black;
         #endregion
 
@@ -45,14 +44,14 @@ namespace MaceEvolve.Models
         {
             get
             {
-                return X - Size / 2;
+                return X + Size / 2;
             }
         }
         public double MY
         {
             get
             {
-                return Y - Size / 2;
+                return Y + Size / 2;
             }
         }
         public double Size
@@ -103,7 +102,7 @@ namespace MaceEvolve.Models
         {
             using (SolidBrush Brush = new SolidBrush(Color))
             {
-                e.Graphics.FillEllipse(Brush, (float)MX, (float)MY, (float)Size, (float)Size);
+                e.Graphics.FillEllipse(Brush, (float)X, (float)Y, (float)Size, (float)Size);
             }
         }
         public virtual void Update()
