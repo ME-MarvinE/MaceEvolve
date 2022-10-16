@@ -435,8 +435,13 @@ namespace MaceEvolve.Models
 
                     if (CurrentNode.NodeType == NodeType.Input)
                     {
-                        if (CurrentNode.CreatureInput == null) { throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureInput)} is null."); }
-                        EvaluatedNodes.Add(CurrentNodeId, InputValues[CurrentNode.CreatureInput.Value]);
+                        if (CurrentNode.CreatureInput == null) { throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureInput)} is null."); 
+                        }
+                        double CurrentNodeWeightedSum = InputValues[CurrentNode.CreatureInput.Value];
+                        double CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum + CurrentNode.Bias);
+
+                        EvaluatedNodes.Add(CurrentNodeId, CurrentNodeOutput);
+
                         NodeQueue.Remove(CurrentNode);
                     }
                     else if (EvaluatedNodes.TryGetValue(CurrentNodeId, out double CachedOutput))
@@ -544,7 +549,11 @@ namespace MaceEvolve.Models
                     if (CurrentNode.NodeType == NodeType.Input)
                     {
                         if (CurrentNode.CreatureInput == null) { throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureInput)} is null."); }
-                        EvaluatedNodes.Add(CurrentNodeId, InputValues[CurrentNode.CreatureInput.Value]);
+
+                        double CurrentNodeWeightedSum = InputValues[CurrentNode.CreatureInput.Value];
+                        double CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum + CurrentNode.Bias);
+
+                        EvaluatedNodes.Add(CurrentNodeId, CurrentNodeOutput);
 
                         NodeQueue.Remove(CurrentNode);
                     }
