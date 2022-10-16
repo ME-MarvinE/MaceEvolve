@@ -1,10 +1,13 @@
 ﻿using MaceEvolve.Enums;
 using MaceEvolve.Extensions;
+using Microsoft.VisualBasic.Devices;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using System.Xml;
 
 namespace MaceEvolve.Models
 {
@@ -20,7 +23,7 @@ namespace MaceEvolve.Models
         [JsonIgnore]
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
-        public Dictionary<Node, double> EvaluatedNodes { get; set; } = new Dictionary<Node, double>();
+        public Dictionary<Node, double> PreviousNodeOutputs = new Dictionary<Node, double>();
         #endregion
 
         #region Constructors
@@ -242,7 +245,6 @@ namespace MaceEvolve.Models
 
             return null;
         }
-
         public static Node GetNodeToRemove(double InputNodeChance, double ProcessNodeChance, double OutputNodeChance, IEnumerable<Node> Nodes)
         {
             double TotalChance = InputNodeChance + ProcessNodeChance + OutputNodeChance;
@@ -411,6 +413,85 @@ namespace MaceEvolve.Models
         public static IEnumerable<Node> GetPossibleTargetNodes(IEnumerable<Node> Nodes)
         {
             return Nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
+        }
+        public Dictionary<int, double> Step(bool OutputNodesOnly)
+        {
+            PreviousNodeOutputs.Clear();
+
+            Dictionary<Node, int> NodeToIdDict = Nodes.ToDictionary(x => x, x => GetNodeId(x));
+            Dictionary<int, Node> IdToNodeDict = NodeToIdDict.ToDictionary(x => x.Value, x => x.Key);
+
+            List<Node> OutputNodes = Nodes.Where(x => x.NodeType == NodeType.Output).ToList();
+            Dictionary<int, double> EvaluatedNodes = new Dictionary<int, double>();
+
+            if (OutputNodesOnly)
+            {
+
+                List<Node> NodeQueue = OutputNodes.ToList();
+
+                while (NodeQueue.Count > 0)
+                {
+                    Node CurrentNode = NodeQueue[NodeQueue.Count - 1];
+                    int CurrentNodeId = NodeToIdDict[CurrentNode];
+
+                    if (CurrentNode.NodeType == NodeType.Input)
+                    {
+                        if (CurrentNode.CreatureInput == null) { throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureInput)} is null."); }
+                        EvaluatedNodes.Add(CurrentNodeId, InputValues[CurrentNode.CreatureInput.Value]);
+                        NodeQueue.Remove(CurrentNode);
+                    }
+                    else if (EvaluatedNodes.TryGetValue(CurrentNodeId, out double CachedOutput))
+                    {
+                        NodeQueue.Remove(CurrentNode);
+                    }
+                    else
+                    {
+                        double CurrentNodeWeightedSum = 0;
+                        double CurrentNodeOutput = 0;
+                        bool ChildNodeNeedsEvaluating = false;
+
+                        foreach (var Connection in Connections)
+                        {
+                            if (Connection.TargetId == CurrentNodeId)
+                            {
+                                if (Connection.SourceId == CurrentNodeId)
+                                {
+                                    CurrentNodeWeightedSum += 0;
+                                }
+                                else if (EvaluatedNodes.TryGetValue(Connection.SourceId, out double CachedSourceNodeOutput))
+                                {
+                                    CurrentNodeWeightedSum += CachedSourceNodeOutput;
+                                }
+                                else if (!NodeQueue.Contains(IdToNodeDict[Connection.SourceId]))
+                                {
+                                    NodeQueue.Add(IdToNodeDict[Connection.SourceId]);
+                                    ChildNodeNeedsEvaluating = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!ChildNodeNeedsEvaluating)
+                        {
+                            CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum + CurrentNode.Bias);
+                            EvaluatedNodes.Add(CurrentNodeId, CurrentNodeOutput);
+
+                            if (NodeQueue.Contains(CurrentNode))
+                            {
+                                NodeQueue.Remove(CurrentNode);
+                            }
+                        }
+                    }
+
+                }
+
+                PreviousNodeOutputs = EvaluatedNodes.ToDictionary(x => IdToNodeDict[x.Key], x => x.Value);
+                return EvaluatedNodes;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
         #endregion
     }

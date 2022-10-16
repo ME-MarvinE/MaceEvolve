@@ -18,6 +18,7 @@ namespace MaceEvolve.Models
         public int SightRange { get; set; } = 200;
         public double Metabolism { get; set; } = 0.1;
         public int FoodEaten { get; set; }
+        public bool IsDead { get; set; }
         //public int StomachSize { get; set; } = 5;
         //public List<Food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
@@ -63,7 +64,7 @@ namespace MaceEvolve.Models
         }
         public override void Update()
         {
-            if (Energy > 0)
+            if (!IsDead)
             {
                 Live();
 
@@ -72,6 +73,7 @@ namespace MaceEvolve.Models
                     Die();
                 }
             }
+
         }
         public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> GameObjects) where T : GameObject
         {
@@ -86,6 +88,7 @@ namespace MaceEvolve.Models
         }
         public void Die()
         {
+            IsDead = true;
             Color = Color.Brown;
             Energy = 0;
         }
@@ -95,12 +98,12 @@ namespace MaceEvolve.Models
 
             UpdateCurrentStepInfo();
             UpdateInputValues();
-            UpdateOutputValues();
 
-            List<Node> OrderedOutputNodes = Brain.Nodes.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).ToList();
-            Node HighestOutputNode = OrderedOutputNodes.LastOrDefault();
+            Dictionary<int, double> NodeIdToOutputDict = Brain.Step(true);
+            Dictionary<Node, double> NodeOutputsDict = NodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.Nodes[x.Key], x => x.Value);
+            Node HighestOutputNode = NodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 
-            if (HighestOutputNode != null && HighestOutputNode.PreviousOutput > 0)
+            if (HighestOutputNode != null && NodeOutputsDict[HighestOutputNode] > 0)
             {
                 ExecuteAction(HighestOutputNode.CreatureAction.Value);
             }
@@ -125,25 +128,6 @@ namespace MaceEvolve.Models
             Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature());
             Brain.UpdateInputValue(CreatureInput.VerticalWorldBoundProximity, VerticalWorldBoundProximity());
             Brain.UpdateInputValue(CreatureInput.HorizontalWorldBoundProximity, HorizontalWorldBoundProximity());
-        }
-        public void UpdateOutputValues()
-        {
-            Brain.EvaluatedNodes.Clear();
-
-            foreach (var Node in Brain.Nodes)
-            {
-                if (Node.NodeType == NodeType.Output)
-                {
-                    if (Node.CreatureAction == null)
-                    {
-                        throw new InvalidOperationException($"Output node contains a {nameof(Models.Node.CreatureAction)} of null.");
-                    }
-                    else if (Brain.Actions.Contains(Node.CreatureAction.Value))
-                    {
-                        Node.GenerateOutput(Brain);
-                    }
-                }
-            }
         }
         public static Creature Reproduce(IEnumerable<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions)
         {
