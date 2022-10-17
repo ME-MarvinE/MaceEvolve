@@ -414,14 +414,13 @@ namespace MaceEvolve.Models
         {
             return Nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
         }
-        public Dictionary<int, double> Step(bool OutputNodesOnly)
+        public Dictionary<int, double> Step(bool OutputNodesOnly, bool CacheSelfReferencingConnections)
         {
-            Dictionary<Node, int> NodeToIdDict = Nodes.ToDictionary(x => x, x => GetNodeId(x));
-            Dictionary<int, Node> IdToNodeDict = NodeToIdDict.ToDictionary(x => x.Value, x => x.Key);
-            Dictionary<int, double> EvaluatedNodes = new Dictionary<int, double>();
-
             if (OutputNodesOnly)
             {
+                Dictionary<int, double> CachedNodeOutputs = new Dictionary<int, double>();
+                Dictionary<Node, int> NodeToIdDict = Nodes.ToDictionary(x => x, x => GetNodeId(x));
+                Dictionary<int, Node> IdToNodeDict = NodeToIdDict.ToDictionary(x => x.Value, x => x.Key);
                 List<int> InputNodeIds = new List<int>();
                 List<int> OutputNodeIds = new List<int>();
 
@@ -437,7 +436,9 @@ namespace MaceEvolve.Models
                     }
                 }
 
+                List<int> NodesBeingEvaluated = new List<int>();
                 List<int> NodeQueue = new List<int>();
+
                 NodeQueue.AddRange(OutputNodeIds);
                 NodeQueue.AddRange(InputNodeIds);
 
@@ -445,7 +446,8 @@ namespace MaceEvolve.Models
                 {
                     int CurrentNodeId = NodeQueue[NodeQueue.Count - 1];
                     Node CurrentNode = IdToNodeDict[CurrentNodeId];
-                    double? Output;
+                    NodesBeingEvaluated.Add(CurrentNodeId);
+                    double? CurrentNodeWeightedSum;
 
                     if (CurrentNode.NodeType == NodeType.Input)
                     {
@@ -453,65 +455,89 @@ namespace MaceEvolve.Models
                         {
                             throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureInput)} is null.");
                         }
-                        double CurrentNodeWeightedSum = InputValues[CurrentNode.CreatureInput.Value];
 
-                        Output = Globals.ReLU(CurrentNodeWeightedSum + CurrentNode.Bias);
+                        CurrentNodeWeightedSum = InputValues[CurrentNode.CreatureInput.Value];
                     }
                     else
                     {
-                        double? CurrentNodeWeightedSum = 0;
+                        if (CurrentNode.NodeType == NodeType.Output && CurrentNode.CreatureAction == null)
+                        {
+                            throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureAction)} is null.");
+                        }
 
-                        foreach (var Connection in Connections)
+                        CurrentNodeWeightedSum = 0;
+
+                        List<Connection> ConnectionsToCurrentNode = Connections.Where(x => x.TargetId == CurrentNodeId).ToList();
+                        bool CurrentNodeHasSelfReferencingConnections = ConnectionsToCurrentNode.Any(x => x.SourceId == CurrentNodeId);
+
+                        foreach (var Connection in ConnectionsToCurrentNode)
                         {
                             if (Connection.TargetId == CurrentNodeId)
                             {
-                                if (EvaluatedNodes.TryGetValue(Connection.SourceId, out double SourceNodeOutput))
-                                {
-                                    CurrentNodeWeightedSum += SourceNodeOutput;
-                                }
-                                else if (NodeQueue.Contains(Connection.SourceId))
-                                {
-                                    Node ConnectionSourceNode = IdToNodeDict[Connection.SourceId];
+                                double SourceNodeOutput;
+                                Node ConnectionSourceNode = IdToNodeDict[Connection.SourceId];
 
+                                if (NodesBeingEvaluated.Contains(Connection.SourceId) || (CurrentNodeHasSelfReferencingConnections && !CacheSelfReferencingConnections))
+                                {
                                     if (PreviousNodeOutputs.TryGetValue(ConnectionSourceNode, out double PreviousSourceNodeOutput))
                                     {
-                                        CurrentNodeWeightedSum += PreviousSourceNodeOutput;
+                                        SourceNodeOutput = PreviousSourceNodeOutput;
                                     }
                                     else
                                     {
-                                        CurrentNodeWeightedSum += 0;
+                                        PreviousNodeOutputs[ConnectionSourceNode] = 0;
+                                        SourceNodeOutput = PreviousNodeOutputs[ConnectionSourceNode];
                                     }
                                 }
                                 else
                                 {
-                                    NodeQueue.Add(Connection.SourceId);
-                                    CurrentNodeWeightedSum = null;
+                                    if (CachedNodeOutputs.TryGetValue(Connection.SourceId, out double CachedSourceNodeOutput))
+                                    {
+                                        SourceNodeOutput = CachedSourceNodeOutput;
+                                    }
+                                    else
+                                    {
+                                        NodeQueue.Add(Connection.SourceId);
+                                        CurrentNodeWeightedSum = null;
+                                        break;
+                                    }
                                 }
+
+                                //CurrentNodeWeightedSum ??= 0;
+
+                                CurrentNodeWeightedSum += SourceNodeOutput * Connection.Weight;
                             }
                         }
-
-                        Output = CurrentNodeWeightedSum == null ? null : Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
                     }
 
-                    if (Output != null)
+                    if (CurrentNodeWeightedSum != null)
                     {
-                        EvaluatedNodes[CurrentNodeId] = Output.Value;
+                        double CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
+
+                        if (CurrentNodeOutput > 10000)
+                        {
+                            var thing = 2;
+                        }
+
+                        NodesBeingEvaluated.Remove(CurrentNodeId);
+
+                        CachedNodeOutputs[CurrentNodeId] = CurrentNodeOutput;
+                        PreviousNodeOutputs[CurrentNode] = CurrentNodeOutput;
+
                         NodeQueue.Remove(CurrentNodeId);
-                        PreviousNodeOutputs[CurrentNode] = Output.Value;
                     }
                 }
-                return EvaluatedNodes;
+
+                return CachedNodeOutputs;
             }
             else
             {
                 throw new NotImplementedException();
             }
         }
-        public Dictionary<int, double> LoggedStep(bool OutputNodesOnly)
+        public Dictionary<int, double> LoggedStep(bool OutputNodesOnly, bool CacheSelfReferencingConnections)
         {
             Dictionary<Node, int> NodeToIdDict = Nodes.ToDictionary(x => x, x => GetNodeId(x));
-            Dictionary<int, Node> IdToNodeDict = NodeToIdDict.ToDictionary(x => x.Value, x => x.Key);
-            Dictionary<int, double> EvaluatedNodes = new Dictionary<int, double>();
 
             //StepInfo
             PreviousStepInfo.Clear();
@@ -546,6 +572,8 @@ namespace MaceEvolve.Models
 
             if (OutputNodesOnly)
             {
+                Dictionary<int, double> CachedNodeOutputs = new Dictionary<int, double>();
+                Dictionary<int, Node> IdToNodeDict = NodeToIdDict.ToDictionary(x => x.Value, x => x.Key);
                 List<int> InputNodeIds = new List<int>();
                 List<int> OutputNodeIds = new List<int>();
 
@@ -561,7 +589,9 @@ namespace MaceEvolve.Models
                     }
                 }
 
+                List<int> NodesBeingEvaluated = new List<int>();
                 List<int> NodeQueue = new List<int>();
+
                 NodeQueue.AddRange(OutputNodeIds);
                 NodeQueue.AddRange(InputNodeIds);
 
@@ -569,8 +599,9 @@ namespace MaceEvolve.Models
                 {
                     int CurrentNodeId = NodeQueue[NodeQueue.Count - 1];
                     Node CurrentNode = IdToNodeDict[CurrentNodeId];
+                    NodesBeingEvaluated.Add(CurrentNodeId);
                     NeuralNetworkStepInfo CurrentNodeStepInfo = PreviousStepInfo.First(x => x.NodeId == CurrentNodeId);
-                    double? Output;
+                    double? CurrentNodeWeightedSum;
 
                     if (CurrentNode.NodeType == NodeType.Input)
                     {
@@ -578,56 +609,81 @@ namespace MaceEvolve.Models
                         {
                             throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureInput)} is null.");
                         }
-                        double CurrentNodeWeightedSum = InputValues[CurrentNode.CreatureInput.Value];
 
-                        Output = Globals.ReLU(CurrentNodeWeightedSum + CurrentNode.Bias);
+                        CurrentNodeWeightedSum = InputValues[CurrentNode.CreatureInput.Value];
                     }
                     else
                     {
-                        double? CurrentNodeWeightedSum = 0;
+                        if (CurrentNode.NodeType == NodeType.Output && CurrentNode.CreatureAction == null)
+                        {
+                            throw new InvalidOperationException($"Node type is {CurrentNode.NodeType} but {nameof(CreatureAction)} is null.");
+                        }
 
-                        foreach (var Connection in Connections)
+                        CurrentNodeWeightedSum = 0;
+
+                        List<Connection> ConnectionsToCurrentNode = Connections.Where(x => x.TargetId == CurrentNodeId).ToList();
+                        bool CurrentNodeHasSelfReferencingConnections = ConnectionsToCurrentNode.Any(x => x.SourceId == CurrentNodeId);
+
+                        foreach (var Connection in ConnectionsToCurrentNode)
                         {
                             if (Connection.TargetId == CurrentNodeId)
                             {
-                                if (EvaluatedNodes.TryGetValue(Connection.SourceId, out double SourceNodeOutput))
+                                double SourceNodeOutput;
+                                Node ConnectionSourceNode = IdToNodeDict[Connection.SourceId];
+
+                                if (NodesBeingEvaluated.Contains(Connection.SourceId) || (CurrentNodeHasSelfReferencingConnections && !CacheSelfReferencingConnections))
                                 {
-                                    CurrentNodeWeightedSum += SourceNodeOutput;
-                                }
-                                else if (NodeQueue.Contains(Connection.SourceId))
-                                {
-                                    Node ConnectionSourceNode = IdToNodeDict[Connection.SourceId];
-                                    
                                     if (PreviousNodeOutputs.TryGetValue(ConnectionSourceNode, out double PreviousSourceNodeOutput))
                                     {
-                                        CurrentNodeWeightedSum += PreviousSourceNodeOutput;
+                                        SourceNodeOutput = PreviousSourceNodeOutput;
                                     }
                                     else
                                     {
-                                        CurrentNodeWeightedSum += 0;
+                                        PreviousNodeOutputs[ConnectionSourceNode] = 0;
+                                        SourceNodeOutput = PreviousNodeOutputs[ConnectionSourceNode];
                                     }
                                 }
                                 else
                                 {
-                                    NodeQueue.Add(Connection.SourceId);
-                                    CurrentNodeWeightedSum = null;
+                                    if (CachedNodeOutputs.TryGetValue(Connection.SourceId, out double CachedSourceNodeOutput))
+                                    {
+                                        SourceNodeOutput = CachedSourceNodeOutput;
+                                    }
+                                    else
+                                    {
+                                        NodeQueue.Add(Connection.SourceId);
+                                        CurrentNodeWeightedSum = null;
+                                        break;
+                                    }
                                 }
+
+                                //CurrentNodeWeightedSum ??= 0;
+
+                                CurrentNodeWeightedSum += SourceNodeOutput * Connection.Weight;
                             }
                         }
-
-                        Output = CurrentNodeWeightedSum == null ? null : Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
                     }
 
-                    if (Output != null)
+                    if (CurrentNodeWeightedSum != null)
                     {
-                        EvaluatedNodes[CurrentNodeId] = Output.Value;
-                        NodeQueue.Remove(CurrentNodeId);
-                        PreviousNodeOutputs[CurrentNode] = Output.Value;
+                        double CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
 
-                        CurrentNodeStepInfo.PreviousOutput = Output.Value;
+                        if (CurrentNodeOutput > 10000)
+                        {
+                            var thing = 2;
+                        }
+
+                        NodesBeingEvaluated.Remove(CurrentNodeId);
+
+                        CachedNodeOutputs[CurrentNodeId] = CurrentNodeOutput;
+                        PreviousNodeOutputs[CurrentNode] = CurrentNodeOutput;
+                        CurrentNodeStepInfo.PreviousOutput = CurrentNodeOutput;
+
+                        NodeQueue.Remove(CurrentNodeId);
                     }
                 }
-                return EvaluatedNodes;
+
+                return CachedNodeOutputs;
             }
             else
             {

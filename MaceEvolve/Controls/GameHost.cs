@@ -24,7 +24,7 @@ namespace MaceEvolve.Controls
         public List<Creature> Creatures { get; set; } = new List<Creature>();
         public List<Food> Food { get; set; } = new List<Food>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
-        public int MaxCreatureAmount { get; set; } = 300;
+        public int MaxCreatureAmount { get; set; } = 150;
         public int MaxFoodAmount { get; set; } = 350;
         public int TargetFPS
         {
@@ -52,12 +52,12 @@ namespace MaceEvolve.Controls
         }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 8;
+        public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 64;
         public double CreatureSpeed { get; set; }
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
-        public int MaxCreatureProcessNodes { get; set; } = 3;
+        public int MaxCreatureProcessNodes { get; set; } = 8;
         public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
