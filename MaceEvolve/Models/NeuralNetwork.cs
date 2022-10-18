@@ -666,7 +666,7 @@ namespace MaceEvolve.Models
 
                     if (CurrentNodeWeightedSum != null)
                     {
-                        double CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
+                        double CurrentNodeOutput = CurrentNode.NodeType == NodeType.Input ? CurrentNodeWeightedSum.Value : Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
 
                         if (CurrentNodeOutput > 10000)
                         {
