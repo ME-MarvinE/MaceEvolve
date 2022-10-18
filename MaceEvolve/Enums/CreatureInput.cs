@@ -7,7 +7,7 @@
         HorizontalProximityToCreature,
         VerticalProximityToFood,
         HorizontalProximityToFood,
-        VerticalWorldBoundProximity,
+        DistanceFromTopWorldBound,
         HorizontalWorldBoundProximity
     }
 }
