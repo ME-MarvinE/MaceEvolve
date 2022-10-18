@@ -104,7 +104,7 @@ namespace MaceEvolve.Models
             UpdateCurrentStepInfo();
             UpdateInputValues();
 
-            Dictionary<int, double> NodeIdToOutputDict = Brain.LoggedStep(true, false);
+            Dictionary<int, double> NodeIdToOutputDict = Brain.LoggedStep(true, true);
             Dictionary<Node, double> NodeOutputsDict = NodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.Nodes[x.Key], x => x.Value);
             Node HighestOutputNode = NodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 

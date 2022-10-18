@@ -21,8 +21,6 @@ namespace MaceEvolve.Models
         [JsonIgnore]
         public List<Node> Nodes { get; } = new List<Node>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
-
-        public Dictionary<Node, double> PreviousNodeOutputs { get; set; } = new Dictionary<Node, double>();
         public List<NeuralNetworkStepInfo> PreviousStepInfo { get; set; } = new List<NeuralNetworkStepInfo>();
         #endregion
 
@@ -414,7 +412,7 @@ namespace MaceEvolve.Models
         {
             return Nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
         }
-        public Dictionary<int, double> Step(bool OutputNodesOnly, bool CacheSelfReferencingConnections)
+        public Dictionary<int, double> Step(bool OutputNodesOnly, bool AlwaysReevaluateNodesWithSelfReferencingConnections)
         {
             if (OutputNodesOnly)
             {
@@ -477,19 +475,13 @@ namespace MaceEvolve.Models
                                 double SourceNodeOutput;
                                 Node ConnectionSourceNode = IdToNodeDict[Connection.SourceId];
 
-                                if (NodesBeingEvaluated.Contains(Connection.SourceId) || (CurrentNodeHasSelfReferencingConnections && !CacheSelfReferencingConnections))
-                                {
-                                    if (PreviousNodeOutputs.TryGetValue(ConnectionSourceNode, out double PreviousSourceNodeOutput))
-                                    {
-                                        SourceNodeOutput = PreviousSourceNodeOutput;
-                                    }
-                                    else
-                                    {
-                                        PreviousNodeOutputs[ConnectionSourceNode] = 0;
-                                        SourceNodeOutput = PreviousNodeOutputs[ConnectionSourceNode];
-                                    }
-                                }
-                                else
+                                //If the source node is already being evaluated, meaning either the current connection is a circular reference or the source node is present earlier in the queue and is a circular reference,
+                                //The cached output of the source node must be used. If there is no cached value, initialise one with a value of 0.
+                                //OR
+                                //Whether the node is evaluated or not, if there is a self referencing connection, use the specified parameter to determine whether it should be evaluated again or not.
+                                //This is important because after a self referencing node's output is calculated, it is cached. When getting the value of that node again, something needs to decided whether to use the original output
+                                //or to calculate a new output using the cached output to resolve the circular reference instead of the initial value of 0.
+                                if (NodesBeingEvaluated.Contains(Connection.SourceId) || !(CurrentNodeHasSelfReferencingConnections && !AlwaysReevaluateNodesWithSelfReferencingConnections))
                                 {
                                     if (CachedNodeOutputs.TryGetValue(Connection.SourceId, out double CachedSourceNodeOutput))
                                     {
@@ -497,13 +489,16 @@ namespace MaceEvolve.Models
                                     }
                                     else
                                     {
-                                        NodeQueue.Add(Connection.SourceId);
-                                        CurrentNodeWeightedSum = null;
-                                        break;
+                                        CachedNodeOutputs[Connection.SourceId] = 0;
+                                        SourceNodeOutput = CachedNodeOutputs[Connection.SourceId];
                                     }
                                 }
-
-                                //CurrentNodeWeightedSum ??= 0;
+                                else
+                                {
+                                    NodeQueue.Add(Connection.SourceId);
+                                    CurrentNodeWeightedSum = null;
+                                    break;
+                                }
 
                                 CurrentNodeWeightedSum += SourceNodeOutput * Connection.Weight;
                             }
@@ -512,17 +507,11 @@ namespace MaceEvolve.Models
 
                     if (CurrentNodeWeightedSum != null)
                     {
-                        double CurrentNodeOutput = Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
-
-                        if (CurrentNodeOutput > 10000)
-                        {
-                            var thing = 2;
-                        }
+                        double CurrentNodeOutput = CurrentNode.NodeType == NodeType.Input ? CurrentNodeWeightedSum.Value : Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
 
                         NodesBeingEvaluated.Remove(CurrentNodeId);
 
                         CachedNodeOutputs[CurrentNodeId] = CurrentNodeOutput;
-                        PreviousNodeOutputs[CurrentNode] = CurrentNodeOutput;
 
                         NodeQueue.Remove(CurrentNodeId);
                     }
@@ -535,7 +524,7 @@ namespace MaceEvolve.Models
                 throw new NotImplementedException();
             }
         }
-        public Dictionary<int, double> LoggedStep(bool OutputNodesOnly, bool CacheSelfReferencingConnections)
+        public Dictionary<int, double> LoggedStep(bool OutputNodesOnly, bool AlwaysReevaluateNodesWithSelfReferencingConnections)
         {
             Dictionary<Node, int> NodeToIdDict = Nodes.ToDictionary(x => x, x => GetNodeId(x));
 
@@ -631,19 +620,13 @@ namespace MaceEvolve.Models
                                 double SourceNodeOutput;
                                 Node ConnectionSourceNode = IdToNodeDict[Connection.SourceId];
 
-                                if (NodesBeingEvaluated.Contains(Connection.SourceId) || (CurrentNodeHasSelfReferencingConnections && !CacheSelfReferencingConnections))
-                                {
-                                    if (PreviousNodeOutputs.TryGetValue(ConnectionSourceNode, out double PreviousSourceNodeOutput))
-                                    {
-                                        SourceNodeOutput = PreviousSourceNodeOutput;
-                                    }
-                                    else
-                                    {
-                                        PreviousNodeOutputs[ConnectionSourceNode] = 0;
-                                        SourceNodeOutput = PreviousNodeOutputs[ConnectionSourceNode];
-                                    }
-                                }
-                                else
+                                //If the source node is already being evaluated, meaning either the current connection is a circular reference or the source node is present earlier in the queue and is a circular reference,
+                                //The cached output of the source node must be used. If there is no cached value, initialise one with a value of 0.
+                                //OR
+                                //Whether the node is evaluated or not, if there is a self referencing connection, use the specified parameter to determine whether it should be evaluated again or not.
+                                //This is important because after a self referencing node's output is calculated, it is cached. When getting the value of that node again, something needs to decided whether to use the original output
+                                //or to calculate a new output using the cached output to resolve the circular reference instead of the initial value of 0.
+                                if (NodesBeingEvaluated.Contains(Connection.SourceId) || !(CurrentNodeHasSelfReferencingConnections && !AlwaysReevaluateNodesWithSelfReferencingConnections))
                                 {
                                     if (CachedNodeOutputs.TryGetValue(Connection.SourceId, out double CachedSourceNodeOutput))
                                     {
@@ -651,13 +634,16 @@ namespace MaceEvolve.Models
                                     }
                                     else
                                     {
-                                        NodeQueue.Add(Connection.SourceId);
-                                        CurrentNodeWeightedSum = null;
-                                        break;
+                                        CachedNodeOutputs[Connection.SourceId] = 0;
+                                        SourceNodeOutput = CachedNodeOutputs[Connection.SourceId];
                                     }
                                 }
-
-                                //CurrentNodeWeightedSum ??= 0;
+                                else
+                                {
+                                    NodeQueue.Add(Connection.SourceId);
+                                    CurrentNodeWeightedSum = null;
+                                    break;
+                                }
 
                                 CurrentNodeWeightedSum += SourceNodeOutput * Connection.Weight;
                             }
@@ -668,15 +654,9 @@ namespace MaceEvolve.Models
                     {
                         double CurrentNodeOutput = CurrentNode.NodeType == NodeType.Input ? CurrentNodeWeightedSum.Value : Globals.ReLU(CurrentNodeWeightedSum.Value + CurrentNode.Bias);
 
-                        if (CurrentNodeOutput > 10000)
-                        {
-                            var thing = 2;
-                        }
-
                         NodesBeingEvaluated.Remove(CurrentNodeId);
 
                         CachedNodeOutputs[CurrentNodeId] = CurrentNodeOutput;
-                        PreviousNodeOutputs[CurrentNode] = CurrentNodeOutput;
                         CurrentNodeStepInfo.PreviousOutput = CurrentNodeOutput;
 
                         NodeQueue.Remove(CurrentNodeId);

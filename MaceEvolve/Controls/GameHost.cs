@@ -53,11 +53,11 @@ namespace MaceEvolve.Controls
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
-        public int MaxCreatureConnections { get; set; } = 64;
+        public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
-        public int MaxCreatureProcessNodes { get; set; } = 3;
+        public int MaxCreatureProcessNodes { get; set; } = 5;
         public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
