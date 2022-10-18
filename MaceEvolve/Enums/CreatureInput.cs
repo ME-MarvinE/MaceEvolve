@@ -8,6 +8,6 @@
         VerticalProximityToFood,
         HorizontalProximityToFood,
         DistanceFromTopWorldBound,
-        HorizontalWorldBoundProximity
+        DistanceFromLeftWorldBound
     }
 }
