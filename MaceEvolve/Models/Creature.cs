@@ -24,14 +24,6 @@ namespace MaceEvolve.Models
         //public List<Food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
         public CreatureStepInfo CurrentStepInfo { get; private set; }
-
-        #endregion
-
-        #region Constructors
-        public Creature(NeuralNetwork Brain)
-        {
-            this.Brain = Brain;
-        }
         #endregion
 
         #region Methods
@@ -105,7 +97,7 @@ namespace MaceEvolve.Models
             UpdateInputValues();
 
             Dictionary<int, double> NodeIdToOutputDict = Brain.LoggedStep(true, true);
-            Dictionary<Node, double> NodeOutputsDict = NodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.Nodes[x.Key], x => x.Value);
+            Dictionary<Node, double> NodeOutputsDict = NodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
             Node HighestOutputNode = NodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 
             if (HighestOutputNode != null && NodeOutputsDict[HighestOutputNode] > 0)
@@ -141,7 +133,10 @@ namespace MaceEvolve.Models
             Dictionary<Creature, Dictionary<Node, Node>> ParentToOffSpringNodesMap = new Dictionary<Creature, Dictionary<Node, Node>>();
             //Dictionary<Node, Node> ParentNodeToOffSpringNodeMap = new Dictionary<Node, Node>();
 
-            Creature OffSpring = new Creature(new NeuralNetwork(new List<Node>(), Inputs, Actions, new List<Connection>()));
+            Creature OffSpring = new Creature()
+            {
+                Brain = new NeuralNetwork(new List<Node>(), Inputs, Actions, new List<Connection>())
+            };
 
             double AverageNumberOfParentConnections = Parents.Average(x => x.Brain.Connections.Count);
 
@@ -158,20 +153,21 @@ namespace MaceEvolve.Models
                 if (RandomParentConnections.Count > 0)
                 {
                     Connection RandomParentConnection = RandomParentConnections[Globals.Random.Next(RandomParentConnections.Count)];
-                    Node RandomParentConnectionSourceNode = RandomParent.Brain.Nodes[RandomParentConnection.SourceId];
-                    Node RandomParentConnectionTargetNode = RandomParent.Brain.Nodes[RandomParentConnection.TargetId];
+                    Node RandomParentConnectionSourceNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.SourceId];
+                    Node RandomParentConnectionTargetNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.TargetId];
 
                     Connection ConnectionToAdd = new Connection() { Weight = RandomParentConnection.Weight };
 
                     if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionSourceNode))
                     {
-                        ConnectionToAdd.SourceId = OffSpring.Brain.GetNodeId(ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionSourceNode]);
+                        ConnectionToAdd.SourceId = OffSpring.Brain.NodesToNodeIdsDict[ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionSourceNode]];
                     }
                     else
                     {
                         Node NodeToAdd = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
+                        int NodeToAddId = OffSpring.Brain.AddNode(NodeToAdd);
 
-                        OffSpring.Brain.Nodes.Add(NodeToAdd);
+                        ConnectionToAdd.SourceId = NodeToAddId;
 
                         if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
                         {
@@ -182,19 +178,18 @@ namespace MaceEvolve.Models
                         {
                             ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionSourceNode, NodeToAdd);
                         }
-
-                        ConnectionToAdd.SourceId = OffSpring.Brain.GetNodeId(NodeToAdd);
                     }
 
                     if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionTargetNode))
                     {
-                        ConnectionToAdd.TargetId = OffSpring.Brain.GetNodeId(ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionTargetNode]);
+                        ConnectionToAdd.TargetId = OffSpring.Brain.NodesToNodeIdsDict[ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionTargetNode]];
                     }
                     else
                     {
                         Node NodeToAdd = new Node(RandomParentConnectionTargetNode.NodeType, RandomParentConnectionTargetNode.Bias, RandomParentConnectionTargetNode.CreatureInput, RandomParentConnectionTargetNode.CreatureAction);
+                        int NodeToAddId = OffSpring.Brain.AddNode(NodeToAdd);
 
-                        OffSpring.Brain.Nodes.Add(NodeToAdd);
+                        ConnectionToAdd.TargetId = NodeToAddId;
 
                         if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
                         {
@@ -205,8 +200,6 @@ namespace MaceEvolve.Models
                         {
                             ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionTargetNode, NodeToAdd);
                         }
-
-                        ConnectionToAdd.TargetId = OffSpring.Brain.GetNodeId(NodeToAdd);
                     }
 
                     OffSpring.Brain.Connections.Add(ConnectionToAdd);
