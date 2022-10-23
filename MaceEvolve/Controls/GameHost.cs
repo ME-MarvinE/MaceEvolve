@@ -141,7 +141,15 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MutationAttempts; i++)
             {
-                bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, 0, 0, MutationChance / 2, MutationChance / 2, MutationChance * 2, MutationChance, MutationChance);
+                bool Mutated = MutateNetwork(NewCreature.Brain,
+                    CreateRandomNodeChance: MutationChance * 0,
+                    RemoveRandomNodeChance: MutationChance * 0,
+                    MutateRandomNodeBiasChance: MutationChance * 2,
+                    CreateRandomConnectionChance: MutationChance,
+                    RemoveRandomConnectionChance: MutationChance,
+                    MutateRandomConnectionSourceChance: MutationChance / 2,
+                    MutateRandomConnectionTargetChance: MutationChance / 2,
+                    MutateRandomConnectionWeightChance: MutationChance * 2);
             }
 
             NewCreatures.Add(NewCreature);
@@ -169,9 +177,9 @@ namespace MaceEvolve.Controls
 
                     if (_Random.NextDouble() <= CreatureFitnessPair.Value && NewCreatures.Count < MaxCreatureAmount)
                     {
-                        int ChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(CreatureFitnessPair.Value, 0, 1, 0, MaxCreatureAmount / 10) : SuccessfulCreature.FoodEaten;
+                        int NumberOfChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(CreatureFitnessPair.Value, 0, 1, 0, MaxCreatureAmount / 10) : SuccessfulCreature.FoodEaten;
 
-                        for (int i = 0; i < ChildrenToCreate; i++)
+                        for (int i = 0; i < NumberOfChildrenToCreate; i++)
                         {
                             if (NewCreatures.Count < MaxCreatureAmount)
                             {
@@ -189,7 +197,15 @@ namespace MaceEvolve.Controls
 
                                 for (int j = 0; j < MutationAttempts; j++)
                                 {
-                                    bool Mutated = MutateNetwork(NewCreature.Brain, MutationChance * 2, 0, 0, MutationChance / 2, MutationChance / 2, MutationChance * 2, MutationChance, MutationChance);
+                                    bool Mutated = MutateNetwork(NewCreature.Brain,
+                                        CreateRandomNodeChance: MutationChance * 0,
+                                        RemoveRandomNodeChance: MutationChance * 0,
+                                        MutateRandomNodeBiasChance: MutationChance * 2,
+                                        CreateRandomConnectionChance: MutationChance,
+                                        RemoveRandomConnectionChance: MutationChance,
+                                        MutateRandomConnectionSourceChance: MutationChance / 2,
+                                        MutateRandomConnectionTargetChance: MutationChance / 2,
+                                        MutateRandomConnectionWeightChance: MutationChance * 2);
                                 }
 
                                 NewCreatures.Add(NewCreature);
@@ -264,59 +280,120 @@ namespace MaceEvolve.Controls
 
             return SuccessfulCreaturesFitnesses;
         }
-        public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double CreateRandomNodeChance, double RemoveRandomNodeChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance, double CreateRandomConnectionChance, double RemoveRandomConnectionChance)
+        public bool MutateNetwork(NeuralNetwork Network, double CreateRandomNodeChance, double RemoveRandomNodeChance, double MutateRandomNodeBiasChance, double CreateRandomConnectionChance, double RemoveRandomConnectionChance,  double MutateRandomConnectionSourceChance, double MutateRandomConnectionTargetChance, double MutateRandomConnectionWeightChance)
         {
-            Node NodeToAdd = NeuralNetwork.GetNodeToAdd(CreateRandomNodeChance, CreateRandomNodeChance, CreateRandomNodeChance, Network.NodeIdsToNodesDict.Values.ToList(), PossibleCreatureInputs, PossibleCreatureActions);
+            List<CreatureInput> PossibleCreatureInputsToAdd = GetPossibleInputsToAdd(Network).ToList();
+            List<CreatureAction> PossibleCreatureActionsToAdd = GetPossibleActionsToAdd(Network).ToList();
+            int ProcessNodeCount = Network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Process).Count();
+            bool MutationOccurred = false;
 
-            //Get a node to remove before adding the new one so that the new one doesn't get voided.
-            Node NodeToRemove = NeuralNetwork.GetNodeToRemove(0, RemoveRandomNodeChance, 0, Network.NodeIdsToNodesDict.Values.ToList());
+            //Things should be removed before being added so that there isn't a chance that the newly added thing is deleted straight after.
+            //Connections should be added after nodes are added so that there is a chance the newly created node gets a connection.
 
-            //Add node before mutating them so that the nodes are considered for mutation.
-            if (NodeToAdd != null)
+            //Remove an existing node. Input nodes should not be removed.
+            List<Node> PossibleNodesToRemove = NeuralNetwork.GetPossibleTargetNodes(Network.NodeIdsToNodesDict.Values).ToList();
+            if (PossibleNodesToRemove.Count > 0 && _Random.NextDouble() <= RemoveRandomNodeChance)
             {
-                Network.AddNode(NodeToAdd);
+                Node NodeToRemove = PossibleNodesToRemove[_Random.Next(PossibleNodesToRemove.Count)];
+                int NodeIdToRemove = Network.NodesToNodeIdsDict[NodeToRemove];
+
+                Network.RemoveNode(NodeIdToRemove, true);
+                MutationOccurred = true;
             }
 
-            //Remove node before mutating them so that the mutations are not voided.
-            if (NodeToRemove != null)
+            //Change a random node's bias.
+            if (_Random.NextDouble() <= MutateRandomNodeBiasChance)
             {
-                Network.RemoveNode(Network.NodesToNodeIdsDict[NodeToRemove], true);
+                List<Node> NodesList = Network.NodeIdsToNodesDict.Values.ToList();
+                Node RandomNode = NodesList[_Random.Next(NodesList.Count)];
+                RandomNode.Bias = _Random.NextDouble(-1, 1);
+
+                MutationOccurred = true;
             }
 
-            //Mutate a random connection.
-            bool RandomConnectionChanged = false;
-
-            if (Network.Connections.Count > 0)
+            //Create a new node.
+            if (_Random.NextDouble() <= CreateRandomNodeChance)
             {
-                Connection RandomConnection = Network.Connections[Globals.Random.Next(Network.Connections.Count)];
-                RandomConnectionChanged =
-                    Network.MutateConnectionSource(RandomConnectionSourceMutationChance, RandomConnection) ||
-                    Network.MutateConnectionTarget(RandomConnectionTargetMutationChance, RandomConnection) ||
-                    NeuralNetwork.MutateConnectionWeight(RandomConnectionWeightMutationChance, RandomConnection, ConnectionWeightBound);
+                Node NodeToAdd;
+                double NodeTypeRandomNum = _Random.NextDouble();
+                double ChanceForSingleNodeType = CreateRandomNodeChance / 3;
 
-                if (Network.Connections.Count > MinCreatureConnections && _Random.NextDouble() <= RemoveRandomConnectionChance)
+                if (NodeTypeRandomNum <= ChanceForSingleNodeType && PossibleCreatureInputsToAdd.Count > 0)
                 {
-                    Network.Connections.Remove(Network.Connections[_Random.Next(Network.Connections.Count)]);
+                    NodeToAdd = new Node(NodeType.Input, _Random.NextDouble(-1, 1), PossibleCreatureInputsToAdd[_Random.Next(PossibleCreatureInputsToAdd.Count)]);
+                }
+                else if ((NodeTypeRandomNum <= ChanceForSingleNodeType * 2 || PossibleCreatureInputsToAdd.Count == 0) && PossibleCreatureActionsToAdd.Count > 0)
+                {
+                    NodeToAdd = new Node(NodeType.Output, _Random.NextDouble(-1, 1), CreatureAction: PossibleCreatureActionsToAdd[_Random.Next(PossibleCreatureActionsToAdd.Count)]);
+                }
+                else if (ProcessNodeCount < MaxCreatureProcessNodes)
+                {
+                    NodeToAdd = new Node(NodeType.Process, _Random.NextDouble(-1, 1));
+                }
+                else
+                {
+                    NodeToAdd = null;
+                }
+
+                if (NodeToAdd != null)
+            {
+                    Network.AddNode(NodeToAdd);
+                    MutationOccurred = true;
                 }
             }
 
+            //Remove a random connection.
+                if (Network.Connections.Count > MinCreatureConnections && _Random.NextDouble() <= RemoveRandomConnectionChance)
+                {
+                Connection RandomConnection = Network.Connections[_Random.Next(Network.Connections.Count)];
+                Network.Connections.Remove(RandomConnection);
+                }
+
+            //Change a random connection's weight.
+            if (_Random.NextDouble() <= MutateRandomConnectionWeightChance)
+            {
+                Connection RandomConnection = Network.Connections[_Random.Next(Network.Connections.Count)];
+
+                RandomConnection.Weight = _Random.NextDouble(-ConnectionWeightBound, ConnectionWeightBound);
+
+                MutationOccurred = true;
+            }
+
+            //Change a random connection's source.
+            if (Network.MutateConnectionSource(MutateRandomConnectionSourceChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
+            {
+                MutationOccurred = true;
+            }
+
+            //Change a random connection's target.
+            if (Network.MutateConnectionTarget(MutateRandomConnectionTargetChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
+            {
+                MutationOccurred = true;
+            }
+
+            //Create a new connection.
             if (Network.Connections.Count < MaxCreatureConnections && _Random.NextDouble() <= CreateRandomConnectionChance)
             {
-                Network.Connections.Add(Network.GenerateRandomConnections(1, 1, ConnectionWeightBound).First());
+                Connection NewConnection = Network.GenerateRandomConnections(1, 1, ConnectionWeightBound).FirstOrDefault();
+
+                if (NewConnection != null)
+                {
+                    Network.Connections.Add(NewConnection);
+                    MutationOccurred = true;
+                }
             }
 
-            //Mutate a random node.
-            bool RandomNodeBiasChanged = false;
-
-            if (Network.Connections.Count > 0)
-            {
-                List<int> PossibleNodeIds = Network.NodeIdsToNodesDict.Keys.ToList();
-                Node RandomNode = Network.NodeIdsToNodesDict[PossibleNodeIds[_Random.Next(PossibleNodeIds.Count)]];
-
-                RandomNodeBiasChanged = NeuralNetwork.MutateNodeBias(RandomNodeBiasMutationChance, RandomNode);
-            }
-
-            return NodeToAdd != null || NodeToRemove != null || RandomNodeBiasChanged || RandomConnectionChanged;
+            return MutationOccurred;
+        }
+        public IEnumerable<CreatureInput> GetPossibleInputsToAdd(NeuralNetwork Network)
+        {
+            //Return any inputs that aren't already used by a node in the network.
+            return PossibleCreatureInputs.Where(x => !Network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Input && x == y.Value.CreatureInput));
+        }
+        public IEnumerable<CreatureAction> GetPossibleActionsToAdd(NeuralNetwork Network)
+        {
+            //Return any actions that aren't already used by a node in the network.
+            return PossibleCreatureActions.Where(x => !Network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Output && x == y.Value.CreatureAction));
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
