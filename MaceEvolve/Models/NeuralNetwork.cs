@@ -613,26 +613,22 @@ namespace MaceEvolve.Models
         }
         public int AddNode(Node Node)
         {
-            int? NodeId = null;
+            bool NodeIdCreated = false;
+            int NodeId = -1;
 
-            foreach (var KeyValuePair in NodeIdsToNodesDict)
+            for (int i = 0; !NodeIdCreated; i++)
             {
-                if (KeyValuePair.Value == null)
+                if (!NodeIdsToNodesDict.ContainsKey(i))
                 {
-                    NodeId = KeyValuePair.Key;
-                    break;
-                }
+                    NodeId = i;
+                    NodeIdCreated = true;
+            }
             }
 
-            if (NodeId == null)
-            {
-                NodeId = NodeIdsToNodesDict.Count;
-            }
+            _NodeIdsToNodesDict[NodeId] = Node;
+            _NodesToNodeIdsDict[Node] = NodeId;
 
-            _NodeIdsToNodesDict[NodeId.Value] = Node;
-            _NodesToNodeIdsDict[Node] = NodeId.Value;
-
-            return NodeId.Value;
+            return NodeId;
         }
         public bool RemoveNode(int NodeId, bool RemoveConnections)
         {
@@ -645,7 +641,7 @@ namespace MaceEvolve.Models
                     RemoveConnectionsToNode(NodeId);
                 }
 
-                _NodeIdsToNodesDict[NodeId] = null;
+                _NodeIdsToNodesDict.Remove(NodeId);
                 _NodesToNodeIdsDict.Remove(Node);
 
                 NodeWasRemoved = true;
