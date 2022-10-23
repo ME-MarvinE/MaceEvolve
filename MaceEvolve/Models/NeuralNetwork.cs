@@ -655,7 +655,10 @@ namespace MaceEvolve.Models
         }
         public void RemoveConnectionsToNode(int NodeId)
         {
-            foreach (var Connection in Connections)
+            //Create a new list to prevent an exception caused by trying to modify a collection that is being iterated over.
+            List<Connection> ConnectionsList = Connections.ToList();
+
+            foreach (var Connection in ConnectionsList)
             {
                 if (Connection.SourceId == NodeId || Connection.TargetId == NodeId)
                 {
@@ -665,7 +668,10 @@ namespace MaceEvolve.Models
         }
         public void RemoveConnectionsToNodes(IEnumerable<int> NodeIds)
         {
-            foreach (var Connection in Connections)
+            //Create a new list to prevent an exception caused by trying to modify a collection that is being iterated over.
+            List<Connection> ConnectionsList = Connections.ToList();
+
+            foreach (var Connection in ConnectionsList)
             {
                 if (NodeIds.Any(x => x == Connection.SourceId || x == Connection.TargetId))
                 {
