@@ -127,7 +127,7 @@ namespace MaceEvolve.Controls
 
             List<Creature> NewCreatures = new List<Creature>();
 
-            Creature NewCreature = Creature.Reproduce(SuccessfulCreatures, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+            Creature NewCreature = Creature.Reproduce(SuccessfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
             NewCreature.GameHost = this;
             NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
             NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -280,7 +280,7 @@ namespace MaceEvolve.Controls
             //Remove node before mutating them so that the mutations are not voided.
             if (NodeToRemove != null)
             {
-                Network.RemoveNode(NodeToRemove, true);
+                Network.RemoveNode(Network.NodesToNodeIdsDict[NodeToRemove], true);
             }
 
             //Mutate a random connection.

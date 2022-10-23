@@ -7,7 +7,7 @@ namespace MaceEvolve.Models
     public class Node
     {
         #region Properties
-        public virtual NodeType NodeType { get; }
+        public NodeType NodeType { get; }
         public double Bias { get; set; }
         public CreatureInput? CreatureInput { get; set; }
         public CreatureAction? CreatureAction { get; set; }

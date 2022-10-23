@@ -126,12 +126,10 @@ namespace MaceEvolve.Models
             Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound());
             Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound());
         }
-        public static Creature Reproduce(IEnumerable<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions)
+        public static Creature Reproduce(IList<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions)
         {
-            List<Creature> ParentsList = new List<Creature>(Parents);
-            Dictionary<Creature, List<Connection>> AvailableParentConnections = ParentsList.ToDictionary(x => x, x => x.Brain.Connections.ToList());
-            Dictionary<Creature, Dictionary<Node, Node>> ParentToOffSpringNodesMap = new Dictionary<Creature, Dictionary<Node, Node>>();
-            //Dictionary<Node, Node> ParentNodeToOffSpringNodeMap = new Dictionary<Node, Node>();
+            Dictionary<Creature, List<Connection>> AvailableParentConnections = Parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
+            Dictionary<Creature, Dictionary<int, int>> ParentToOffSpringNodesMap = new Dictionary<Creature, Dictionary<int, int>>();
 
             Creature OffSpring = new Creature()
             {
@@ -147,60 +145,50 @@ namespace MaceEvolve.Models
 
             while (OffSpring.Brain.Connections.Count < AverageNumberOfParentConnections)
             {
-                Creature RandomParent = ParentsList[Globals.Random.Next(ParentsList.Count)];
-                List<Connection> RandomParentConnections = AvailableParentConnections[RandomParent];
+                Creature RandomParent = Parents[Globals.Random.Next(Parents.Count)];
+                List<Connection> RandomParentAvailableConnections = AvailableParentConnections[RandomParent];
 
-                if (RandomParentConnections.Count > 0)
+                if (RandomParentAvailableConnections.Count > 0)
                 {
-                    Connection RandomParentConnection = RandomParentConnections[Globals.Random.Next(RandomParentConnections.Count)];
-                    Node RandomParentConnectionSourceNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.SourceId];
-                    Node RandomParentConnectionTargetNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.TargetId];
+                    Connection RandomParentConnection = RandomParentAvailableConnections[Globals.Random.Next(RandomParentAvailableConnections.Count)];
 
-                    Connection ConnectionToAdd = new Connection() { Weight = RandomParentConnection.Weight };
-
-                    if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionSourceNode))
+                    //If a parent's node has not been added and mapped to an offspring's node, create a new node and map it to the parent's node.
+                    if (!(ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnection.SourceId)))
                     {
-                        ConnectionToAdd.SourceId = OffSpring.Brain.NodesToNodeIdsDict[ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionSourceNode]];
-                    }
-                    else
-                    {
-                        Node NodeToAdd = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
-                        int NodeToAddId = OffSpring.Brain.AddNode(NodeToAdd);
+                        Node RandomParentConnectionSourceNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.SourceId];
+                        Node NewNode = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
+                        int NewNodeId = OffSpring.Brain.AddNode(NewNode);
 
-                        ConnectionToAdd.SourceId = NodeToAddId;
-
+                        //Map the newly added offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
                         if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
                         {
-                            ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<Node, Node>());
+                            ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<int, int>());
                         }
 
-                        if (!ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionSourceNode))
-                        {
-                            ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionSourceNode, NodeToAdd);
-                        }
+                        ParentToOffSpringNodesMap[RandomParent][RandomParentConnection.SourceId] = NewNodeId;
                     }
 
-                    if (ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionTargetNode))
+                    if (!(ParentToOffSpringNodesMap.ContainsKey(RandomParent) && ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnection.TargetId)))
                     {
-                        ConnectionToAdd.TargetId = OffSpring.Brain.NodesToNodeIdsDict[ParentToOffSpringNodesMap[RandomParent][RandomParentConnectionTargetNode]];
-                    }
-                    else
-                    {
-                        Node NodeToAdd = new Node(RandomParentConnectionTargetNode.NodeType, RandomParentConnectionTargetNode.Bias, RandomParentConnectionTargetNode.CreatureInput, RandomParentConnectionTargetNode.CreatureAction);
-                        int NodeToAddId = OffSpring.Brain.AddNode(NodeToAdd);
+                        Node RandomParentConnectionTargetNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.TargetId];
+                        Node NewNode = new Node(RandomParentConnectionTargetNode.NodeType, RandomParentConnectionTargetNode.Bias, RandomParentConnectionTargetNode.CreatureInput, RandomParentConnectionTargetNode.CreatureAction);
+                        int NewNodeId = OffSpring.Brain.AddNode(NewNode);
 
-                        ConnectionToAdd.TargetId = NodeToAddId;
-
+                        //Map the newly added offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
                         if (!ParentToOffSpringNodesMap.ContainsKey(RandomParent))
                         {
-                            ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<Node, Node>());
+                            ParentToOffSpringNodesMap.Add(RandomParent, new Dictionary<int, int>());
                         }
 
-                        if (!ParentToOffSpringNodesMap[RandomParent].ContainsKey(RandomParentConnectionTargetNode))
-                        {
-                            ParentToOffSpringNodesMap[RandomParent].Add(RandomParentConnectionTargetNode, NodeToAdd);
-                        }
+                        ParentToOffSpringNodesMap[RandomParent][RandomParentConnection.TargetId] = NewNodeId;
                     }
+
+                    Connection ConnectionToAdd = new Connection()
+                    {
+                        Weight = RandomParentConnection.Weight,
+                        SourceId = ParentToOffSpringNodesMap[RandomParent][RandomParentConnection.SourceId],
+                        TargetId = ParentToOffSpringNodesMap[RandomParent][RandomParentConnection.TargetId]
+                    };
 
                     OffSpring.Brain.Connections.Add(ConnectionToAdd);
                     AvailableParentConnections[RandomParent].Remove(RandomParentConnection);
