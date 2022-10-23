@@ -627,14 +627,10 @@ namespace MaceEvolve.Models
             if (NodeId == null)
             {
                 NodeId = NodeIdsToNodesDict.Count;
-                _NodeIdsToNodesDict.Add(NodeId.Value, Node);
-            }
-            else
-            {
-                _NodeIdsToNodesDict[NodeId.Value] = Node;
             }
 
-            _NodesToNodeIdsDict.Add(Node, NodeId.Value);
+            _NodeIdsToNodesDict[NodeId.Value] = Node;
+            _NodesToNodeIdsDict[Node] = NodeId.Value;
 
             return NodeId.Value;
         }
@@ -661,25 +657,21 @@ namespace MaceEvolve.Models
 
             return NodeWasRemoved;
         }
-        public bool RemoveNode(Node Node, bool RemoveConnections)
-        {
-            return RemoveNode(NodesToNodeIdsDict[Node], RemoveConnections);
-        }
-        public void RemoveConnectionsToNode(int NodeIdToRemoveConnectionsFrom)
+        public void RemoveConnectionsToNode(int NodeId)
         {
             foreach (var Connection in Connections)
             {
-                if (Connection.SourceId == NodeIdToRemoveConnectionsFrom || Connection.TargetId == NodeIdToRemoveConnectionsFrom)
+                if (Connection.SourceId == NodeId || Connection.TargetId == NodeId)
                 {
                     Connections.Remove(Connection);
                 }
             }
         }
-        public void RemoveConnectionsToNodes(IEnumerable<int> NodeIdsToRemoveConnectionsFrom)
+        public void RemoveConnectionsToNodes(IEnumerable<int> NodeIds)
         {
             foreach (var Connection in Connections)
             {
-                if (NodeIdsToRemoveConnectionsFrom.Any(x => x == Connection.SourceId || x == Connection.TargetId))
+                if (NodeIds.Any(x => x == Connection.SourceId || x == Connection.TargetId))
                 {
                     Connections.Remove(Connection);
                 }
