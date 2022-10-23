@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace MaceEvolve.Controls
@@ -53,11 +54,11 @@ namespace MaceEvolve.Controls
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
-        public int MaxCreatureConnections { get; set; } = 128;
+        public int MaxCreatureConnections { get; set; } = 64;
         public double CreatureSpeed { get; set; }
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
-        public int MaxCreatureProcessNodes { get; set; } = 5;
+        public int MaxCreatureProcessNodes { get; set; } = 3;
         public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
@@ -265,21 +266,21 @@ namespace MaceEvolve.Controls
         }
         public bool MutateNetwork(NeuralNetwork Network, double RandomNodeBiasMutationChance, double CreateRandomNodeChance, double RemoveRandomNodeChance, double RandomConnectionSourceMutationChance, double RandomConnectionTargetMutationChance, double RandomConnectionWeightMutationChance, double CreateRandomConnectionChance, double RemoveRandomConnectionChance)
         {
-            Node NodeToAdd = NeuralNetwork.GetNodeToAdd(CreateRandomNodeChance, CreateRandomNodeChance, CreateRandomNodeChance, Network.Nodes, PossibleCreatureInputs, PossibleCreatureActions);
+            Node NodeToAdd = NeuralNetwork.GetNodeToAdd(CreateRandomNodeChance, CreateRandomNodeChance, CreateRandomNodeChance, Network.NodeIdsToNodesDict.Values.ToList(), PossibleCreatureInputs, PossibleCreatureActions);
 
             //Get a node to remove before adding the new one so that the new one doesn't get voided.
-            Node NodeToRemove = NeuralNetwork.GetNodeToRemove(0, RemoveRandomNodeChance, 0, Network.Nodes);
+            Node NodeToRemove = NeuralNetwork.GetNodeToRemove(0, RemoveRandomNodeChance, 0, Network.NodeIdsToNodesDict.Values.ToList());
 
             //Add node before mutating them so that the nodes are considered for mutation.
             if (NodeToAdd != null)
             {
-                Network.Nodes.Add(NodeToAdd);
+                Network.AddNode(NodeToAdd);
             }
 
             //Remove node before mutating them so that the mutations are not voided.
             if (NodeToRemove != null)
             {
-                Network.RemoveNodeAndConnections(NodeToRemove);
+                Network.RemoveNode(NodeToRemove, true);
             }
 
             //Mutate a random connection.
@@ -288,7 +289,10 @@ namespace MaceEvolve.Controls
             if (Network.Connections.Count > 0)
             {
                 Connection RandomConnection = Network.Connections[Globals.Random.Next(Network.Connections.Count)];
-                RandomConnectionChanged = NeuralNetwork.MutateConnection(RandomConnection, Network.Nodes, RandomConnectionSourceMutationChance, RandomConnectionTargetMutationChance, RandomConnectionWeightMutationChance, ConnectionWeightBound);
+                RandomConnectionChanged =
+                    Network.MutateConnectionSource(RandomConnectionSourceMutationChance, RandomConnection) ||
+                    Network.MutateConnectionTarget(RandomConnectionTargetMutationChance, RandomConnection) ||
+                    NeuralNetwork.MutateConnectionWeight(RandomConnectionWeightMutationChance, RandomConnection, ConnectionWeightBound);
 
                 if (Network.Connections.Count > MinCreatureConnections && _Random.NextDouble() <= RemoveRandomConnectionChance)
                 {
@@ -298,7 +302,7 @@ namespace MaceEvolve.Controls
 
             if (Network.Connections.Count < MaxCreatureConnections && _Random.NextDouble() <= CreateRandomConnectionChance)
             {
-                Network.Connections.Add(NeuralNetwork.GenerateRandomConnections(1, 1, Network.Nodes, ConnectionWeightBound).First());
+                Network.Connections.Add(Network.GenerateRandomConnections(1, 1, ConnectionWeightBound).First());
             }
 
             //Mutate a random node.
@@ -306,7 +310,9 @@ namespace MaceEvolve.Controls
 
             if (Network.Connections.Count > 0)
             {
-                Node RandomNode = Network.Nodes[_Random.Next(Network.Nodes.Count)];
+                List<int> PossibleNodeIds = Network.NodeIdsToNodesDict.Keys.ToList();
+                Node RandomNode = Network.NodeIdsToNodesDict[PossibleNodeIds[_Random.Next(PossibleNodeIds.Count)]];
+
                 RandomNodeBiasChanged = NeuralNetwork.MutateNodeBias(RandomNodeBiasMutationChance, RandomNode);
             }
 
@@ -430,8 +436,9 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creatures.Add(new Creature(new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList(), MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound))
+                Creature NewCreature = new Creature()
                 {
+                    Brain = new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList()),
                     GameHost = this,
                     X = _Random.Next(WorldBounds.Left + WorldBounds.Width),
                     Y = _Random.Next(WorldBounds.Top + WorldBounds.Height),
@@ -442,7 +449,10 @@ namespace MaceEvolve.Controls
                     Energy = MaxCreatureEnergy,
                     MaxEnergy = MaxCreatureEnergy,
                     SightRange = 100
-                });
+                };
+
+                NewCreature.Brain.Connections = NewCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound);
+                Creatures.Add(NewCreature);
             }
 
             return Creatures;
