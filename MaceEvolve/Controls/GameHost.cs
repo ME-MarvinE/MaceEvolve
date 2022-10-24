@@ -54,11 +54,11 @@ namespace MaceEvolve.Controls
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
-        public int MaxCreatureConnections { get; set; } = 512;
+        public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
         public double NewGenerationInterval { get; set; } = 12;
         public double SecondsUntilNewGeneration { get; set; } = 12;
-        public int MaxCreatureProcessNodes { get; set; } = 8;
+        public int MaxCreatureProcessNodes { get; set; } = 4;
         public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
@@ -72,6 +72,17 @@ namespace MaceEvolve.Controls
         public bool UseSuccessBounds { get; set; }
         public Creature SelectedCreature { get; set; }
         public Color? SelectedCreaturePreviousColor { get; set; }
+        public Color GenLabelTextColor
+        {
+            get
+            {
+                return lblGenerationCount.ForeColor;
+            }
+            set
+            {
+                lblGenerationCount.ForeColor = value;
+            }
+        }
         #endregion
 
         #region Constructors
@@ -282,7 +293,7 @@ namespace MaceEvolve.Controls
 
             return SuccessfulCreaturesFitnesses;
         }
-        public bool MutateNetwork(NeuralNetwork Network, double CreateRandomNodeChance, double RemoveRandomNodeChance, double MutateRandomNodeBiasChance, double CreateRandomConnectionChance, double RemoveRandomConnectionChance,  double MutateRandomConnectionSourceChance, double MutateRandomConnectionTargetChance, double MutateRandomConnectionWeightChance)
+        public bool MutateNetwork(NeuralNetwork Network, double CreateRandomNodeChance, double RemoveRandomNodeChance, double MutateRandomNodeBiasChance, double CreateRandomConnectionChance, double RemoveRandomConnectionChance, double MutateRandomConnectionSourceChance, double MutateRandomConnectionTargetChance, double MutateRandomConnectionWeightChance)
         {
             List<CreatureInput> PossibleCreatureInputsToAdd = GetPossibleInputsToAdd(Network).ToList();
             List<CreatureAction> PossibleCreatureActionsToAdd = GetPossibleActionsToAdd(Network).ToList();
