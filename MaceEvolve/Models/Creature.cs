@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Controls;
 using MaceEvolve.Enums;
+using MaceEvolve.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -126,7 +127,7 @@ namespace MaceEvolve.Models
             Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound());
             Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound());
         }
-        public static Creature Reproduce(IList<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions)
+        public static Creature Reproduce(IList<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions, double NodeBiasMaxVariancePercentage, double ConnectionWeightMaxVariancePercentage, double ConnectionWeightBound)
         {
             Dictionary<Creature, List<Connection>> AvailableParentConnections = Parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
             Dictionary<Creature, Dictionary<int, int>> ParentToOffspringNodesMap = new Dictionary<Creature, Dictionary<int, int>>();
@@ -159,6 +160,18 @@ namespace MaceEvolve.Models
                         Node NewNode = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
                         int NewNodeId = Offspring.Brain.AddNode(NewNode);
 
+                        //Apply any variance to the node's bias.
+                        NewNode.Bias = Globals.Random.NextDoubleVariance(RandomParentConnectionSourceNode.Bias, NodeBiasMaxVariancePercentage);
+
+                        if (NewNode.Bias < -1)
+                        {
+                            NewNode.Bias = -1;
+                        }
+                        else if (NewNode.Bias > 1)
+                        {
+                            NewNode.Bias = 1;
+                        }
+
                         //Map the newly added Offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
                         if (!ParentToOffspringNodesMap.ContainsKey(RandomParent))
                         {
@@ -185,10 +198,21 @@ namespace MaceEvolve.Models
 
                     Connection ConnectionToAdd = new Connection()
                     {
-                        Weight = RandomParentConnection.Weight,
                         SourceId = ParentToOffspringNodesMap[RandomParent][RandomParentConnection.SourceId],
                         TargetId = ParentToOffspringNodesMap[RandomParent][RandomParentConnection.TargetId]
                     };
+
+                    //Apply any variance to the connection's weight.
+                    ConnectionToAdd.Weight = Globals.Random.NextDoubleVariance(RandomParentConnection.Weight, ConnectionWeightMaxVariancePercentage);
+
+                    if (ConnectionToAdd.Weight < -ConnectionWeightBound)
+                    {
+                        ConnectionToAdd.Weight = -ConnectionWeightBound;
+                    }
+                    else if (ConnectionToAdd.Weight > ConnectionWeightBound)
+                    {
+                        ConnectionToAdd.Weight = ConnectionWeightBound;
+                    }
 
                     Offspring.Brain.Connections.Add(ConnectionToAdd);
                     AvailableParentConnections[RandomParent].Remove(RandomParentConnection);

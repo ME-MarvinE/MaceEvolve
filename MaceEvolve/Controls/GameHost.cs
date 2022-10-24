@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Enums;
+using MaceEvolve.Extensions;
 using MaceEvolve.Models;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
-using System.Xml.Linq;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace MaceEvolve.Controls
@@ -65,6 +65,8 @@ namespace MaceEvolve.Controls
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
         public int GenerationCount { get; set; } = 1;
+        public double ReproductionNodeBiasVariance = 0.05;
+        public double ReproductionConnectionWeightVariance = 0.05;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
@@ -127,7 +129,7 @@ namespace MaceEvolve.Controls
 
             List<Creature> NewCreatures = new List<Creature>();
 
-            Creature NewCreature = Creature.Reproduce(SuccessfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+            Creature NewCreature = Creature.Reproduce(SuccessfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
             NewCreature.GameHost = this;
             NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
             NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -183,7 +185,7 @@ namespace MaceEvolve.Controls
                         {
                             if (NewCreatures.Count < MaxCreatureAmount)
                             {
-                                Creature NewCreature = Creature.Reproduce(new List<Creature>() { SuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+                                Creature NewCreature = Creature.Reproduce(new List<Creature>() { SuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
                                 NewCreature.GameHost = this;
                                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -336,18 +338,18 @@ namespace MaceEvolve.Controls
                 }
 
                 if (NodeToAdd != null)
-            {
+                {
                     Network.AddNode(NodeToAdd);
                     MutationOccurred = true;
                 }
             }
 
             //Remove a random connection.
-                if (Network.Connections.Count > MinCreatureConnections && _Random.NextDouble() <= RemoveRandomConnectionChance)
-                {
+            if (Network.Connections.Count > MinCreatureConnections && _Random.NextDouble() <= RemoveRandomConnectionChance)
+            {
                 Connection RandomConnection = Network.Connections[_Random.Next(Network.Connections.Count)];
                 Network.Connections.Remove(RandomConnection);
-                }
+            }
 
             //Change a random connection's weight.
             if (_Random.NextDouble() <= MutateRandomConnectionWeightChance)
