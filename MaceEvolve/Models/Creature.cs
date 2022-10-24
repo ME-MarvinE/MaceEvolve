@@ -126,6 +126,7 @@ namespace MaceEvolve.Models
             Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature());
             Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound());
             Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound());
+            Brain.UpdateInputValue(CreatureInput.RandomInput, RandomInput());
         }
         public static Creature Reproduce(IList<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions, double NodeBiasMaxVariancePercentage, double ConnectionWeightMaxVariancePercentage, double ConnectionWeightBound)
         {
@@ -289,6 +290,10 @@ namespace MaceEvolve.Models
         public double DistanceFromLeftWorldBound()
         {
             return Globals.Map(X, GameHost.WorldBounds.Left, GameHost.WorldBounds.Right, 0, 1);
+        }
+        public double RandomInput()
+        {
+            return Globals.Random.NextDouble();
         }
         #endregion
 

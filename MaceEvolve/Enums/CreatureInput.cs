@@ -8,6 +8,7 @@
         VerticalProximityToFood,
         HorizontalProximityToFood,
         DistanceFromTopWorldBound,
-        DistanceFromLeftWorldBound
+        DistanceFromLeftWorldBound,
+        RandomInput
     }
 }

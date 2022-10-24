@@ -62,15 +62,7 @@ namespace MaceEvolve.Models
         #region Methods
         public void UpdateInputValue(CreatureInput CreatureInput, double Value)
         {
-            if (InputValues.ContainsKey(CreatureInput))
-            {
-                _InputValues[CreatureInput] = Value;
-            }
-            else
-            {
-                _InputValues.Add(CreatureInput, Value);
-            }
-
+            _InputValues[CreatureInput] = Value;
         }
         public List<Connection> GenerateRandomConnections(int MinConnections, int MaxConnections, double WeightBound)
         {
