@@ -34,6 +34,7 @@ namespace MaceEvolve
             this.StopButton = new System.Windows.Forms.Button();
             this.ResetButton = new System.Windows.Forms.Button();
             this.NextGenButton = new System.Windows.Forms.Button();
+            this.btnTrackBestCreature = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // StartButton
@@ -92,12 +93,27 @@ namespace MaceEvolve
             this.NextGenButton.UseVisualStyleBackColor = false;
             this.NextGenButton.Click += new System.EventHandler(this.NextGenButton_Click);
             // 
+            // btnTrackBestCreature
+            // 
+            this.btnTrackBestCreature.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnTrackBestCreature.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.btnTrackBestCreature.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnTrackBestCreature.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTrackBestCreature.Location = new System.Drawing.Point(616, 50);
+            this.btnTrackBestCreature.Name = "btnTrackBestCreature";
+            this.btnTrackBestCreature.Size = new System.Drawing.Size(156, 32);
+            this.btnTrackBestCreature.TabIndex = 2;
+            this.btnTrackBestCreature.Text = "Track Best Creature";
+            this.btnTrackBestCreature.UseVisualStyleBackColor = false;
+            this.btnTrackBestCreature.Click += new System.EventHandler(this.btnTrackBestCreature_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.ClientSize = new System.Drawing.Size(784, 661);
+            this.Controls.Add(this.btnTrackBestCreature);
             this.Controls.Add(this.NextGenButton);
             this.Controls.Add(this.ResetButton);
             this.Controls.Add(this.StopButton);
@@ -114,5 +130,6 @@ namespace MaceEvolve
         private Button StopButton;
         private Button ResetButton;
         private Button NextGenButton;
+        private Button btnTrackBestCreature;
     }
 }

@@ -34,5 +34,10 @@ namespace MaceEvolve
             MainGameHost.SecondsUntilNewGeneration = 0;
             MainGameHost.NewGenerationTimer_Tick(this, e);
         }
+
+        private void btnTrackBestCreature_Click(object sender, EventArgs e)
+        {
+            MainGameHost.BestCreatureNetworkViewerForm.Show();
+        }
     }
 }

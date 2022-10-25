@@ -83,6 +83,8 @@ namespace MaceEvolve.Controls
                 lblGenerationCount.ForeColor = value;
             }
         }
+        public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; } = new NetworkViewerForm();
+        public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; } = new NetworkViewerForm();
         #endregion
 
         #region Constructors
@@ -420,9 +422,15 @@ namespace MaceEvolve.Controls
                 Food.Update();
             }
 
+            Creature MostFoodEatenCreature = null;
+
             foreach (Creature Creature in CreaturesList)
             {
                 Creature.Update();
+                if (MostFoodEatenCreature == null || Creature.FoodEaten > MostFoodEatenCreature.FoodEaten)
+                {
+                    MostFoodEatenCreature = Creature;
+                }
             }
 
             if (_Random.NextDouble() <= 0.8)
@@ -444,6 +452,11 @@ namespace MaceEvolve.Controls
             }
 
             lblGenerationCount.Text = $"Gen {GenerationCount}";
+
+            if (MostFoodEatenCreature != null && BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork != MostFoodEatenCreature.Brain)
+            {
+                ChangeTrackedNeuralNetwork(BestCreatureNetworkViewerForm.NetworkViewer, MostFoodEatenCreature.Brain);
+            }
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
         {
@@ -470,6 +483,25 @@ namespace MaceEvolve.Controls
             TargetTPS = 60;
             TargetFPS = TargetTPS;
             CreatureSpeed = UseSuccessBounds ? 3.5 : 2.75;
+
+            BestCreatureNetworkViewerForm = new NetworkViewerForm(new NeuralNetworkViewer() { Dock = DockStyle.Fill });
+            BestCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
+
+            SelectedCreatureNetworkViewerForm = new NetworkViewerForm(new NeuralNetworkViewer() { Dock = DockStyle.Fill });
+            SelectedCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
+
             Reset();
         }
         private void DrawTimer_Tick(object sender, EventArgs e)
@@ -549,8 +581,8 @@ namespace MaceEvolve.Controls
         }
         private void GameHost_MouseClick(object sender, MouseEventArgs e)
         {
-            Point MouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
-            IEnumerable<Creature> CreaturesOrderedByDistanceToMouse = Creatures.OrderBy(x => Globals.GetDistanceFrom(MouseLocation.X, MouseLocation.Y, x.MX, x.MY));
+            Point RelativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
+            IEnumerable<Creature> CreaturesOrderedByDistanceToMouse = Creatures.OrderBy(x => Globals.GetDistanceFrom(RelativeMouseLocation.X, RelativeMouseLocation.Y, x.MX, x.MY));
 
             Creature NewSelectedCreature = CreaturesOrderedByDistanceToMouse.FirstOrDefault();
 
@@ -574,7 +606,23 @@ namespace MaceEvolve.Controls
                 }
             }
 
+            if (SelectedCreature == null)
+            {
+                SelectedCreatureNetworkViewerForm.Hide();
+            }
+            else
+            {
+                SelectedCreatureNetworkViewerForm.Hide();
+                ChangeTrackedNeuralNetwork(SelectedCreatureNetworkViewerForm.NetworkViewer, SelectedCreature.Brain);
+                SelectedCreatureNetworkViewerForm.Show();
+            }
+
             Invalidate();
+        }
+        public static void ChangeTrackedNeuralNetwork(NeuralNetworkViewer NetworkViewer, NeuralNetwork NewNeuralNetwork)
+        {
+            NetworkViewer.NeuralNetwork = NewNeuralNetwork;
+            NetworkViewer.ResetDrawnNodes();
         }
         #endregion
     }
