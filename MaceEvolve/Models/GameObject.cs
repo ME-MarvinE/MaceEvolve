@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace MaceEvolve.Models
 {
-    public abstract class GameObject
+    public class GameObject
     {
         #region Fields
         private Rectangle _Rectangle = new Rectangle(0, 0, 0, 0);

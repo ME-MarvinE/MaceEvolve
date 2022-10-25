@@ -1,12 +1,13 @@
 using MaceEvolve.Controls;
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace MaceEvolve
 {
     public partial class MainForm : Form
     {
-        public GameHost MainGameHost = new GameHost() { Dock = DockStyle.Fill };
+        public GameHost MainGameHost = new GameHost() { Dock = DockStyle.Fill, GenLabelTextColor = Color.White };
         public MainForm()
         {
             InitializeComponent();
@@ -32,6 +33,11 @@ namespace MaceEvolve
         {
             MainGameHost.SecondsUntilNewGeneration = 0;
             MainGameHost.NewGenerationTimer_Tick(this, e);
+        }
+
+        private void btnTrackBestCreature_Click(object sender, EventArgs e)
+        {
+            MainGameHost.BestCreatureNetworkViewerForm.Show();
         }
     }
 }
