@@ -115,7 +115,7 @@ namespace MaceEvolve.Controls
                 }
 
                 NodeGameObject.X = Globals.Random.Next(XLowerimit, XUpperLimit);
-                NodeGameObject.Y = Globals.Random.Next(Bounds.Bottom - (int)NodeGameObject.Size);
+                NodeGameObject.Y = (Bounds.Bottom - NodeGameObject.Size) > 0 ? Globals.Random.Next(Bounds.Bottom - (int)NodeGameObject.Size) : 0;
 
                 DrawnNodeIdsToGameObject.Add(NodeId, NodeGameObject);
             }
@@ -172,7 +172,7 @@ namespace MaceEvolve.Controls
                     Brush NodeBrush = _NodeTypeToBrushDict[Node.NodeType];
 
                     NeuralNetworkStepInfo NodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == NodeId);
-                    //NodeGameObject.Size = Globals.Map(NodeNetworkStepInfo.PreviousOutput, 0, 1, )
+
                     string PreviousOutputString = NodeNetworkStepInfo == null ? null : string.Format("{0:0.##}", NodeNetworkStepInfo.PreviousOutput);
                     int NodeIdFontSize = NodeFontSize - 4;
                     int NodePreviousOutputFontSize = NodeFontSize;
