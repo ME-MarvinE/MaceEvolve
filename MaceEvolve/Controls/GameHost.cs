@@ -612,9 +612,8 @@ namespace MaceEvolve.Controls
             }
             else
             {
-                SelectedCreatureNetworkViewerForm.Hide();
-                ChangeTrackedNeuralNetwork(SelectedCreatureNetworkViewerForm.NetworkViewer, SelectedCreature.Brain);
                 SelectedCreatureNetworkViewerForm.Show();
+                ChangeTrackedNeuralNetwork(SelectedCreatureNetworkViewerForm.NetworkViewer, SelectedCreature.Brain);
             }
 
             Invalidate();
