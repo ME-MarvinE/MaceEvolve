@@ -213,7 +213,7 @@ namespace MaceEvolve.Controls
                                 for (int j = 0; j < MutationAttempts; j++)
                                 {
                                     bool Mutated = MutateNetwork(NewCreature.Brain,
-                                        CreateRandomNodeChance: MutationChance * 0,
+                                        CreateRandomNodeChance: MutationChance * 2,
                                         RemoveRandomNodeChance: MutationChance * 0,
                                         MutateRandomNodeBiasChance: MutationChance * 2,
                                         CreateRandomConnectionChance: MutationChance,
@@ -352,7 +352,48 @@ namespace MaceEvolve.Controls
 
                 if (NodeToAdd != null)
                 {
+                    List<Node> PossibleSourceNodes = NeuralNetwork.GetPossibleSourceNodes(Network.NodeIdsToNodesDict.Values).ToList();
+                    List<Node> PossibleTargetNodes = NeuralNetwork.GetPossibleTargetNodes(Network.NodeIdsToNodesDict.Values).ToList();
+
                     Network.AddNode(NodeToAdd);
+                    int NodeToAddId = Network.NodesToNodeIdsDict[NodeToAdd];
+
+                    if (Network.Connections.Count < MaxCreatureConnections && PossibleSourceNodes.Count > 0 && PossibleTargetNodes.Count > 0)
+                    {
+                        Connection NewConnection = new Connection() { Weight = _Random.NextDouble(-ConnectionWeightBound, ConnectionWeightBound) };
+
+                        switch (NodeToAdd.NodeType)
+                        {
+                            case NodeType.Input:
+                                NewConnection.SourceId = NodeToAddId;
+                                NewConnection.TargetId = Network.NodesToNodeIdsDict[PossibleTargetNodes[_Random.Next(PossibleTargetNodes.Count)]];
+                                break;
+
+                            case NodeType.Process:
+                                if (_Random.NextDouble() <= 0.5)
+                                {
+                                    NewConnection.SourceId = NodeToAddId;
+                                    NewConnection.TargetId = Network.NodesToNodeIdsDict[PossibleTargetNodes[_Random.Next(PossibleTargetNodes.Count)]];
+                                }
+                                else
+                                {
+                                    NewConnection.SourceId = Network.NodesToNodeIdsDict[PossibleSourceNodes[_Random.Next(PossibleSourceNodes.Count)]];
+                                    NewConnection.TargetId = NodeToAddId;
+                                }
+                                break;
+
+                            case NodeType.Output:
+                                NewConnection.SourceId = Network.NodesToNodeIdsDict[PossibleSourceNodes[_Random.Next(PossibleSourceNodes.Count)]];
+                                NewConnection.TargetId = NodeToAddId;
+                                break;
+
+                            default:
+                                throw new NotImplementedException();
+                        }
+
+                        Network.Connections.Add(NewConnection);
+                    }
+
                     MutationOccurred = true;
                 }
             }
@@ -365,7 +406,7 @@ namespace MaceEvolve.Controls
             }
 
             //Change a random connection's weight.
-            if (_Random.NextDouble() <= MutateRandomConnectionWeightChance)
+            if (Network.Connections.Count > 0 && _Random.NextDouble() <= MutateRandomConnectionWeightChance)
             {
                 Connection RandomConnection = Network.Connections[_Random.Next(Network.Connections.Count)];
 
@@ -375,13 +416,13 @@ namespace MaceEvolve.Controls
             }
 
             //Change a random connection's source.
-            if (Network.MutateConnectionSource(MutateRandomConnectionSourceChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
+            if (Network.Connections.Count > 0 && Network.MutateConnectionSource(MutateRandomConnectionSourceChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
             {
                 MutationOccurred = true;
             }
 
             //Change a random connection's target.
-            if (Network.MutateConnectionTarget(MutateRandomConnectionTargetChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
+            if (Network.Connections.Count > 0 && Network.MutateConnectionTarget(MutateRandomConnectionTargetChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
             {
                 MutationOccurred = true;
             }
