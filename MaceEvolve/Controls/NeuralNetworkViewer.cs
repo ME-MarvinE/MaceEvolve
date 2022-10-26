@@ -109,6 +109,10 @@ namespace MaceEvolve.Controls
                     default:
                         throw new NotImplementedException(nameof(Node.NodeType));
                 }
+                if (XUpperLimit < XLowerimit)
+                {
+                    XUpperLimit = XLowerimit;
+                }
 
                 NodeGameObject.X = Globals.Random.Next(XLowerimit, XUpperLimit);
                 NodeGameObject.Y = Globals.Random.Next(Bounds.Bottom - (int)NodeGameObject.Size);
@@ -116,7 +120,6 @@ namespace MaceEvolve.Controls
                 DrawnNodeIdsToGameObject.Add(NodeId, NodeGameObject);
             }
         }
-
         private void NeuralNetworkViewer_Paint(object sender, PaintEventArgs e)
         {
             if (NeuralNetwork != null)
@@ -137,6 +140,7 @@ namespace MaceEvolve.Controls
                     {
                         Color PenColor;
                         float PenSize;
+
                         if (Connection.Weight == 0)
                         {
                             PenColor = Color.Gray;
@@ -165,10 +169,10 @@ namespace MaceEvolve.Controls
                     int NodeId = KeyValuePair.Key;
                     Node Node = NeuralNetwork.NodeIdsToNodesDict[NodeId];
                     GameObject NodeGameObject = KeyValuePair.Value;
-
                     Brush NodeBrush = _NodeTypeToBrushDict[Node.NodeType];
 
                     NeuralNetworkStepInfo NodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == NodeId);
+                    //NodeGameObject.Size = Globals.Map(NodeNetworkStepInfo.PreviousOutput, 0, 1, )
                     string PreviousOutputString = NodeNetworkStepInfo == null ? null : string.Format("{0:0.##}", NodeNetworkStepInfo.PreviousOutput);
                     int NodeIdFontSize = NodeFontSize - 4;
                     int NodePreviousOutputFontSize = NodeFontSize;
