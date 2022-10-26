@@ -37,7 +37,8 @@ namespace MaceEvolve
 
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
         {
-            MainGameHost.BestCreatureNetworkViewerForm.Show();
+            NetworkViewerForm NetworkViewerForm = new NetworkViewerForm(MainGameHost.BestCreatureNeuralNetworkViewer);
+            NetworkViewerForm.Show();
         }
     }
 }

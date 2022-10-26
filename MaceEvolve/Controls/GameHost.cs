@@ -69,8 +69,9 @@ namespace MaceEvolve.Controls
         public double ReproductionConnectionWeightVariance = 0.05;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
-        public bool UseSuccessBounds { get; set; }
+        public bool UseSuccessBounds { get; set; } = true;
         public Creature SelectedCreature { get; set; }
+        public Creature BestCreature { get; set; }
         public Color? SelectedCreaturePreviousColor { get; set; }
         public Color GenLabelTextColor
         {
@@ -83,8 +84,8 @@ namespace MaceEvolve.Controls
                 lblGenerationCount.ForeColor = value;
             }
         }
-        public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; } = new NetworkViewerForm();
-        public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; } = new NetworkViewerForm();
+        public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer { get; set; }
+        public NeuralNetworkViewer BestCreatureNeuralNetworkViewer { get; set; }
         #endregion
 
         #region Constructors
@@ -199,6 +200,7 @@ namespace MaceEvolve.Controls
                             if (NewCreatures.Count < MaxCreatureAmount)
                             {
                                 Creature NewCreature = Creature.Reproduce(new List<Creature>() { SuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
+
                                 NewCreature.GameHost = this;
                                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -326,7 +328,7 @@ namespace MaceEvolve.Controls
                 MutationOccurred = true;
             }
 
-            //Create a new node.
+            //Create a new node with a default connection.
             if (_Random.NextDouble() <= CreateRandomNodeChance)
             {
                 Node NodeToAdd;
@@ -463,14 +465,30 @@ namespace MaceEvolve.Controls
                 Food.Update();
             }
 
-            Creature MostFoodEatenCreature = null;
+            Creature NewBestCreature = null;
+
+            Point MiddleOfSuccessBounds = Globals.Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
 
             foreach (Creature Creature in CreaturesList)
             {
                 Creature.Update();
-                if (MostFoodEatenCreature == null || Creature.FoodEaten > MostFoodEatenCreature.FoodEaten)
+
+                if (UseSuccessBounds)
                 {
-                    MostFoodEatenCreature = Creature;
+                    double DistanceFromMiddle = Globals.GetDistanceFrom(Creature.MX, Creature.MY, MiddleOfSuccessBounds.X, MiddleOfSuccessBounds.Y);
+                    double? NewBestCreatureDistanceFromMiddle = NewBestCreature == null ? null : Globals.GetDistanceFrom(NewBestCreature.MX, NewBestCreature.MY, MiddleOfSuccessBounds.X, MiddleOfSuccessBounds.Y);
+                    
+                    if (NewBestCreatureDistanceFromMiddle == null || DistanceFromMiddle < NewBestCreatureDistanceFromMiddle)
+                    {
+                        NewBestCreature = Creature;
+                    }
+                }
+                else
+                {
+                    if (NewBestCreature == null || Creature.FoodEaten > NewBestCreature.FoodEaten)
+                    {
+                        NewBestCreature = Creature;
+                    }
                 }
             }
 
@@ -494,9 +512,14 @@ namespace MaceEvolve.Controls
 
             lblGenerationCount.Text = $"Gen {GenerationCount}";
 
-            if (MostFoodEatenCreature != null && BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork != MostFoodEatenCreature.Brain)
+            if (NewBestCreature != null && BestCreature != NewBestCreature)
             {
-                ChangeTrackedNeuralNetwork(BestCreatureNetworkViewerForm.NetworkViewer, MostFoodEatenCreature.Brain);
+                BestCreature = NewBestCreature;
+                BestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(BestCreature.Brain, BestCreatureNeuralNetworkViewer);
+            }
+            else if (BestCreatureNeuralNetworkViewer == null || BestCreatureNeuralNetworkViewer.IsDisposed)
+            {
+                BestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(BestCreature.Brain, BestCreatureNeuralNetworkViewer);
             }
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
@@ -524,24 +547,6 @@ namespace MaceEvolve.Controls
             TargetTPS = 60;
             TargetFPS = TargetTPS;
             CreatureSpeed = UseSuccessBounds ? 3.5 : 2.75;
-
-            BestCreatureNetworkViewerForm = new NetworkViewerForm(new NeuralNetworkViewer() { Dock = DockStyle.Fill });
-            BestCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
-
-            SelectedCreatureNetworkViewerForm = new NetworkViewerForm(new NeuralNetworkViewer() { Dock = DockStyle.Fill });
-            SelectedCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
 
             Reset();
         }
@@ -647,26 +652,47 @@ namespace MaceEvolve.Controls
                 }
             }
 
-            if (SelectedCreature == null)
+            if (SelectedCreature != null)
             {
-                SelectedCreatureNetworkViewerForm?.Hide();
-            }
-            else
-            {
-                if (!SelectedCreatureNetworkViewerForm.IsDisposed)
-                {
-                    SelectedCreatureNetworkViewerForm.Show();
-                }
+                NeuralNetworkViewer OldNetworkViewer = SelectedCreatureNeuralNetworkViewer;
+                SelectedCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(SelectedCreature.Brain, SelectedCreatureNeuralNetworkViewer);
 
-                ChangeTrackedNeuralNetwork(SelectedCreatureNetworkViewerForm.NetworkViewer, SelectedCreature.Brain);
+                if (OldNetworkViewer != SelectedCreatureNeuralNetworkViewer)
+                {
+                    NetworkViewerForm NetworkViewerForm = new NetworkViewerForm(SelectedCreatureNeuralNetworkViewer);
+                    NetworkViewerForm.Show();
+                }
             }
 
             Invalidate();
         }
-        public static void ChangeTrackedNeuralNetwork(NeuralNetworkViewer NetworkViewer, NeuralNetwork NewNeuralNetwork)
+        public static void ChangeNetworkViewerNetwork(NeuralNetworkViewer NetworkViewer, NeuralNetwork NewNeuralNetwork)
         {
             NetworkViewer.NeuralNetwork = NewNeuralNetwork;
             NetworkViewer.ResetDrawnNodes();
+        }
+        public NeuralNetworkViewer UpdateOrCreateNetworkViewer(NeuralNetwork NeuralNetwork, NeuralNetworkViewer NetworkViewer = null)
+        {
+            NeuralNetworkViewer ReturnedNetworkViewer = NetworkViewer;
+
+            bool CreateNewNetworkViewer = ReturnedNetworkViewer == null || ReturnedNetworkViewer.IsDisposed;
+
+            if (CreateNewNetworkViewer)
+            {
+                ReturnedNetworkViewer = new NeuralNetworkViewer();
+                ReturnedNetworkViewer.Dock = DockStyle.Fill;
+                ReturnedNetworkViewer.BackColor = BackColor;
+                ReturnedNetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
+                ReturnedNetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
+            }
+
+            ReturnedNetworkViewer.NeuralNetwork = NeuralNetwork;
+
+            return ReturnedNetworkViewer;
         }
         #endregion
     }
