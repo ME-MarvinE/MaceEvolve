@@ -1,6 +1,7 @@
 ﻿using MaceEvolve.Enums;
 using MaceEvolve.Extensions;
 using MaceEvolve.Models;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,6 +20,10 @@ namespace MaceEvolve.Controls
         protected static Random _Random = new Random();
         private int _TargetFPS = 10;
         private int _TargetTPS = 10;
+        private Creature _SelectedCreature;
+        private Creature _BestCreature;
+        private NeuralNetworkViewer _BestCreatureNeuralNetworkViewer;
+        private NeuralNetworkViewer _SelectedCreatureNeuralNetworkViewer;
         #endregion
 
         #region Properties
@@ -56,7 +61,7 @@ namespace MaceEvolve.Controls
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
-        public double NewGenerationInterval { get; set; } = 12;
+        public double NewGenerationInterval { get; set; } = 36;
         public double SecondsUntilNewGeneration { get; set; } = 12;
         public int MaxCreatureProcessNodes { get; set; } = 4;
         public double MutationChance { get; set; } = 0.1;
@@ -70,8 +75,30 @@ namespace MaceEvolve.Controls
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; } = true;
-        public Creature SelectedCreature { get; set; }
-        public Creature BestCreature { get; set; }
+        public Creature SelectedCreature
+        {
+            get
+            {
+                return _SelectedCreature;
+            }
+            set
+            {
+                _SelectedCreature = value;
+                _SelectedCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(_SelectedCreature?.Brain, _SelectedCreatureNeuralNetworkViewer);
+            }
+        }
+        public Creature BestCreature
+        {
+            get
+            {
+                return _BestCreature;
+            }
+            set
+            {
+                _BestCreature = value;
+                _BestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(_BestCreature?.Brain, _BestCreatureNeuralNetworkViewer);
+            }
+        }
         public Color? SelectedCreaturePreviousColor { get; set; }
         public Color GenLabelTextColor
         {
@@ -84,8 +111,21 @@ namespace MaceEvolve.Controls
                 lblGenerationCount.ForeColor = value;
             }
         }
-        public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer { get; set; }
-        public NeuralNetworkViewer BestCreatureNeuralNetworkViewer { get; set; }
+        public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
+        {
+            get
+            {
+                return UpdateOrCreateNetworkViewer(_SelectedCreature?.Brain, _SelectedCreatureNeuralNetworkViewer);
+            }
+        }
+        public NeuralNetworkViewer BestCreatureNeuralNetworkViewer
+
+        {
+            get
+            {
+                return UpdateOrCreateNetworkViewer(_BestCreature?.Brain, _BestCreatureNeuralNetworkViewer);
+            }
+        }
         #endregion
 
         #region Constructors
@@ -116,13 +156,14 @@ namespace MaceEvolve.Controls
 
             Point MiddleOfWorldBounds = Globals.Middle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height);
             //SuccessBounds = new Rectangle(WorldBounds.Location.X, WorldBounds.Location.Y, 150, 150);
-            SuccessBounds = new Rectangle(WorldBounds.X, MiddleOfWorldBounds.Y - 75, 150, 150);
+            SuccessBounds = new Rectangle(MiddleOfWorldBounds.X - 75, MiddleOfWorldBounds.Y - 75, 150, 150);
 
             Stopwatch.Reset();
             SecondsUntilNewGeneration = NewGenerationInterval;
             Creatures.Clear();
             ResetFood();
             GenerationCount = 1;
+            BestCreature = null;
             SelectedCreature = null;
 
             Creatures.AddRange(GenerateCreatures());
@@ -200,7 +241,6 @@ namespace MaceEvolve.Controls
                             if (NewCreatures.Count < MaxCreatureAmount)
                             {
                                 Creature NewCreature = Creature.Reproduce(new List<Creature>() { SuccessfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-
                                 NewCreature.GameHost = this;
                                 NewCreature.X = _Random.Next(WorldBounds.Left + WorldBounds.Width);
                                 NewCreature.Y = _Random.Next(WorldBounds.Top + WorldBounds.Height);
@@ -477,7 +517,7 @@ namespace MaceEvolve.Controls
                 {
                     double DistanceFromMiddle = Globals.GetDistanceFrom(Creature.MX, Creature.MY, MiddleOfSuccessBounds.X, MiddleOfSuccessBounds.Y);
                     double? NewBestCreatureDistanceFromMiddle = NewBestCreature == null ? null : Globals.GetDistanceFrom(NewBestCreature.MX, NewBestCreature.MY, MiddleOfSuccessBounds.X, MiddleOfSuccessBounds.Y);
-                    
+
                     if (NewBestCreatureDistanceFromMiddle == null || DistanceFromMiddle < NewBestCreatureDistanceFromMiddle)
                     {
                         NewBestCreature = Creature;
@@ -515,11 +555,6 @@ namespace MaceEvolve.Controls
             if (NewBestCreature != null && BestCreature != NewBestCreature)
             {
                 BestCreature = NewBestCreature;
-                BestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(BestCreature.Brain, BestCreatureNeuralNetworkViewer);
-            }
-            else if (BestCreatureNeuralNetworkViewer == null || BestCreatureNeuralNetworkViewer.IsDisposed)
-            {
-                BestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(BestCreature.Brain, BestCreatureNeuralNetworkViewer);
             }
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
@@ -630,6 +665,7 @@ namespace MaceEvolve.Controls
             Point RelativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
             IEnumerable<Creature> CreaturesOrderedByDistanceToMouse = Creatures.OrderBy(x => Globals.GetDistanceFrom(RelativeMouseLocation.X, RelativeMouseLocation.Y, x.MX, x.MY));
 
+            Creature OldSelectedCreature = SelectedCreature;
             Creature NewSelectedCreature = CreaturesOrderedByDistanceToMouse.FirstOrDefault();
 
             if (SelectedCreature == null)
@@ -652,16 +688,10 @@ namespace MaceEvolve.Controls
                 }
             }
 
-            if (SelectedCreature != null)
+            if (NewSelectedCreature != null && OldSelectedCreature != NewSelectedCreature)
             {
-                NeuralNetworkViewer OldNetworkViewer = SelectedCreatureNeuralNetworkViewer;
-                SelectedCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(SelectedCreature.Brain, SelectedCreatureNeuralNetworkViewer);
-
-                if (OldNetworkViewer != SelectedCreatureNeuralNetworkViewer)
-                {
-                    NetworkViewerForm NetworkViewerForm = new NetworkViewerForm(SelectedCreatureNeuralNetworkViewer);
-                    NetworkViewerForm.Show();
-                }
+                NetworkViewerForm NetworkViewerForm = new NetworkViewerForm(SelectedCreatureNeuralNetworkViewer);
+                NetworkViewerForm.Show();
             }
 
             Invalidate();

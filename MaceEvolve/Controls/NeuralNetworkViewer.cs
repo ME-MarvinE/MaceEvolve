@@ -77,47 +77,50 @@ namespace MaceEvolve.Controls
         {
             DrawnNodeIdsToGameObject.Clear();
 
-            Dictionary<int, Node> NodeIdsToNodesDict = NeuralNetwork.NodeIdsToNodesDict.ToDictionary(x => x.Key, x => x.Value);
-
-            foreach (var KeyValuePair in NodeIdsToNodesDict)
+            if (NeuralNetwork != null)
             {
-                int NodeId = KeyValuePair.Key;
-                Node Node = KeyValuePair.Value;
+                Dictionary<int, Node> NodeIdsToNodesDict = NeuralNetwork.NodeIdsToNodesDict.ToDictionary(x => x.Key, x => x.Value);
 
-                GameObject NodeGameObject = new GameObject();
-                NodeGameObject.Size = NodeSize;
-
-                int XLowerimit;
-                int XUpperLimit;
-                switch (Node.NodeType)
+                foreach (var KeyValuePair in NodeIdsToNodesDict)
                 {
-                    case NodeType.Input:
-                        XLowerimit = Bounds.Left;
-                        XUpperLimit = (Bounds.Left + Bounds.Width / 3) - (int)NodeGameObject.Size;
-                        break;
+                    int NodeId = KeyValuePair.Key;
+                    Node Node = KeyValuePair.Value;
 
-                    case NodeType.Process:
-                        XLowerimit = Bounds.Left + Bounds.Width / 3;
-                        XUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 2) - (int)NodeGameObject.Size;
-                        break;
+                    GameObject NodeGameObject = new GameObject();
+                    NodeGameObject.Size = NodeSize;
 
-                    case NodeType.Output:
-                        XLowerimit = Bounds.Left + (Bounds.Left + (Bounds.Width / 3) * 2);
-                        XUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 3) - (int)NodeGameObject.Size;
-                        break;
+                    int XLowerimit;
+                    int XUpperLimit;
+                    switch (Node.NodeType)
+                    {
+                        case NodeType.Input:
+                            XLowerimit = Bounds.Left;
+                            XUpperLimit = (Bounds.Left + Bounds.Width / 3) - (int)NodeGameObject.Size;
+                            break;
 
-                    default:
-                        throw new NotImplementedException(nameof(Node.NodeType));
+                        case NodeType.Process:
+                            XLowerimit = Bounds.Left + Bounds.Width / 3;
+                            XUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 2) - (int)NodeGameObject.Size;
+                            break;
+
+                        case NodeType.Output:
+                            XLowerimit = Bounds.Left + (Bounds.Left + (Bounds.Width / 3) * 2);
+                            XUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 3) - (int)NodeGameObject.Size;
+                            break;
+
+                        default:
+                            throw new NotImplementedException(nameof(Node.NodeType));
+                    }
+                    if (XUpperLimit < XLowerimit)
+                    {
+                        XUpperLimit = XLowerimit;
+                    }
+
+                    NodeGameObject.X = Globals.Random.Next(XLowerimit, XUpperLimit);
+                    NodeGameObject.Y = (Bounds.Bottom - NodeGameObject.Size) > 0 ? Globals.Random.Next(Bounds.Bottom - (int)NodeGameObject.Size) : 0;
+
+                    DrawnNodeIdsToGameObject.Add(NodeId, NodeGameObject);
                 }
-                if (XUpperLimit < XLowerimit)
-                {
-                    XUpperLimit = XLowerimit;
-                }
-
-                NodeGameObject.X = Globals.Random.Next(XLowerimit, XUpperLimit);
-                NodeGameObject.Y = (Bounds.Bottom - NodeGameObject.Size) > 0 ? Globals.Random.Next(Bounds.Bottom - (int)NodeGameObject.Size) : 0;
-
-                DrawnNodeIdsToGameObject.Add(NodeId, NodeGameObject);
             }
         }
         private void NeuralNetworkViewer_Paint(object sender, PaintEventArgs e)
