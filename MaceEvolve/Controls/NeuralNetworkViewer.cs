@@ -203,14 +203,31 @@ namespace MaceEvolve.Controls
                 lblSelectedNodeId.Visible = SelectedNodeId != null;
                 lblSelectedNodePreviousOutput.Visible = SelectedNodeId != null;
                 lblSelectedNodeConnectionCount.Visible = SelectedNodeId != null;
+                lblNodeInputOrAction.Visible = SelectedNodeId != null;
                 if (SelectedNodeId != null)
                 {
                     lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
                     lblSelectedNodePreviousOutput.Text = $"Previous Output: {NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == SelectedNodeId).PreviousOutput}";
                     lblSelectedNodeConnectionCount.Text = $"Connections: {NetworkConnectionsList.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
+
+                    switch (SelectedNode.NodeType)
+                    {
+                        case NodeType.Input:
+                            lblNodeInputOrAction.Text = $"Type: Input ({SelectedNode.CreatureInput})";
+                            break;
+
+                        case NodeType.Process:
+                            lblNodeInputOrAction.Text = "Type: Process";
+                            break;
+
+                        case NodeType.Output:
+                            lblNodeInputOrAction.Text = $"Type: Output ({SelectedNode.CreatureAction})";
+                            break;
+
+                        default:
+                            throw new NotImplementedException();
+                    }
                 }
-
-
             }
         }
         private void NeuralNetworkViewer_MouseDown(object sender, MouseEventArgs e)

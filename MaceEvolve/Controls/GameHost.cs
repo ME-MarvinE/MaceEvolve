@@ -717,6 +717,7 @@ namespace MaceEvolve.Controls
                 ReturnedNetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
                 ReturnedNetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
                 ReturnedNetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
                 ReturnedNetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
             }
 
