@@ -10,11 +10,36 @@ namespace MaceEvolve.Models
 {
     public class Creature : GameObject
     {
+        #region Fields
+        private double _Energy;
+        #endregion
+
         #region Properties
         public NeuralNetwork Brain { get; set; }
         private double MoveCost { get; set; } = 0.5;
         public Genome Genome;
-        public double Energy { get; set; } = 150;
+        public double Energy
+        {
+            get
+            {
+                return _Energy;
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    _Energy = 0;
+                }
+                else if (value > MaxEnergy)
+                {
+                    _Energy = MaxEnergy;
+                }
+                else
+                {
+                    _Energy = value;
+                }
+            }
+        }
         public double MaxEnergy { get; set; } = 150;
         public double Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
