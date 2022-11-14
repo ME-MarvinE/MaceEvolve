@@ -574,7 +574,10 @@ namespace MaceEvolve.Controls
                 Food.Draw(e);
             }
 
+            if (UseSuccessBounds)
+            {
             e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), SuccessBounds);
+        }
         }
         private void GameHost_Load(object sender, EventArgs e)
         {
