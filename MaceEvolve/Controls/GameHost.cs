@@ -24,6 +24,8 @@ namespace MaceEvolve.Controls
         private Creature _BestCreature;
         private NeuralNetworkViewer _BestCreatureNeuralNetworkViewer;
         private NeuralNetworkViewer _SelectedCreatureNeuralNetworkViewer;
+        private double _SecondsUntilNewGeneration = 12;
+        private int _GenerationCount = 1;
         #endregion
 
         #region Properties
@@ -62,14 +64,36 @@ namespace MaceEvolve.Controls
         public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
         public double NewGenerationInterval { get; set; } = 36;
-        public double SecondsUntilNewGeneration { get; set; } = 12;
+        public double SecondsUntilNewGeneration
+        {
+            get
+            {
+                return _SecondsUntilNewGeneration;
+            }
+            set
+            {
+                _SecondsUntilNewGeneration = value;
+                lblGenEndsIn.Text = $"Ends in {string.Format("{0:0}", SecondsUntilNewGeneration)}s";
+            }
+        }
         public int MaxCreatureProcessNodes { get; set; } = 4;
         public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
-        public int GenerationCount { get; set; } = 1;
+        public int GenerationCount
+        {
+            get
+            {
+                return _GenerationCount;
+            }
+            set
+            {
+                _GenerationCount = value;
+                lblGenerationCount.Text = $"Gen {GenerationCount}";
+            }
+        }
         public double ReproductionNodeBiasVariance = 0.05;
         public double ReproductionConnectionWeightVariance = 0.05;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
@@ -110,6 +134,17 @@ namespace MaceEvolve.Controls
             {
                 lblGenerationCount.ForeColor = value;
             }
+        }
+        public Color GenEndsInLabelTextColor
+        {
+            get
+            {
+                return lblGenEndsIn.ForeColor;
+            }
+            set
+            {
+                lblGenEndsIn.ForeColor = value;
+        }
         }
         public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
         {
@@ -168,7 +203,6 @@ namespace MaceEvolve.Controls
 
             Creatures.AddRange(GenerateCreatures());
 
-            lblGenerationCount.Text = $"Gen {GenerationCount}";
             Invalidate();
         }
         public List<Creature> NewGenerationSexual()
@@ -549,8 +583,6 @@ namespace MaceEvolve.Controls
                     });
                 }
             }
-
-            lblGenerationCount.Text = $"Gen {GenerationCount}";
 
             if (NewBestCreature != null && BestCreature != NewBestCreature)
             {

@@ -7,7 +7,14 @@ namespace MaceEvolve
 {
     public partial class MainForm : Form
     {
-        public GameHost MainGameHost = new GameHost() { Dock = DockStyle.Fill, GenLabelTextColor = Color.White };
+        public GameHost MainGameHost = new GameHost()
+        {
+            Dock = DockStyle.Fill,
+            GenLabelTextColor = Color.White,
+            GenEndsInLabelTextColor = Color.White,
+            SecondsUntilNewGeneration = 12,
+            GenerationCount = 1
+        };
         public MainForm()
         {
             InitializeComponent();

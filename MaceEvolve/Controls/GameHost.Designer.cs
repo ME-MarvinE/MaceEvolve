@@ -33,6 +33,7 @@
             this.DrawTimer = new System.Windows.Forms.Timer(this.components);
             this.NewGenerationTimer = new System.Windows.Forms.Timer(this.components);
             this.lblGenerationCount = new System.Windows.Forms.Label();
+            this.lblGenEndsIn = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // GameTimer
@@ -60,10 +61,22 @@
             this.lblGenerationCount.TabIndex = 3;
             this.lblGenerationCount.Text = "Gen 1";
             // 
+            // lblGenEndsIn
+            // 
+            this.lblGenEndsIn.AutoSize = true;
+            this.lblGenEndsIn.BackColor = System.Drawing.Color.Transparent;
+            this.lblGenEndsIn.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.lblGenEndsIn.Location = new System.Drawing.Point(16, 43);
+            this.lblGenEndsIn.Name = "lblGenEndsIn";
+            this.lblGenEndsIn.Size = new System.Drawing.Size(80, 21);
+            this.lblGenEndsIn.TabIndex = 3;
+            this.lblGenEndsIn.Text = "Ends In 0s";
+            // 
             // GameHost
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lblGenEndsIn);
             this.Controls.Add(this.lblGenerationCount);
             this.DoubleBuffered = true;
             this.Name = "GameHost";
@@ -82,5 +95,7 @@
         private System.Windows.Forms.Timer DrawTimer;
         private System.Windows.Forms.Timer NewGenerationTimer;
         private System.Windows.Forms.Label lblGenerationCount;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblGenEndsIn;
     }
 }
