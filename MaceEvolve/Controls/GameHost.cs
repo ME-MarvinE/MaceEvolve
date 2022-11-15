@@ -98,7 +98,7 @@ namespace MaceEvolve.Controls
         public double ReproductionConnectionWeightVariance = 0.05;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
-        public bool UseSuccessBounds { get; set; } = true;
+        public bool UseSuccessBounds { get; set; }
         public Creature SelectedCreature
         {
             get
@@ -144,7 +144,7 @@ namespace MaceEvolve.Controls
             set
             {
                 lblGenEndsIn.ForeColor = value;
-        }
+            }
         }
         public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
         {
@@ -608,8 +608,8 @@ namespace MaceEvolve.Controls
 
             if (UseSuccessBounds)
             {
-            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), SuccessBounds);
-        }
+                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), SuccessBounds);
+            }
         }
         private void GameHost_Load(object sender, EventArgs e)
         {
