@@ -1,6 +1,7 @@
 ﻿using MaceEvolve.Enums;
 using MaceEvolve.Extensions;
 using MaceEvolve.Models;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,6 +20,12 @@ namespace MaceEvolve.Controls
         protected static Random _Random = new Random();
         private int _TargetFPS = 10;
         private int _TargetTPS = 10;
+        private Creature _SelectedCreature;
+        private Creature _BestCreature;
+        private NeuralNetworkViewer _BestCreatureNeuralNetworkViewer;
+        private NeuralNetworkViewer _SelectedCreatureNeuralNetworkViewer;
+        private double _SecondsUntilNewGeneration = 12;
+        private int _GenerationCount = 1;
         #endregion
 
         #region Properties
@@ -56,21 +63,66 @@ namespace MaceEvolve.Controls
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
-        public double NewGenerationInterval { get; set; } = 12;
-        public double SecondsUntilNewGeneration { get; set; } = 12;
+        public double NewGenerationInterval { get; set; } = 36;
+        public double SecondsUntilNewGeneration
+        {
+            get
+            {
+                return _SecondsUntilNewGeneration;
+            }
+            set
+            {
+                _SecondsUntilNewGeneration = value;
+                lblGenEndsIn.Text = $"Ends in {string.Format("{0:0}", SecondsUntilNewGeneration)}s";
+            }
+        }
         public int MaxCreatureProcessNodes { get; set; } = 4;
         public double MutationChance { get; set; } = 0.1;
         public double MutationAttempts { get; set; } = 10;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
-        public int GenerationCount { get; set; } = 1;
+        public int GenerationCount
+        {
+            get
+            {
+                return _GenerationCount;
+            }
+            set
+            {
+                _GenerationCount = value;
+                lblGenerationCount.Text = $"Gen {GenerationCount}";
+            }
+        }
         public double ReproductionNodeBiasVariance = 0.05;
         public double ReproductionConnectionWeightVariance = 0.05;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
-        public Creature SelectedCreature { get; set; }
+        public Creature SelectedCreature
+        {
+            get
+            {
+                return _SelectedCreature;
+            }
+            set
+            {
+                _SelectedCreature = value;
+                _SelectedCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(_SelectedCreature?.Brain, _SelectedCreatureNeuralNetworkViewer);
+            }
+        }
+        public Creature BestCreature
+        {
+            get
+            {
+                return _BestCreature;
+            }
+            set
+            {
+                _BestCreature = value;
+                _BestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(_BestCreature?.Brain, _BestCreatureNeuralNetworkViewer);
+            }
+        }
         public Color? SelectedCreaturePreviousColor { get; set; }
         public Color GenLabelTextColor
         {
@@ -83,8 +135,32 @@ namespace MaceEvolve.Controls
                 lblGenerationCount.ForeColor = value;
             }
         }
-        public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; } = new NetworkViewerForm();
-        public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; } = new NetworkViewerForm();
+        public Color GenEndsInLabelTextColor
+        {
+            get
+            {
+                return lblGenEndsIn.ForeColor;
+            }
+            set
+            {
+                lblGenEndsIn.ForeColor = value;
+            }
+        }
+        public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
+        {
+            get
+            {
+                return UpdateOrCreateNetworkViewer(_SelectedCreature?.Brain, _SelectedCreatureNeuralNetworkViewer);
+            }
+        }
+        public NeuralNetworkViewer BestCreatureNeuralNetworkViewer
+
+        {
+            get
+            {
+                return UpdateOrCreateNetworkViewer(_BestCreature?.Brain, _BestCreatureNeuralNetworkViewer);
+            }
+        }
         #endregion
 
         #region Constructors
@@ -115,18 +191,18 @@ namespace MaceEvolve.Controls
 
             Point MiddleOfWorldBounds = Globals.Middle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height);
             //SuccessBounds = new Rectangle(WorldBounds.Location.X, WorldBounds.Location.Y, 150, 150);
-            SuccessBounds = new Rectangle(WorldBounds.X, MiddleOfWorldBounds.Y - 75, 150, 150);
+            SuccessBounds = new Rectangle(MiddleOfWorldBounds.X - 75, MiddleOfWorldBounds.Y - 75, 150, 150);
 
             Stopwatch.Reset();
             SecondsUntilNewGeneration = NewGenerationInterval;
             Creatures.Clear();
             ResetFood();
             GenerationCount = 1;
+            BestCreature = null;
             SelectedCreature = null;
 
             Creatures.AddRange(GenerateCreatures());
 
-            lblGenerationCount.Text = $"Gen {GenerationCount}";
             Invalidate();
         }
         public List<Creature> NewGenerationSexual()
@@ -213,7 +289,7 @@ namespace MaceEvolve.Controls
                                 for (int j = 0; j < MutationAttempts; j++)
                                 {
                                     bool Mutated = MutateNetwork(NewCreature.Brain,
-                                        CreateRandomNodeChance: MutationChance * 0,
+                                        CreateRandomNodeChance: MutationChance * 2,
                                         RemoveRandomNodeChance: MutationChance * 0,
                                         MutateRandomNodeBiasChance: MutationChance * 2,
                                         CreateRandomConnectionChance: MutationChance,
@@ -326,7 +402,7 @@ namespace MaceEvolve.Controls
                 MutationOccurred = true;
             }
 
-            //Create a new node.
+            //Create a new node with a default connection.
             if (_Random.NextDouble() <= CreateRandomNodeChance)
             {
                 Node NodeToAdd;
@@ -352,7 +428,48 @@ namespace MaceEvolve.Controls
 
                 if (NodeToAdd != null)
                 {
+                    List<Node> PossibleSourceNodes = NeuralNetwork.GetPossibleSourceNodes(Network.NodeIdsToNodesDict.Values).ToList();
+                    List<Node> PossibleTargetNodes = NeuralNetwork.GetPossibleTargetNodes(Network.NodeIdsToNodesDict.Values).ToList();
+
                     Network.AddNode(NodeToAdd);
+                    int NodeToAddId = Network.NodesToNodeIdsDict[NodeToAdd];
+
+                    if (Network.Connections.Count < MaxCreatureConnections && PossibleSourceNodes.Count > 0 && PossibleTargetNodes.Count > 0)
+                    {
+                        Connection NewConnection = new Connection() { Weight = _Random.NextDouble(-ConnectionWeightBound, ConnectionWeightBound) };
+
+                        switch (NodeToAdd.NodeType)
+                        {
+                            case NodeType.Input:
+                                NewConnection.SourceId = NodeToAddId;
+                                NewConnection.TargetId = Network.NodesToNodeIdsDict[PossibleTargetNodes[_Random.Next(PossibleTargetNodes.Count)]];
+                                break;
+
+                            case NodeType.Process:
+                                if (_Random.NextDouble() <= 0.5)
+                                {
+                                    NewConnection.SourceId = NodeToAddId;
+                                    NewConnection.TargetId = Network.NodesToNodeIdsDict[PossibleTargetNodes[_Random.Next(PossibleTargetNodes.Count)]];
+                                }
+                                else
+                                {
+                                    NewConnection.SourceId = Network.NodesToNodeIdsDict[PossibleSourceNodes[_Random.Next(PossibleSourceNodes.Count)]];
+                                    NewConnection.TargetId = NodeToAddId;
+                                }
+                                break;
+
+                            case NodeType.Output:
+                                NewConnection.SourceId = Network.NodesToNodeIdsDict[PossibleSourceNodes[_Random.Next(PossibleSourceNodes.Count)]];
+                                NewConnection.TargetId = NodeToAddId;
+                                break;
+
+                            default:
+                                throw new NotImplementedException();
+                        }
+
+                        Network.Connections.Add(NewConnection);
+                    }
+
                     MutationOccurred = true;
                 }
             }
@@ -365,7 +482,7 @@ namespace MaceEvolve.Controls
             }
 
             //Change a random connection's weight.
-            if (_Random.NextDouble() <= MutateRandomConnectionWeightChance)
+            if (Network.Connections.Count > 0 && _Random.NextDouble() <= MutateRandomConnectionWeightChance)
             {
                 Connection RandomConnection = Network.Connections[_Random.Next(Network.Connections.Count)];
 
@@ -375,13 +492,13 @@ namespace MaceEvolve.Controls
             }
 
             //Change a random connection's source.
-            if (Network.MutateConnectionSource(MutateRandomConnectionSourceChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
+            if (Network.Connections.Count > 0 && Network.MutateConnectionSource(MutateRandomConnectionSourceChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
             {
                 MutationOccurred = true;
             }
 
             //Change a random connection's target.
-            if (Network.MutateConnectionTarget(MutateRandomConnectionTargetChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
+            if (Network.Connections.Count > 0 && Network.MutateConnectionTarget(MutateRandomConnectionTargetChance, Network.Connections[_Random.Next(Network.Connections.Count)]))
             {
                 MutationOccurred = true;
             }
@@ -422,14 +539,30 @@ namespace MaceEvolve.Controls
                 Food.Update();
             }
 
-            Creature MostFoodEatenCreature = null;
+            Creature NewBestCreature = null;
+
+            Point MiddleOfSuccessBounds = Globals.Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
 
             foreach (Creature Creature in CreaturesList)
             {
                 Creature.Update();
-                if (MostFoodEatenCreature == null || Creature.FoodEaten > MostFoodEatenCreature.FoodEaten)
+
+                if (UseSuccessBounds)
                 {
-                    MostFoodEatenCreature = Creature;
+                    double DistanceFromMiddle = Globals.GetDistanceFrom(Creature.MX, Creature.MY, MiddleOfSuccessBounds.X, MiddleOfSuccessBounds.Y);
+                    double? NewBestCreatureDistanceFromMiddle = NewBestCreature == null ? null : Globals.GetDistanceFrom(NewBestCreature.MX, NewBestCreature.MY, MiddleOfSuccessBounds.X, MiddleOfSuccessBounds.Y);
+
+                    if (NewBestCreatureDistanceFromMiddle == null || DistanceFromMiddle < NewBestCreatureDistanceFromMiddle)
+                    {
+                        NewBestCreature = Creature;
+                    }
+                }
+                else
+                {
+                    if (NewBestCreature == null || Creature.FoodEaten > NewBestCreature.FoodEaten)
+                    {
+                        NewBestCreature = Creature;
+                    }
                 }
             }
 
@@ -451,11 +584,9 @@ namespace MaceEvolve.Controls
                 }
             }
 
-            lblGenerationCount.Text = $"Gen {GenerationCount}";
-
-            if (MostFoodEatenCreature != null && BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork != MostFoodEatenCreature.Brain)
+            if (NewBestCreature != null && BestCreature != NewBestCreature)
             {
-                ChangeTrackedNeuralNetwork(BestCreatureNetworkViewerForm.NetworkViewer, MostFoodEatenCreature.Brain);
+                BestCreature = NewBestCreature;
             }
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
@@ -475,7 +606,10 @@ namespace MaceEvolve.Controls
                 Food.Draw(e);
             }
 
-            e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), SuccessBounds);
+            if (UseSuccessBounds)
+            {
+                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), SuccessBounds);
+            }
         }
         private void GameHost_Load(object sender, EventArgs e)
         {
@@ -483,24 +617,6 @@ namespace MaceEvolve.Controls
             TargetTPS = 60;
             TargetFPS = TargetTPS;
             CreatureSpeed = UseSuccessBounds ? 3.5 : 2.75;
-
-            BestCreatureNetworkViewerForm = new NetworkViewerForm(new NeuralNetworkViewer() { Dock = DockStyle.Fill });
-            BestCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
-            BestCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
-
-            SelectedCreatureNetworkViewerForm = new NetworkViewerForm(new NeuralNetworkViewer() { Dock = DockStyle.Fill });
-            SelectedCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
 
             Reset();
         }
@@ -584,6 +700,7 @@ namespace MaceEvolve.Controls
             Point RelativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
             IEnumerable<Creature> CreaturesOrderedByDistanceToMouse = Creatures.OrderBy(x => Globals.GetDistanceFrom(RelativeMouseLocation.X, RelativeMouseLocation.Y, x.MX, x.MY));
 
+            Creature OldSelectedCreature = SelectedCreature;
             Creature NewSelectedCreature = CreaturesOrderedByDistanceToMouse.FirstOrDefault();
 
             if (SelectedCreature == null)
@@ -606,23 +723,42 @@ namespace MaceEvolve.Controls
                 }
             }
 
-            if (SelectedCreature == null)
+            if (NewSelectedCreature != null && OldSelectedCreature != NewSelectedCreature)
             {
-                SelectedCreatureNetworkViewerForm.Hide();
-            }
-            else
-            {
-                SelectedCreatureNetworkViewerForm.Hide();
-                ChangeTrackedNeuralNetwork(SelectedCreatureNetworkViewerForm.NetworkViewer, SelectedCreature.Brain);
-                SelectedCreatureNetworkViewerForm.Show();
+                NetworkViewerForm NetworkViewerForm = new NetworkViewerForm(SelectedCreatureNeuralNetworkViewer);
+                NetworkViewerForm.Show();
             }
 
             Invalidate();
         }
-        public static void ChangeTrackedNeuralNetwork(NeuralNetworkViewer NetworkViewer, NeuralNetwork NewNeuralNetwork)
+        public static void ChangeNetworkViewerNetwork(NeuralNetworkViewer NetworkViewer, NeuralNetwork NewNeuralNetwork)
         {
             NetworkViewer.NeuralNetwork = NewNeuralNetwork;
             NetworkViewer.ResetDrawnNodes();
+        }
+        public NeuralNetworkViewer UpdateOrCreateNetworkViewer(NeuralNetwork NeuralNetwork, NeuralNetworkViewer NetworkViewer = null)
+        {
+            NeuralNetworkViewer ReturnedNetworkViewer = NetworkViewer;
+
+            bool CreateNewNetworkViewer = ReturnedNetworkViewer == null || ReturnedNetworkViewer.IsDisposed;
+
+            if (CreateNewNetworkViewer)
+            {
+                ReturnedNetworkViewer = new NeuralNetworkViewer();
+                ReturnedNetworkViewer.Dock = DockStyle.Fill;
+                ReturnedNetworkViewer.BackColor = BackColor;
+                ReturnedNetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
+                ReturnedNetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
+                ReturnedNetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
+            }
+
+            ReturnedNetworkViewer.NeuralNetwork = NeuralNetwork;
+
+            return ReturnedNetworkViewer;
         }
         #endregion
     }
