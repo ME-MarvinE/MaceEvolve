@@ -538,7 +538,7 @@ namespace MaceEvolve.Controls
 
                     creature.Live(environmentInfo);
 
-                    if (creature.Energy < 0)
+                    if (creature.Energy <= 0)
                     {
                         creature.Die();
                     }
@@ -594,14 +594,40 @@ namespace MaceEvolve.Controls
 
             foreach (Creature creature in Creatures)
             {
-                using (SolidBrush brush = new SolidBrush(creature == SelectedCreature ? Color.White : creature.Color))
+                Color creatureColor;
+
+                if (creature.IsDead)
+                {
+                    creatureColor = Color.FromArgb(255, 165, 41, 41);
+                }
+                else
+                {
+                    creatureColor = Color.FromArgb(creature.Color.A, creature.Color.R, creature.Color.G, creature.Color.B);
+                }
+
+                Color? creatureRingColor;
+
+                if (creature == SelectedCreature)
+                {
+                    creatureRingColor = Color.White;
+                }
+                else if (creature == BestCreature)
+                {
+                    creatureRingColor = Color.Gold;
+                }
+                else
+                {
+                    creatureRingColor = null;
+                }
+
+                using (SolidBrush brush = new SolidBrush(creatureColor))
                 {
                     e.Graphics.FillEllipse(brush, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
                 }
 
-                if (creature == BestCreature)
+                if (creatureRingColor != null)
                 {
-                    using (Pen pen = new Pen(Color.Gold, 2))
+                    using (Pen pen = new Pen(creatureRingColor.Value, 2))
                     {
                         e.Graphics.DrawEllipse(pen, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
                     }
@@ -689,7 +715,7 @@ namespace MaceEvolve.Controls
                     X = random.Next(WorldBounds.Left + WorldBounds.Width),
                     Y = random.Next(WorldBounds.Top + WorldBounds.Height),
                     Size = 10,
-                    Color = Color.FromArgb(255, 64, 64, random.Next(256)),
+                    Color = Color.FromArgb(255, 64, 64, Math.Max(96, random.Next(256))),
                     Speed = CreatureSpeed,
                     Metabolism = 0.1,
                     Energy = MaxCreatureEnergy,

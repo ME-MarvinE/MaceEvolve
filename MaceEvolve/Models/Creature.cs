@@ -93,7 +93,6 @@ namespace MaceEvolve.Models
         public void Die()
         {
             IsDead = true;
-            Color = Color.Brown;
             Energy = 0;
         }
         public void Live(EnvironmentInfo currentEnvironmentInfo)
