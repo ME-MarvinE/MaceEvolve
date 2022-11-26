@@ -1,6 +1,4 @@
-﻿using MaceEvolve.Controls;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using System.Drawing;
 
 namespace MaceEvolve.Models
 {
@@ -12,7 +10,6 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Properties
-        public GameHost GameHost { get; set; }
         public double X
         {
             get
