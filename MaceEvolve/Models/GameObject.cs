@@ -1,10 +1,5 @@
 ﻿using MaceEvolve.Controls;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaceEvolve.Models
@@ -12,8 +7,8 @@ namespace MaceEvolve.Models
     public class GameObject
     {
         #region Fields
-        private Rectangle _Rectangle = new Rectangle(0, 0, 0, 0);
-        public Color _Color = Color.Black;
+        private Rectangle _rectangle = new Rectangle(0, 0, 0, 0);
+        private Color _color = Color.Black;
         #endregion
 
         #region Properties
@@ -70,22 +65,22 @@ namespace MaceEvolve.Models
         {
             get
             {
-                return _Color;
+                return _color;
             }
             set
             {
-                _Color = value;
+                _color = value;
             }
         }
         public Rectangle Rectangle
         {
             get
             {
-                return _Rectangle;
+                return _rectangle;
             }
             set
             {
-                _Rectangle = value;
+                _rectangle = value;
             }
         }
 

@@ -1,19 +1,18 @@
-﻿using MaceEvolve.Models;
-using System;
+﻿using System;
 
 namespace MaceEvolve.Extensions
 {
     public static class RandomExtensions
     {
-        public static double NextDouble(this Random Random, double MinValue, double MaxValue)
+        public static double NextDouble(this Random random, double minValue, double maxValue)
         {
-            return Random.NextDouble() * (MaxValue - MinValue) + MinValue;
+            return random.NextDouble() * (maxValue - minValue) + minValue;
         }
-        public static double NextDoubleVariance(this Random Random, double Value, double Variance)
+        public static double NextDoubleVariance(this Random random, double value, double variance)
         {
-            double Multiplier = Random.NextDouble(1 - Variance, 1 + Variance);
+            double Multiplier = random.NextDouble(1 - variance, 1 + variance);
 
-            return Value * Multiplier;
+            return value * Multiplier;
         }
     }
 }

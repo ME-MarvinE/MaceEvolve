@@ -11,7 +11,6 @@ namespace MaceEvolve.Models
         public IReadOnlyList<Creature> VisibleCreatures { get; set; }
         public IReadOnlyList<Food> VisibleFoodOrderedByDistance { get; set; }
         public IReadOnlyList<Creature> VisibleCreaturesOrderedByDistance { get; set; }
-
         #endregion
     }
 }

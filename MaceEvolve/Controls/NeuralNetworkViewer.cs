@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Net.Security;
-using System.Security.Cryptography;
 using System.Windows.Forms;
 
 namespace MaceEvolve.Controls
@@ -13,7 +11,7 @@ namespace MaceEvolve.Controls
     public partial class NeuralNetworkViewer : UserControl
     {
         #region Fields
-        public NeuralNetwork _NeuralNetwork;
+        public NeuralNetwork _neuralNetwork;
         #endregion
 
         #region Properties
@@ -21,28 +19,28 @@ namespace MaceEvolve.Controls
         {
             get
             {
-                return _NeuralNetwork;
+                return _neuralNetwork;
             }
             set
             {
-                if (_NeuralNetwork != value)
+                if (_neuralNetwork != value)
                 {
                     SelectedNodeId = null;
                     MovingNodeId = null;
 
-                    _NeuralNetwork = value;
+                    _neuralNetwork = value;
 
                     ResetDrawnNodes();
                 }
             }
         }
-        private Dictionary<NodeType, Color> _NodeTypeToColorDict { get; } = new Dictionary<NodeType, Color>()
+        private Dictionary<NodeType, Color> NodeTypeToColorDict { get; } = new Dictionary<NodeType, Color>()
         {
             { NodeType.Input, Color.Blue },
             { NodeType.Process, Color.Gray },
             { NodeType.Output, Color.Orange }
         };
-        private Dictionary<NodeType, Brush> _NodeTypeToBrushDict { get; }
+        private Dictionary<NodeType, Brush> NodeTypeToBrushDict { get; }
         private Dictionary<int, GameObject> DrawnNodeIdsToGameObject { get; set; } = new Dictionary<int, GameObject>();
         public int NodeSize = 75;
         public int NodeFontSize = 14;
@@ -55,15 +53,15 @@ namespace MaceEvolve.Controls
             : this(null)
         {
         }
-        public NeuralNetworkViewer(NeuralNetwork NeuralNetwork)
+        public NeuralNetworkViewer(NeuralNetwork neuralNetwork)
         {
-            this.NeuralNetwork = NeuralNetwork;
+            NeuralNetwork = neuralNetwork;
 
-            _NodeTypeToBrushDict = new Dictionary<NodeType, Brush>()
+            NodeTypeToBrushDict = new Dictionary<NodeType, Brush>()
             {
-                { NodeType.Input, new SolidBrush(_NodeTypeToColorDict[NodeType.Input]) },
-                { NodeType.Process, new SolidBrush(_NodeTypeToColorDict[NodeType.Process]) },
-                { NodeType.Output, new SolidBrush(_NodeTypeToColorDict[NodeType.Output]) }
+                { NodeType.Input, new SolidBrush(NodeTypeToColorDict[NodeType.Input]) },
+                { NodeType.Process, new SolidBrush(NodeTypeToColorDict[NodeType.Process]) },
+                { NodeType.Output, new SolidBrush(NodeTypeToColorDict[NodeType.Output]) }
             };
 
             DoubleBuffered = true;
@@ -79,47 +77,47 @@ namespace MaceEvolve.Controls
 
             if (NeuralNetwork != null)
             {
-                Dictionary<int, Node> NodeIdsToNodesDict = NeuralNetwork.NodeIdsToNodesDict.ToDictionary(x => x.Key, x => x.Value);
+                Dictionary<int, Node> nodeIdsToNodesDict = NeuralNetwork.NodeIdsToNodesDict.ToDictionary(x => x.Key, x => x.Value);
 
-                foreach (var KeyValuePair in NodeIdsToNodesDict)
+                foreach (var keyValuePair in nodeIdsToNodesDict)
                 {
-                    int NodeId = KeyValuePair.Key;
-                    Node Node = KeyValuePair.Value;
+                    int nodeId = keyValuePair.Key;
+                    Node node = keyValuePair.Value;
 
-                    GameObject NodeGameObject = new GameObject();
-                    NodeGameObject.Size = NodeSize;
+                    GameObject nodeGameObject = new GameObject();
+                    nodeGameObject.Size = NodeSize;
 
-                    int XLowerimit;
-                    int XUpperLimit;
-                    switch (Node.NodeType)
+                    int xLowerimit;
+                    int xUpperLimit;
+                    switch (node.NodeType)
                     {
                         case NodeType.Input:
-                            XLowerimit = Bounds.Left;
-                            XUpperLimit = (Bounds.Left + Bounds.Width / 3) - (int)NodeGameObject.Size;
+                            xLowerimit = Bounds.Left;
+                            xUpperLimit = (Bounds.Left + Bounds.Width / 3) - (int)nodeGameObject.Size;
                             break;
 
                         case NodeType.Process:
-                            XLowerimit = Bounds.Left + Bounds.Width / 3;
-                            XUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 2) - (int)NodeGameObject.Size;
+                            xLowerimit = Bounds.Left + Bounds.Width / 3;
+                            xUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 2) - (int)nodeGameObject.Size;
                             break;
 
                         case NodeType.Output:
-                            XLowerimit = Bounds.Left + (Bounds.Left + (Bounds.Width / 3) * 2);
-                            XUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 3) - (int)NodeGameObject.Size;
+                            xLowerimit = Bounds.Left + (Bounds.Left + (Bounds.Width / 3) * 2);
+                            xUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 3) - (int)nodeGameObject.Size;
                             break;
 
                         default:
-                            throw new NotImplementedException(nameof(Node.NodeType));
+                            throw new NotImplementedException(nameof(node.NodeType));
                     }
-                    if (XUpperLimit < XLowerimit)
+                    if (xUpperLimit < xLowerimit)
                     {
-                        XUpperLimit = XLowerimit;
+                        xUpperLimit = xLowerimit;
                     }
 
-                    NodeGameObject.X = Globals.Random.Next(XLowerimit, XUpperLimit);
-                    NodeGameObject.Y = (Bounds.Bottom - NodeGameObject.Size) > 0 ? Globals.Random.Next(Bounds.Bottom - (int)NodeGameObject.Size) : 0;
+                    nodeGameObject.X = Globals.Random.Next(xLowerimit, xUpperLimit);
+                    nodeGameObject.Y = (Bounds.Bottom - nodeGameObject.Size) > 0 ? Globals.Random.Next(Bounds.Bottom - (int)nodeGameObject.Size) : 0;
 
-                    DrawnNodeIdsToGameObject.Add(NodeId, NodeGameObject);
+                    DrawnNodeIdsToGameObject.Add(nodeId, nodeGameObject);
                 }
             }
         }
@@ -127,73 +125,73 @@ namespace MaceEvolve.Controls
         {
             if (NeuralNetwork != null)
             {
-                Node SelectedNode = SelectedNodeId == null ? null : NeuralNetwork.NodeIdsToNodesDict[SelectedNodeId.Value];
+                Node selectedNode = SelectedNodeId == null ? null : NeuralNetwork.NodeIdsToNodesDict[SelectedNodeId.Value];
                 e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
                 e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
                 //Draw connections between nodes.
                 //Currently, duplicate connections will draw over each other. Self referencing connections aren't supported.
-                List<Connection> NetworkConnectionsList = NeuralNetwork.Connections.ToList();
-                foreach (var Connection in NetworkConnectionsList)
+                List<Connection> networkConnectionsList = NeuralNetwork.Connections.ToList();
+                foreach (var connection in networkConnectionsList)
                 {
-                    GameObject SourceIdGameObject;
-                    GameObject TargetIdGameObject;
+                    GameObject sourceIdGameObject;
+                    GameObject targetIdGameObject;
 
-                    if (DrawnNodeIdsToGameObject.TryGetValue(Connection.SourceId, out SourceIdGameObject) && DrawnNodeIdsToGameObject.TryGetValue(Connection.TargetId, out TargetIdGameObject))
+                    if (DrawnNodeIdsToGameObject.TryGetValue(connection.SourceId, out sourceIdGameObject) && DrawnNodeIdsToGameObject.TryGetValue(connection.TargetId, out targetIdGameObject))
                     {
-                        Color PenColor;
-                        float PenSize;
+                        Color penColor;
+                        float penSize;
 
-                        if (Connection.Weight == 0)
+                        if (connection.Weight == 0)
                         {
-                            PenColor = Color.Gray;
-                            PenSize = (int)Globals.Map(Connection.Weight, -4, 4, 2, 8);
+                            penColor = Color.Gray;
+                            penSize = (int)Globals.Map(connection.Weight, -4, 4, 2, 8);
                         }
-                        if (Connection.Weight > 0)
+                        if (connection.Weight > 0)
                         {
-                            PenColor = Color.FromArgb(0, (int)Globals.Map(Connection.Weight, 0, 4, 0, 255), 0);
-                            PenSize = (int)Globals.Map(Connection.Weight, 0, 4, 2, 8);
+                            penColor = Color.FromArgb(0, (int)Globals.Map(connection.Weight, 0, 4, 0, 255), 0);
+                            penSize = (int)Globals.Map(connection.Weight, 0, 4, 2, 8);
                         }
                         else
                         {
-                            PenColor = Color.FromArgb((int)Globals.Map(Connection.Weight, 0, -4, 0, 255), 0, 0);
-                            PenSize = (int)Globals.Map(Connection.Weight, 0, -4, 2, 8);
+                            penColor = Color.FromArgb((int)Globals.Map(connection.Weight, 0, -4, 0, 255), 0, 0);
+                            penSize = (int)Globals.Map(connection.Weight, 0, -4, 2, 8);
                         }
 
-                        e.Graphics.DrawLine(new Pen(PenColor, PenSize), (int)SourceIdGameObject.MX, (int)SourceIdGameObject.MY, (int)TargetIdGameObject.MX, (int)TargetIdGameObject.MY);
+                        e.Graphics.DrawLine(new Pen(penColor, penSize), (int)sourceIdGameObject.MX, (int)sourceIdGameObject.MY, (int)targetIdGameObject.MX, (int)targetIdGameObject.MY);
                     }
                 }
 
-                NeuralNetworkStepInfo HighestOutputNodeStepInfo = NeuralNetwork.PreviousStepInfo.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
+                NeuralNetworkStepInfo highestOutputNodeStepInfo = NeuralNetwork.PreviousStepInfo.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
 
                 //Draw nodes.
-                foreach (var KeyValuePair in DrawnNodeIdsToGameObject)
+                foreach (var keyValuePair in DrawnNodeIdsToGameObject)
                 {
-                    int NodeId = KeyValuePair.Key;
-                    Node Node = NeuralNetwork.NodeIdsToNodesDict[NodeId];
-                    GameObject NodeGameObject = KeyValuePair.Value;
-                    Brush NodeBrush = _NodeTypeToBrushDict[Node.NodeType];
+                    int nodeId = keyValuePair.Key;
+                    Node node = NeuralNetwork.NodeIdsToNodesDict[nodeId];
+                    GameObject nodeGameObject = keyValuePair.Value;
+                    Brush nodeBrush = NodeTypeToBrushDict[node.NodeType];
 
-                    NeuralNetworkStepInfo NodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == NodeId);
+                    NeuralNetworkStepInfo nodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == nodeId);
 
-                    string PreviousOutputString = NodeNetworkStepInfo == null ? null : string.Format("{0:0.##}", NodeNetworkStepInfo.PreviousOutput);
-                    int NodeIdFontSize = NodeFontSize - 4;
-                    int NodePreviousOutputFontSize = NodeFontSize;
+                    string previousOutputString = nodeNetworkStepInfo == null ? null : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
+                    int nodeIdFontSize = NodeFontSize - 4;
+                    int nodePreviousOutputFontSize = NodeFontSize;
 
-                    e.Graphics.FillEllipse(NodeBrush, (float)NodeGameObject.X, (float)NodeGameObject.Y, (float)NodeGameObject.Size, (float)NodeGameObject.Size);
+                    e.Graphics.FillEllipse(nodeBrush, (float)nodeGameObject.X, (float)nodeGameObject.Y, (float)nodeGameObject.Size, (float)nodeGameObject.Size);
 
-                    if (HighestOutputNodeStepInfo != null && NodeNetworkStepInfo == HighestOutputNodeStepInfo)
+                    if (highestOutputNodeStepInfo != null && nodeNetworkStepInfo == highestOutputNodeStepInfo)
                     {
-                        e.Graphics.DrawEllipse(new Pen(Color.White, 3), (float)NodeGameObject.X, (float)NodeGameObject.Y, (float)NodeGameObject.Size, (float)NodeGameObject.Size);
+                        e.Graphics.DrawEllipse(new Pen(Color.White, 3), (float)nodeGameObject.X, (float)nodeGameObject.Y, (float)nodeGameObject.Size, (float)nodeGameObject.Size);
                     }
 
-                    if (NodeId == SelectedNodeId)
+                    if (nodeId == SelectedNodeId)
                     {
-                        e.Graphics.DrawEllipse(new Pen(Color.White, 6), (float)NodeGameObject.X, (float)NodeGameObject.Y, (float)NodeGameObject.Size, (float)NodeGameObject.Size);
+                        e.Graphics.DrawEllipse(new Pen(Color.White, 6), (float)nodeGameObject.X, (float)nodeGameObject.Y, (float)nodeGameObject.Size, (float)nodeGameObject.Size);
                     }
 
-                    e.Graphics.DrawString($"{NodeId}", new Font(FontFamily.GenericSansSerif, NodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), (float)NodeGameObject.MX - NodeIdFontSize, (float)NodeGameObject.MY - NodePreviousOutputFontSize * 2);
-                    e.Graphics.DrawString(PreviousOutputString, new Font(FontFamily.GenericSansSerif, NodePreviousOutputFontSize), new SolidBrush(Color.Black), (float)NodeGameObject.MX - NodePreviousOutputFontSize * 2, (float)NodeGameObject.MY);
+                    e.Graphics.DrawString($"{nodeId}", new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), (float)nodeGameObject.MX - nodeIdFontSize, (float)nodeGameObject.MY - nodePreviousOutputFontSize * 2);
+                    e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), (float)nodeGameObject.MX - nodePreviousOutputFontSize * 2, (float)nodeGameObject.MY);
 
                 }
 
@@ -208,12 +206,12 @@ namespace MaceEvolve.Controls
                 {
                     lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
                     lblSelectedNodePreviousOutput.Text = $"Previous Output: {NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == SelectedNodeId).PreviousOutput}";
-                    lblSelectedNodeConnectionCount.Text = $"Connections: {NetworkConnectionsList.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
+                    lblSelectedNodeConnectionCount.Text = $"Connections: {networkConnectionsList.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
 
-                    switch (SelectedNode.NodeType)
+                    switch (selectedNode.NodeType)
                     {
                         case NodeType.Input:
-                            lblNodeInputOrAction.Text = $"Type: Input ({SelectedNode.CreatureInput})";
+                            lblNodeInputOrAction.Text = $"Type: Input ({selectedNode.CreatureInput})";
                             break;
 
                         case NodeType.Process:
@@ -221,7 +219,7 @@ namespace MaceEvolve.Controls
                             break;
 
                         case NodeType.Output:
-                            lblNodeInputOrAction.Text = $"Type: Output ({SelectedNode.CreatureAction})";
+                            lblNodeInputOrAction.Text = $"Type: Output ({selectedNode.CreatureAction})";
                             break;
 
                         default:
@@ -232,19 +230,19 @@ namespace MaceEvolve.Controls
         }
         private void NeuralNetworkViewer_MouseDown(object sender, MouseEventArgs e)
         {
-            Point RelativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
+            Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
 
-            Dictionary<int, GameObject> NodeIdsOrderedByDistanceToMouse = DrawnNodeIdsToGameObject.OrderBy(x => Globals.GetDistanceFrom(RelativeMouseLocation.X, RelativeMouseLocation.Y, x.Value.MX, x.Value.MY)).ToDictionary(x => x.Key, x => x.Value);
+            Dictionary<int, GameObject> nodeIdsOrderedByDistanceToMouse = DrawnNodeIdsToGameObject.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.Value.MX, x.Value.MY)).ToDictionary(x => x.Key, x => x.Value);
 
-            int? ClosestNodeId = NodeIdsOrderedByDistanceToMouse.Count == 0 ? null : NodeIdsOrderedByDistanceToMouse.FirstOrDefault().Key;
+            int? closestNodeId = nodeIdsOrderedByDistanceToMouse.Count == 0 ? null : nodeIdsOrderedByDistanceToMouse.FirstOrDefault().Key;
 
-            if (ClosestNodeId == null || Globals.GetDistanceFrom(RelativeMouseLocation.X, RelativeMouseLocation.Y, NodeIdsOrderedByDistanceToMouse[ClosestNodeId.Value].MX, NodeIdsOrderedByDistanceToMouse[ClosestNodeId.Value].MY) > NodeIdsOrderedByDistanceToMouse[ClosestNodeId.Value].Size / 2)
+            if (closestNodeId == null || Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].MX, nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].MY) > nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].Size / 2)
             {
                 SelectedNodeId = null;
             }
             else
             {
-                SelectedNodeId = ClosestNodeId.Value;
+                SelectedNodeId = closestNodeId.Value;
             }
 
             MovingNodeId = SelectedNodeId;
@@ -255,17 +253,17 @@ namespace MaceEvolve.Controls
         }
         private void NeuralNetworkViewer_MouseMove(object sender, MouseEventArgs e)
         {
-            Point RelativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
+            Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
 
             if (MovingNodeId != null)
             {
-                GameObject MovingNodeGameObject = DrawnNodeIdsToGameObject[MovingNodeId.Value];
+                GameObject movingNodeGameObject = DrawnNodeIdsToGameObject[MovingNodeId.Value];
 
-                MovingNodeGameObject.X = RelativeMouseLocation.X - MovingNodeGameObject.Size / 2;
-                MovingNodeGameObject.Y = RelativeMouseLocation.Y - MovingNodeGameObject.Size / 2;
+                movingNodeGameObject.X = relativeMouseLocation.X - movingNodeGameObject.Size / 2;
+                movingNodeGameObject.Y = relativeMouseLocation.Y - movingNodeGameObject.Size / 2;
             }
         }
-        private void DrawTimer_Tick(object sender, System.EventArgs e)
+        private void DrawTimer_Tick(object sender, EventArgs e)
         {
             Invalidate();
         }

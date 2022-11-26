@@ -11,7 +11,7 @@ namespace MaceEvolve.Models
     public class Creature : GameObject
     {
         #region Fields
-        private double _Energy;
+        private double _energy;
         #endregion
 
         #region Properties
@@ -22,21 +22,21 @@ namespace MaceEvolve.Models
         {
             get
             {
-                return _Energy;
+                return _energy;
             }
             set
             {
                 if (value < 0)
                 {
-                    _Energy = 0;
+                    _energy = 0;
                 }
                 else if (value > MaxEnergy)
                 {
-                    _Energy = MaxEnergy;
+                    _energy = MaxEnergy;
                 }
                 else
                 {
-                    _Energy = value;
+                    _energy = value;
                 }
             }
         }
@@ -47,15 +47,15 @@ namespace MaceEvolve.Models
         public int FoodEaten { get; set; }
         public bool IsDead { get; set; }
         //public int StomachSize { get; set; } = 5;
-        //public List<Food> StomachContents { get; set; } = 5;
+        //public List<food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
         public CreatureStepInfo CurrentStepInfo { get; private set; }
         #endregion
 
         #region Methods
-        public void ExecuteAction(CreatureAction CreatureAction)
+        public void ExecuteAction(CreatureAction creatureAction)
         {
-            switch (CreatureAction)
+            switch (creatureAction)
             {
                 case CreatureAction.MoveForward:
                     MoveForward();
@@ -94,15 +94,15 @@ namespace MaceEvolve.Models
             }
 
         }
-        public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> GameObjects) where T : GameObject
+        public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> gameObjects) where T : GameObject
         {
             if (typeof(T) == typeof(Creature))
             {
-                return GameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange && x != this);
+                return gameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange && x != this);
             }
             else
             {
-                return GameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange);
+                return gameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange);
             }
         }
         public void Die()
@@ -113,22 +113,18 @@ namespace MaceEvolve.Models
         }
         public void Live()
         {
-            if (GameHost.SelectedCreature == this)
-            {
-                bool IsSelected = true;
-            }
             CurrentStepInfo = new CreatureStepInfo();
 
             UpdateCurrentStepInfo();
             UpdateInputValues();
 
-            Dictionary<int, double> NodeIdToOutputDict = Brain.LoggedStep(true, true);
-            Dictionary<Node, double> NodeOutputsDict = NodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
-            Node HighestOutputNode = NodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
+            Dictionary<int, double> nodeIdToOutputDict = Brain.LoggedStep(true, true);
+            Dictionary<Node, double> nodeOutputsDict = nodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
+            Node highestOutputNode = nodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 
-            if (HighestOutputNode != null && NodeOutputsDict[HighestOutputNode] > 0)
+            if (highestOutputNode != null && nodeOutputsDict[highestOutputNode] > 0)
             {
-                ExecuteAction(HighestOutputNode.CreatureAction.Value);
+                ExecuteAction(highestOutputNode.CreatureAction.Value);
             }
 
             Energy -= Metabolism;
@@ -153,99 +149,99 @@ namespace MaceEvolve.Models
             Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound());
             Brain.UpdateInputValue(CreatureInput.RandomInput, RandomInput());
         }
-        public static Creature Reproduce(IList<Creature> Parents, List<CreatureInput> Inputs, List<CreatureAction> Actions, double NodeBiasMaxVariancePercentage, double ConnectionWeightMaxVariancePercentage, double ConnectionWeightBound)
+        public static Creature Reproduce(IList<Creature> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound)
         {
-            Dictionary<Creature, List<Connection>> AvailableParentConnections = Parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
-            Dictionary<Creature, Dictionary<int, int>> ParentToOffspringNodesMap = new Dictionary<Creature, Dictionary<int, int>>();
+            Dictionary<Creature, List<Connection>> availableParentConnections = parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
+            Dictionary<Creature, Dictionary<int, int>> parentToOffspringNodesMap = new Dictionary<Creature, Dictionary<int, int>>();
 
-            Creature Offspring = new Creature()
+            Creature offspring = new Creature()
             {
-                Brain = new NeuralNetwork(new List<Node>(), Inputs, Actions, new List<Connection>())
+                Brain = new NeuralNetwork(new List<Node>(), inputs, actions, new List<Connection>())
             };
 
-            double AverageNumberOfParentConnections = Parents.Average(x => x.Brain.Connections.Count);
+            double averageNumberOfParentConnections = parents.Average(x => x.Brain.Connections.Count);
 
-            if (AverageNumberOfParentConnections > 0 && AverageNumberOfParentConnections < 1)
+            if (averageNumberOfParentConnections > 0 && averageNumberOfParentConnections < 1)
             {
-                AverageNumberOfParentConnections = 1;
+                averageNumberOfParentConnections = 1;
             }
 
-            while (Offspring.Brain.Connections.Count < AverageNumberOfParentConnections)
+            while (offspring.Brain.Connections.Count < averageNumberOfParentConnections)
             {
-                Creature RandomParent = Parents[Globals.Random.Next(Parents.Count)];
-                List<Connection> RandomParentAvailableConnections = AvailableParentConnections[RandomParent];
+                Creature randomParent = parents[Globals.Random.Next(parents.Count)];
+                List<Connection> randomParentAvailableConnections = availableParentConnections[randomParent];
 
-                if (RandomParentAvailableConnections.Count > 0)
+                if (randomParentAvailableConnections.Count > 0)
                 {
-                    Connection RandomParentConnection = RandomParentAvailableConnections[Globals.Random.Next(RandomParentAvailableConnections.Count)];
+                    Connection randomParentConnection = randomParentAvailableConnections[Globals.Random.Next(randomParentAvailableConnections.Count)];
 
-                    //If a parent's node has not been added and mapped to an Offspring's node, create a new node and map it to the parent's node.
-                    if (!(ParentToOffspringNodesMap.ContainsKey(RandomParent) && ParentToOffspringNodesMap[RandomParent].ContainsKey(RandomParentConnection.SourceId)))
+                    //If a parent's node has not been added and mapped to an offspring's node, create a new node and map it to the parent's node.
+                    if (!(parentToOffspringNodesMap.ContainsKey(randomParent) && parentToOffspringNodesMap[randomParent].ContainsKey(randomParentConnection.SourceId)))
                     {
-                        Node RandomParentConnectionSourceNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.SourceId];
-                        Node NewNode = new Node(RandomParentConnectionSourceNode.NodeType, RandomParentConnectionSourceNode.Bias, RandomParentConnectionSourceNode.CreatureInput, RandomParentConnectionSourceNode.CreatureAction);
-                        int NewNodeId = Offspring.Brain.AddNode(NewNode);
+                        Node randomParentConnectionSourceNode = randomParent.Brain.NodeIdsToNodesDict[randomParentConnection.SourceId];
+                        Node newNode = new Node(randomParentConnectionSourceNode.NodeType, randomParentConnectionSourceNode.Bias, randomParentConnectionSourceNode.CreatureInput, randomParentConnectionSourceNode.CreatureAction);
+                        int newNodeId = offspring.Brain.AddNode(newNode);
 
                         //Apply any variance to the node's bias.
-                        NewNode.Bias = Globals.Random.NextDoubleVariance(RandomParentConnectionSourceNode.Bias, NodeBiasMaxVariancePercentage);
+                        newNode.Bias = Globals.Random.NextDoubleVariance(randomParentConnectionSourceNode.Bias, nodeBiasMaxVariancePercentage);
 
-                        if (NewNode.Bias < -1)
+                        if (newNode.Bias < -1)
                         {
-                            NewNode.Bias = -1;
+                            newNode.Bias = -1;
                         }
-                        else if (NewNode.Bias > 1)
+                        else if (newNode.Bias > 1)
                         {
-                            NewNode.Bias = 1;
-                        }
-
-                        //Map the newly added Offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
-                        if (!ParentToOffspringNodesMap.ContainsKey(RandomParent))
-                        {
-                            ParentToOffspringNodesMap.Add(RandomParent, new Dictionary<int, int>());
+                            newNode.Bias = 1;
                         }
 
-                        ParentToOffspringNodesMap[RandomParent][RandomParentConnection.SourceId] = NewNodeId;
+                        //Map the newly added offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
+                        if (!parentToOffspringNodesMap.ContainsKey(randomParent))
+                        {
+                            parentToOffspringNodesMap.Add(randomParent, new Dictionary<int, int>());
+                        }
+
+                        parentToOffspringNodesMap[randomParent][randomParentConnection.SourceId] = newNodeId;
                     }
 
-                    if (!(ParentToOffspringNodesMap.ContainsKey(RandomParent) && ParentToOffspringNodesMap[RandomParent].ContainsKey(RandomParentConnection.TargetId)))
+                    if (!(parentToOffspringNodesMap.ContainsKey(randomParent) && parentToOffspringNodesMap[randomParent].ContainsKey(randomParentConnection.TargetId)))
                     {
-                        Node RandomParentConnectionTargetNode = RandomParent.Brain.NodeIdsToNodesDict[RandomParentConnection.TargetId];
-                        Node NewNode = new Node(RandomParentConnectionTargetNode.NodeType, RandomParentConnectionTargetNode.Bias, RandomParentConnectionTargetNode.CreatureInput, RandomParentConnectionTargetNode.CreatureAction);
-                        int NewNodeId = Offspring.Brain.AddNode(NewNode);
+                        Node randomParentConnectionTargetNode = randomParent.Brain.NodeIdsToNodesDict[randomParentConnection.TargetId];
+                        Node newNode = new Node(randomParentConnectionTargetNode.NodeType, randomParentConnectionTargetNode.Bias, randomParentConnectionTargetNode.CreatureInput, randomParentConnectionTargetNode.CreatureAction);
+                        int newNodeId = offspring.Brain.AddNode(newNode);
 
-                        //Map the newly added Offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
-                        if (!ParentToOffspringNodesMap.ContainsKey(RandomParent))
+                        //Map the newly added offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
+                        if (!parentToOffspringNodesMap.ContainsKey(randomParent))
                         {
-                            ParentToOffspringNodesMap.Add(RandomParent, new Dictionary<int, int>());
+                            parentToOffspringNodesMap.Add(randomParent, new Dictionary<int, int>());
                         }
 
-                        ParentToOffspringNodesMap[RandomParent][RandomParentConnection.TargetId] = NewNodeId;
+                        parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId] = newNodeId;
                     }
 
-                    Connection ConnectionToAdd = new Connection()
+                    Connection connectionToAdd = new Connection()
                     {
-                        SourceId = ParentToOffspringNodesMap[RandomParent][RandomParentConnection.SourceId],
-                        TargetId = ParentToOffspringNodesMap[RandomParent][RandomParentConnection.TargetId]
+                        SourceId = parentToOffspringNodesMap[randomParent][randomParentConnection.SourceId],
+                        TargetId = parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId]
                     };
 
                     //Apply any variance to the connection's weight.
-                    ConnectionToAdd.Weight = Globals.Random.NextDoubleVariance(RandomParentConnection.Weight, ConnectionWeightMaxVariancePercentage);
+                    connectionToAdd.Weight = Globals.Random.NextDoubleVariance(randomParentConnection.Weight, connectionWeightMaxVariancePercentage);
 
-                    if (ConnectionToAdd.Weight < -ConnectionWeightBound)
+                    if (connectionToAdd.Weight < -connectionWeightBound)
                     {
-                        ConnectionToAdd.Weight = -ConnectionWeightBound;
+                        connectionToAdd.Weight = -connectionWeightBound;
                     }
-                    else if (ConnectionToAdd.Weight > ConnectionWeightBound)
+                    else if (connectionToAdd.Weight > connectionWeightBound)
                     {
-                        ConnectionToAdd.Weight = ConnectionWeightBound;
+                        connectionToAdd.Weight = connectionWeightBound;
                     }
 
-                    Offspring.Brain.Connections.Add(ConnectionToAdd);
-                    AvailableParentConnections[RandomParent].Remove(RandomParentConnection);
+                    offspring.Brain.Connections.Add(connectionToAdd);
+                    availableParentConnections[randomParent].Remove(randomParentConnection);
                 }
             }
 
-            return Offspring;
+            return offspring;
         }
 
         #region CreatureValues
@@ -262,11 +258,11 @@ namespace MaceEvolve.Models
             }
 
             //Visible creatures does not contain itself. No need to filter.
-            Creature ClosestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
+            Creature closestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
 
-            double HorizontalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, ClosestCreature.MX, MY);
+            double horizontalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
 
-            return Globals.Map(HorizontalDistanceToCreature, 0, SightRange, 0, 1);
+            return Globals.Map(horizontalDistanceToCreature, 0, SightRange, 0, 1);
         }
         public double VerticalProximityToCreature()
         {
@@ -276,11 +272,11 @@ namespace MaceEvolve.Models
             }
 
             //Visible creatures does not contain itself. No need to filter.
-            Creature ClosestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
+            Creature closestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
 
-            double VerticalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, MX, ClosestCreature.MY);
+            double verticalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
 
-            return Globals.Map(VerticalDistanceToCreature, 0, SightRange, 0, 1);
+            return Globals.Map(verticalDistanceToCreature, 0, SightRange, 0, 1);
         }
         public double HorizontalProximityToFood()
         {
@@ -289,11 +285,11 @@ namespace MaceEvolve.Models
                 return 1;
             }
 
-            Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+            Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
 
-            double HorizontalDistanceToFood = Globals.GetDistanceFrom(MX, MY, ClosestFood.MX, MY);
+            double horizontalDistanceToFood = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
 
-            return Globals.Map(HorizontalDistanceToFood, 0, SightRange, 0, 1);
+            return Globals.Map(horizontalDistanceToFood, 0, SightRange, 0, 1);
         }
         public double VerticalProximityToFood()
         {
@@ -302,11 +298,11 @@ namespace MaceEvolve.Models
                 return 1;
             }
 
-            Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+            Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
 
-            double VerticalDistanceToFood = Globals.GetDistanceFrom(MX, MY, MX, ClosestFood.MY);
+            double verticalDistanceToFood = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
 
-            return Globals.Map(VerticalDistanceToFood, 0, SightRange, 0, 1);
+            return Globals.Map(verticalDistanceToFood, 0, SightRange, 0, 1);
         }
         public double DistanceFromTopWorldBound()
         {
@@ -323,33 +319,28 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Actions
-        private void Eat(Food Food)
+        private void Eat(Food food)
         {
-            Energy -= Food.ServingDigestionCost;
-            Food.Servings -= 1;
+            Energy -= food.ServingDigestionCost;
+            food.Servings -= 1;
             FoodEaten += 1;
-            Energy += Food.EnergyPerServing;
+            Energy += food.EnergyPerServing;
         }
         public bool TryEatFoodInRange()
         {
-            if (GameHost.SelectedCreature == this)
-            {
-                bool IsSelected = true;
-            }
-
             if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
                 return false;
             }
 
-            Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+            Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
 
-            if (Globals.GetDistanceFrom(MX, MY, ClosestFood.MX, ClosestFood.MY) > Size / 2)
+            if (Globals.GetDistanceFrom(MX, MY, closestFood.MX, closestFood.MY) > Size / 2)
             {
                 return false;
             }
 
-            Eat(ClosestFood);
+            Eat(closestFood);
 
             return true;
         }
@@ -397,38 +388,38 @@ namespace MaceEvolve.Models
         {
             if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count > 0)
             {
-                Food ClosestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+                Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
 
-                double XDifference = X - ClosestFood.X;
-                double YDifference = Y - ClosestFood.Y;
+                double xDifference = X - closestFood.X;
+                double yDifference = Y - closestFood.Y;
 
-                if (XDifference + YDifference <= SightRange)
+                if (xDifference + yDifference <= SightRange)
                 {
-                    if (YDifference > 0)
+                    if (yDifference > 0)
                     {
-                        if (YDifference >= Speed)
+                        if (yDifference >= Speed)
                         {
                             MoveForward();
                         }
                     }
-                    else if (YDifference < 0)
+                    else if (yDifference < 0)
                     {
-                        if (YDifference <= -Speed)
+                        if (yDifference <= -Speed)
                         {
                             MoveBackward();
                         }
                     }
 
-                    if (XDifference > 0)
+                    if (xDifference > 0)
                     {
-                        if (XDifference >= Speed)
+                        if (xDifference >= Speed)
                         {
                             MoveLeft();
                         }
                     }
-                    else if (XDifference < 0)
+                    else if (xDifference < 0)
                     {
-                        if (XDifference <= -Speed)
+                        if (xDifference <= -Speed)
                         {
                             MoveRight();
                         }
