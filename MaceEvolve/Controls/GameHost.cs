@@ -122,7 +122,6 @@ namespace MaceEvolve.Controls
                 _bestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(_bestCreature?.Brain, _bestCreatureNeuralNetworkViewer);
             }
         }
-        public Color? SelectedCreaturePreviousColor { get; set; }
         public Color GenLabelTextColor
         {
             get
@@ -590,20 +589,18 @@ namespace MaceEvolve.Controls
         }
         private void GameHost_Paint(object sender, PaintEventArgs e)
         {
-            List<Food> foodList = new List<Food>(Food);
-            List<Creature> creaturesList = new List<Creature>(Creatures);
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            foreach (Creature creature in creaturesList)
+            foreach (Creature creature in Creatures)
             {
-                using (SolidBrush brush = new SolidBrush(creature.Color))
+                using (SolidBrush brush = new SolidBrush(creature == SelectedCreature ? Color.White : creature.Color))
                 {
                     e.Graphics.FillEllipse(brush, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
                 }
             }
 
-            foreach (Food food in foodList)
+            foreach (Food food in Food)
             {
                 using (SolidBrush brush = new SolidBrush(food.Color))
                 {
@@ -706,25 +703,7 @@ namespace MaceEvolve.Controls
             Creature oldSelectedCreature = SelectedCreature;
             Creature newSelectedCreature = creaturesOrderedByDistanceToMouse.FirstOrDefault();
 
-            if (SelectedCreature == null)
-            {
-                if (newSelectedCreature != null)
-                {
-                    SelectedCreature = newSelectedCreature;
-                    SelectedCreaturePreviousColor = newSelectedCreature.Color;
-                }
-            }
-            else
-            {
-                SelectedCreature.Color = SelectedCreaturePreviousColor.Value;
-                SelectedCreature = newSelectedCreature;
-                SelectedCreaturePreviousColor = newSelectedCreature?.Color;
-
-                if (newSelectedCreature != null)
-                {
-                    newSelectedCreature.Color = Color.White;
-                }
-            }
+            SelectedCreature = newSelectedCreature;
 
             if (newSelectedCreature != null && oldSelectedCreature != newSelectedCreature)
             {
