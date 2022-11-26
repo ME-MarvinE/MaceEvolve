@@ -598,6 +598,14 @@ namespace MaceEvolve.Controls
                 {
                     e.Graphics.FillEllipse(brush, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
                 }
+
+                if (creature == BestCreature)
+                {
+                    using (Pen pen = new Pen(Color.Gold, 2))
+                    {
+                        e.Graphics.DrawEllipse(pen, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
+                    }
+                }
             }
 
             foreach (Food food in Food)
