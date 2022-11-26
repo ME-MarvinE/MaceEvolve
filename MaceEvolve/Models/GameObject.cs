@@ -91,11 +91,5 @@ namespace MaceEvolve.Models
         {
         }
         #endregion
-
-        #region Methods
-        public virtual void Update()
-        {
-        }
-        #endregion
     }
 }
