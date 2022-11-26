@@ -122,6 +122,36 @@ namespace MaceEvolve.Controls
                 }
             }
         }
+        public static Color GetConnectionPenColor(Connection connection)
+        {
+            if (connection.Weight == 0)
+            {
+                return Color.Gray;
+            }
+            if (connection.Weight > 0)
+            {
+                return Color.FromArgb(0, (int)Globals.Map(connection.Weight, 0, 4, 0, 255), 0);
+            }
+            else
+            {
+                return Color.FromArgb((int)Globals.Map(connection.Weight, 0, -4, 0, 255), 0, 0);
+            }
+        }
+        public static int GetConnectionPenSize(Connection connection)
+        {
+            if (connection.Weight == 0)
+            {
+                return (int)Globals.Map(connection.Weight, -4, 4, 2, 8);
+            }
+            if (connection.Weight > 0)
+            {
+                return (int)Globals.Map(connection.Weight, 0, 4, 2, 8);
+            }
+            else
+            {
+                return (int)Globals.Map(connection.Weight, 0, -4, 2, 8);
+            }
+        }
         private void NeuralNetworkViewer_Paint(object sender, PaintEventArgs e)
         {
             if (NeuralNetwork != null)
@@ -131,33 +161,17 @@ namespace MaceEvolve.Controls
                 e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
                 //Draw connections between nodes.
-                //Currently, duplicate connections will draw over each other. Self referencing connections aren't supported.
-                List<Connection> networkConnectionsList = NeuralNetwork.Connections.ToList();
-                foreach (var connection in networkConnectionsList)
+                //Currently, duplicate connections will draw over each other.
+                List<Connection> drawableConnections = NeuralNetwork.Connections.Where(x => DrawnNodeIdsToGameObject.Keys.Contains(x.SourceId) && DrawnNodeIdsToGameObject.Keys.Contains(x.TargetId)).ToList();
+
+                foreach (var connection in drawableConnections)
                 {
-                    GameObject sourceIdGameObject;
-                    GameObject targetIdGameObject;
-
-                    if (DrawnNodeIdsToGameObject.TryGetValue(connection.SourceId, out sourceIdGameObject) && DrawnNodeIdsToGameObject.TryGetValue(connection.TargetId, out targetIdGameObject))
+                    if (connection.SourceId != connection.TargetId)
                     {
-                        Color penColor;
-                        float penSize;
-
-                        if (connection.Weight == 0)
-                        {
-                            penColor = Color.Gray;
-                            penSize = (int)Globals.Map(connection.Weight, -4, 4, 2, 8);
-                        }
-                        if (connection.Weight > 0)
-                        {
-                            penColor = Color.FromArgb(0, (int)Globals.Map(connection.Weight, 0, 4, 0, 255), 0);
-                            penSize = (int)Globals.Map(connection.Weight, 0, 4, 2, 8);
-                        }
-                        else
-                        {
-                            penColor = Color.FromArgb((int)Globals.Map(connection.Weight, 0, -4, 0, 255), 0, 0);
-                            penSize = (int)Globals.Map(connection.Weight, 0, -4, 2, 8);
-                        }
+                        GameObject sourceIdGameObject = DrawnNodeIdsToGameObject[connection.SourceId];
+                        GameObject targetIdGameObject = DrawnNodeIdsToGameObject[connection.TargetId];
+                        Color penColor = GetConnectionPenColor(connection);
+                        float penSize = GetConnectionPenSize(connection);
 
                         e.Graphics.DrawLine(new Pen(penColor, penSize), (int)sourceIdGameObject.MX, (int)sourceIdGameObject.MY, (int)targetIdGameObject.MX, (int)targetIdGameObject.MY);
                     }
@@ -165,7 +179,7 @@ namespace MaceEvolve.Controls
 
                 NeuralNetworkStepInfo highestOutputNodeStepInfo = NeuralNetwork.PreviousStepInfo.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
 
-                //Draw nodes.
+                //Draw nodes and self referencing connections.
                 foreach (var keyValuePair in DrawnNodeIdsToGameObject)
                 {
                     int nodeId = keyValuePair.Key;
@@ -173,6 +187,29 @@ namespace MaceEvolve.Controls
                     GameObject nodeGameObject = keyValuePair.Value;
                     Brush nodeBrush = NodeTypeToBrushDict[node.NodeType];
 
+                    //Draw the node's self referencing connections.
+                    List<Connection> selfReferencingConnections = drawableConnections.Where(x => x.SourceId == nodeId && x.SourceId == x.TargetId).ToList();
+                    double selfReferencingConnectionAngle = selfReferencingConnections.Count <= 1 ? 0 : 360 / selfReferencingConnections.Count;
+
+                    for (int i = 0; i < selfReferencingConnections.Count; i++)
+                    {
+                        double angleToDrawConnection = (i + 1) * selfReferencingConnectionAngle;
+                        angleToDrawConnection += 225; //Offset because ellipse is drawn from top left. This makes the first circle be drawn above te node instead of to the right.
+
+                        Connection connection = selfReferencingConnections[i];
+                        GameObject sourceIdGameObject = DrawnNodeIdsToGameObject[connection.SourceId];
+                        GameObject targetIdGameObject = DrawnNodeIdsToGameObject[connection.TargetId];
+
+                        Color penColor = GetConnectionPenColor(connection);
+                        float penSize = GetConnectionPenSize(connection);
+
+                        e.Graphics.TranslateTransform((float)sourceIdGameObject.MX, (float)sourceIdGameObject.MY);
+                        e.Graphics.RotateTransform((float)angleToDrawConnection);
+                        e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, (int)(sourceIdGameObject.Size * 0.75), (int)(sourceIdGameObject.Size * 0.75));
+                        e.Graphics.ResetTransform();
+                    }
+
+                    //Draw the node.
                     NeuralNetworkStepInfo nodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == nodeId);
 
                     string previousOutputString = nodeNetworkStepInfo == null ? null : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
@@ -193,7 +230,6 @@ namespace MaceEvolve.Controls
 
                     e.Graphics.DrawString($"{nodeId}", new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), (float)nodeGameObject.MX - nodeIdFontSize, (float)nodeGameObject.MY - nodePreviousOutputFontSize * 2);
                     e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), (float)nodeGameObject.MX - nodePreviousOutputFontSize * 2, (float)nodeGameObject.MY);
-
                 }
 
                 lblNetworkConnectionsCount.Text = $"Connections: {NeuralNetwork.Connections.Count}";
@@ -207,7 +243,7 @@ namespace MaceEvolve.Controls
                 {
                     lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
                     lblSelectedNodePreviousOutput.Text = $"Previous Output: {NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == SelectedNodeId).PreviousOutput}";
-                    lblSelectedNodeConnectionCount.Text = $"Connections: {networkConnectionsList.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
+                    lblSelectedNodeConnectionCount.Text = $"Connections: {NeuralNetwork.Connections.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
 
                     switch (selectedNode.NodeType)
                     {
