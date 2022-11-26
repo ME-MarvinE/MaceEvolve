@@ -1,6 +1,4 @@
 ﻿using MaceEvolve.Enums;
-using System;
-using System.Linq;
 
 namespace MaceEvolve.Models
 {
@@ -14,12 +12,12 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Constructors
-        public Node(NodeType NodeType, double Bias, CreatureInput? CreatureInput = null, CreatureAction? CreatureAction = null)
+        public Node(NodeType nodeType, double bias, CreatureInput? creatureInput = null, CreatureAction? creatureAction = null)
         {
-            this.NodeType = NodeType;
-            this.CreatureInput = CreatureInput;
-            this.CreatureAction = CreatureAction;
-            this.Bias = Bias;
+            NodeType = nodeType;
+            CreatureInput = creatureInput;
+            CreatureAction = creatureAction;
+            Bias = bias;
         }
         #endregion
     }

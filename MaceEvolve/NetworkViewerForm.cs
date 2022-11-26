@@ -1,13 +1,4 @@
 ﻿using MaceEvolve.Controls;
-using MaceEvolve.Models;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaceEvolve
@@ -47,11 +38,11 @@ namespace MaceEvolve
             : this(null)
         {
         }
-        public NetworkViewerForm(NeuralNetworkViewer NetworkViewer)
+        public NetworkViewerForm(NeuralNetworkViewer networkViewer)
         {
             InitializeComponent();
 
-            this.NetworkViewer = NetworkViewer;
+            NetworkViewer = networkViewer;
         }
         #endregion
     }

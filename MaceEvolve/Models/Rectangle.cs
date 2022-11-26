@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MaceEvolve.Models
+﻿namespace MaceEvolve.Models
 {
     public class Rectangle
     {
@@ -13,12 +7,12 @@ namespace MaceEvolve.Models
         public double Width { get; set; }
         public double Height { get; set; }
 
-        public Rectangle(double X, double Y, double Width, double Height)
+        public Rectangle(double x, double y, double width, double height)
         {
-            this.X = X;
-            this.Y = Y;
-            this.Width = Width;
-            this.Height = Height;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
         }
     }
 }
