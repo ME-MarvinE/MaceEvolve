@@ -1,4 +1,4 @@
-﻿namespace MaceEvolve.Models
+﻿namespace MaceEvolve.Enums
 {
     public enum NodeType
     {
