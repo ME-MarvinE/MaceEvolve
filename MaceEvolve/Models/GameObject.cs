@@ -93,13 +93,6 @@ namespace MaceEvolve.Models
         #endregion
 
         #region Methods
-        public virtual void Draw(PaintEventArgs e)
-        {
-            using (SolidBrush Brush = new SolidBrush(Color))
-            {
-                e.Graphics.FillEllipse(Brush, (float)X, (float)Y, (float)Size, (float)Size);
-            }
-        }
         public virtual void Update()
         {
         }

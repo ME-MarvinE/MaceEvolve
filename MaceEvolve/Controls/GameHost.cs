@@ -597,12 +597,18 @@ namespace MaceEvolve.Controls
 
             foreach (Creature creature in creaturesList)
             {
-                creature.Draw(e);
+                using (SolidBrush brush = new SolidBrush(creature.Color))
+                {
+                    e.Graphics.FillEllipse(brush, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
+                }
             }
 
             foreach (Food food in foodList)
             {
-                food.Draw(e);
+                using (SolidBrush brush = new SolidBrush(food.Color))
+                {
+                    e.Graphics.FillEllipse(brush, (float)food.X, (float)food.Y, (float)food.Size, (float)food.Size);
+                }
             }
 
             if (UseSuccessBounds)
