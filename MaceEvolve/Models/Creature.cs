@@ -81,19 +81,6 @@ namespace MaceEvolve.Models
                     throw new NotImplementedException();
             }
         }
-        public override void Update()
-        {
-            if (!IsDead)
-            {
-                Live();
-
-                if (Energy < 0)
-                {
-                    Die();
-                }
-            }
-
-        }
         public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> gameObjects) where T : GameObject
         {
             if (typeof(T) == typeof(Creature))

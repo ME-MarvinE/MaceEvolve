@@ -533,18 +533,21 @@ namespace MaceEvolve.Controls
 
             Food.RemoveAll(x => x.Servings <= 0);
 
-            foreach (Food food in foodList)
-            {
-                food.Update();
-            }
-
             Creature newBestCreature = null;
 
             Point middleOfSuccessBounds = Globals.Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
 
             foreach (Creature creature in creaturesList)
             {
-                creature.Update();
+                if (!creature.IsDead)
+                {
+                    creature.Live();
+
+                    if (creature.Energy < 0)
+                    {
+                        creature.Die();
+                    }
+                }
 
                 if (UseSuccessBounds)
                 {
@@ -597,12 +600,18 @@ namespace MaceEvolve.Controls
 
             foreach (Creature creature in creaturesList)
             {
-                creature.Draw(e);
+                using (SolidBrush brush = new SolidBrush(creature.Color))
+                {
+                    e.Graphics.FillEllipse(brush, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
+                }
             }
 
             foreach (Food food in foodList)
             {
-                food.Draw(e);
+                using (SolidBrush brush = new SolidBrush(food.Color))
+                {
+                    e.Graphics.FillEllipse(brush, (float)food.X, (float)food.Y, (float)food.Size, (float)food.Size);
+                }
             }
 
             if (UseSuccessBounds)
