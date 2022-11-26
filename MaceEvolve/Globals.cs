@@ -16,79 +16,79 @@ namespace MaceEvolve
         #endregion
 
         #region Methods
-        public static int Map(int Num, int Min1, int Max1, int Min2, int Max2, bool WithinBounds = true)
+        public static int Map(int num, int min1, int max1, int min2, int max2, bool withinBounds = true)
         {
-            var NewValue = (Num - Min1) / (Max1 - Min1) * (Max2 - Min2) + Min2;
+            var newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
 
-            if (!WithinBounds)
+            if (!withinBounds)
             {
-                return NewValue;
+                return newValue;
             }
-            if (Min2 < Max2)
+            if (min2 < max2)
             {
-                return Clamp(NewValue, Min2, Max2);
+                return Clamp(newValue, min2, max2);
             }
             else
             {
-                return Clamp(NewValue, Max2, Min2);
+                return Clamp(newValue, max2, min2);
             }
         }
-        public static double Map(double Num, double Min1, double Max1, double Min2, double Max2, bool WithinBounds = true)
+        public static double Map(double num, double min1, double max1, double min2, double max2, bool withinBounds = true)
         {
-            var NewValue = (Num - Min1) / (Max1 - Min1) * (Max2 - Min2) + Min2;
+            var newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
 
-            if (!WithinBounds)
+            if (!withinBounds)
             {
-                return NewValue;
+                return newValue;
             }
-            if (Min2 < Max2)
+            if (min2 < max2)
             {
-                return Clamp(NewValue, Min2, Max2);
+                return Clamp(newValue, min2, max2);
             }
             else
             {
-                return Clamp(NewValue, Max2, Min2);
+                return Clamp(newValue, max2, min2);
             }
         }
-        public static int Clamp(int Num, int Min, int Max)
+        public static int Clamp(int num, int min, int max)
         {
-            return Math.Max(Math.Min(Num, Max), Min);
+            return Math.Max(Math.Min(num, max), min);
         }
-        public static double Clamp(double Num, double Min, double Max)
+        public static double Clamp(double num, double min, double max)
         {
-            return Math.Max(Math.Min(Num, Max), Min);
+            return Math.Max(Math.Min(num, max), min);
         }
-        public static double Sigmoid(double Num)
+        public static double Sigmoid(double num)
         {
-            return 1 / (1 + Math.Exp(-Num));
+            return 1 / (1 + Math.Exp(-num));
         }
-        public static double ReLU(double Num)
+        public static double ReLU(double num)
         {
-            return Math.Max(0, Num);
+            return Math.Max(0, num);
         }
-        public static double SigmoidDerivative(double Num)
+        public static double SigmoidDerivative(double num)
         {
-            return Num * (1 - Num);
+            return num * (1 - num);
         }
-        public static int GetDistanceFrom(int X, int Y, int TargetX, int TargetY)
+        public static int GetDistanceFrom(int x, int y, int targetX, int targetY)
         {
-            return (int)GetDistanceFrom((double)X, (double)Y, (double)TargetX, (double)TargetY);
+            return (int)GetDistanceFrom((double)x, (double)y, (double)targetX, (double)targetY);
         }
-        public static double GetDistanceFrom(double X, double Y, double TargetX, double TargetY)
+        public static double GetDistanceFrom(double x, double y, double targetX, double targetY)
         {
-            return Math.Abs(X - TargetX) + Math.Abs(Y - TargetY);
+            return Math.Abs(x - targetX) + Math.Abs(y - targetY);
         }
-        public static double Hypotenuse(int A, int B)
+        public static double Hypotenuse(int a, int b)
         {
-            return Math.Sqrt(Math.Pow(A, 2) + Math.Pow(B, 2));
+            return Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
         }
-        public static Point Middle(int X, int Y, int Width, int Height)
+        public static Point Middle(int x, int y, int width, int height)
         {
-            return new Point(X + Width / 2, Y + Height / 2);
+            return new Point(x + width / 2, y + height / 2);
         }
-        public static Point Middle(double X, double Y, double Width, double Height)
+        public static Point Middle(double x, double y, double width, double height)
         {
-            return new Point((int)(X + Width / 2),(int)(Y + Height / 2));
+            return new Point((int)(x + width / 2),(int)(y + height / 2));
         }
         #endregion
     }
