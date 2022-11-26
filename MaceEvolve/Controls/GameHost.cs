@@ -218,7 +218,6 @@ namespace MaceEvolve.Controls
             List<Creature> newCreatures = new List<Creature>();
 
             Creature newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-            newCreature.GameHost = this;
             newCreature.X = random.Next(WorldBounds.Left + WorldBounds.Width);
             newCreature.Y = random.Next(WorldBounds.Top + WorldBounds.Height);
             newCreature.Size = 10;
@@ -274,7 +273,6 @@ namespace MaceEvolve.Controls
                             if (newCreatures.Count < MaxCreatureAmount)
                             {
                                 Creature newCreature = Creature.Reproduce(new List<Creature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-                                newCreature.GameHost = this;
                                 newCreature.X = random.Next(WorldBounds.Left + WorldBounds.Width);
                                 newCreature.Y = random.Next(WorldBounds.Top + WorldBounds.Height);
                                 newCreature.Size = 10;
@@ -528,25 +526,25 @@ namespace MaceEvolve.Controls
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            List<Food> foodList = new List<Food>(Food);
-            List<Creature> creaturesList = new List<Creature>(Creatures);
+            Creature newBestCreature = null;
+            Point middleOfSuccessBounds = Globals.Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
 
             Food.RemoveAll(x => x.Servings <= 0);
 
-            Creature newBestCreature = null;
-
-            Point middleOfSuccessBounds = Globals.Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
-
-            foreach (Creature creature in creaturesList)
+            foreach (Creature creature in Creatures)
             {
                 if (!creature.IsDead)
                 {
-                    creature.Live();
+                    EnvironmentInfo environmentInfo = new EnvironmentInfo(Creatures.AsReadOnly(), Food.AsReadOnly(), WorldBounds);
+
+                    creature.Live(environmentInfo);
 
                     if (creature.Energy < 0)
                     {
                         creature.Die();
                     }
+
+                    Food.RemoveAll(x => x.Servings <= 0);
                 }
 
                 if (UseSuccessBounds)
@@ -570,11 +568,10 @@ namespace MaceEvolve.Controls
 
             if (random.NextDouble() <= 0.8)
             {
-                if (foodList.Count < MaxFoodAmount)
+                if (Food.Count < MaxFoodAmount)
                 {
                     Food.Add(new Apple()
                     {
-                        GameHost = this,
                         X = random.Next(WorldBounds.Left + WorldBounds.Width),
                         Y = random.Next(WorldBounds.Top + WorldBounds.Height),
                         Servings = 1,
@@ -665,7 +662,6 @@ namespace MaceEvolve.Controls
             {
                 Food.Add(new Apple()
                 {
-                    GameHost = this,
                     X = random.Next(WorldBounds.Left + WorldBounds.Width),
                     Y = random.Next(WorldBounds.Top + WorldBounds.Height),
                     Servings = 1,
@@ -685,7 +681,6 @@ namespace MaceEvolve.Controls
                 Creature newCreature = new Creature()
                 {
                     Brain = new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList()),
-                    GameHost = this,
                     X = random.Next(WorldBounds.Left + WorldBounds.Width),
                     Y = random.Next(WorldBounds.Top + WorldBounds.Height),
                     Size = 10,

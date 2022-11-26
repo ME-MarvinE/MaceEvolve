@@ -72,14 +72,14 @@
             this.lblGenEndsIn.TabIndex = 3;
             this.lblGenEndsIn.Text = "Ends In 0s";
             // 
-            // GameHost
+            // WorldBounds
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.lblGenEndsIn);
             this.Controls.Add(this.lblGenerationCount);
             this.DoubleBuffered = true;
-            this.Name = "GameHost";
+            this.Name = "WorldBounds";
             this.Size = new System.Drawing.Size(446, 285);
             this.Load += new System.EventHandler(this.GameHost_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.GameHost_Paint);

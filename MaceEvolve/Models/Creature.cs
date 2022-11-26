@@ -1,5 +1,4 @@
-﻿using MaceEvolve.Controls;
-using MaceEvolve.Enums;
+﻿using MaceEvolve.Enums;
 using MaceEvolve.Extensions;
 using System;
 using System.Collections.Generic;
@@ -49,32 +48,31 @@ namespace MaceEvolve.Models
         //public int StomachSize { get; set; } = 5;
         //public List<food> StomachContents { get; set; } = 5;
         //public double DigestionRate = 0.1;
-        public CreatureStepInfo CurrentStepInfo { get; private set; }
         #endregion
 
         #region Methods
-        public void ExecuteAction(CreatureAction creatureAction)
+        public void ExecuteAction(CreatureAction creatureAction, CreatureStepInfo stepInfo)
         {
             switch (creatureAction)
             {
                 case CreatureAction.MoveForward:
-                    MoveForward();
+                    MoveForward(stepInfo);
                     break;
 
                 case CreatureAction.MoveBackward:
-                    MoveBackward();
+                    MoveBackward(stepInfo);
                     break;
 
                 case CreatureAction.MoveLeft:
-                    MoveLeft();
+                    MoveLeft(stepInfo);
                     break;
 
                 case CreatureAction.MoveRight:
-                    MoveRight();
+                    MoveRight(stepInfo);
                     break;
 
                 case CreatureAction.TryEat:
-                    TryEatFoodInRange();
+                    TryEatFoodInRange(stepInfo);
                     break;
 
                 default:
@@ -98,12 +96,11 @@ namespace MaceEvolve.Models
             Color = Color.Brown;
             Energy = 0;
         }
-        public void Live()
+        public void Live(EnvironmentInfo currentEnvironmentInfo)
         {
-            CurrentStepInfo = new CreatureStepInfo();
+            CreatureStepInfo currentStepInfo = CreateStepInfo(currentEnvironmentInfo);
 
-            UpdateCurrentStepInfo();
-            UpdateInputValues();
+            UpdateInputValues(currentStepInfo);
 
             Dictionary<int, double> nodeIdToOutputDict = Brain.LoggedStep(true, true);
             Dictionary<Node, double> nodeOutputsDict = nodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
@@ -111,29 +108,32 @@ namespace MaceEvolve.Models
 
             if (highestOutputNode != null && nodeOutputsDict[highestOutputNode] > 0)
             {
-                ExecuteAction(highestOutputNode.CreatureAction.Value);
+                ExecuteAction(highestOutputNode.CreatureAction.Value, currentStepInfo);
             }
 
             Energy -= Metabolism;
         }
-        public void UpdateCurrentStepInfo()
+        public CreatureStepInfo CreateStepInfo(EnvironmentInfo environmentInfo)
         {
-            CurrentStepInfo.ExistingFood = GameHost.Food.Where(x => x.Servings > 0).ToList();
-            CurrentStepInfo.ExistingCreatures = GameHost.Creatures.ToList();
-            CurrentStepInfo.VisibleFood = GetVisibleGameObjects(CurrentStepInfo.ExistingFood).ToList();
-            CurrentStepInfo.VisibleCreatures = GetVisibleGameObjects(CurrentStepInfo.ExistingCreatures).ToList();
-            CurrentStepInfo.VisibleFoodOrderedByDistance = CurrentStepInfo.VisibleFood.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
-            CurrentStepInfo.VisibleCreaturesOrderedByDistance = CurrentStepInfo.VisibleCreatures.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
+            CreatureStepInfo stepInfo = new CreatureStepInfo();
+
+            stepInfo.EnvironmentInfo = environmentInfo;
+            stepInfo.VisibleFood = GetVisibleGameObjects(stepInfo.EnvironmentInfo.ExistingFood).ToList();
+            stepInfo.VisibleCreatures = GetVisibleGameObjects(stepInfo.EnvironmentInfo.ExistingCreatures).ToList();
+            stepInfo.VisibleFoodOrderedByDistance = stepInfo.VisibleFood.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
+            stepInfo.VisibleCreaturesOrderedByDistance = stepInfo.VisibleCreatures.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
+
+            return stepInfo;
         }
-        public void UpdateInputValues()
+        public void UpdateInputValues(CreatureStepInfo stepInfo)
         {
             Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy());
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood());
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood());
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToCreature, VerticalProximityToCreature());
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature());
-            Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound());
-            Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound());
+            Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.VerticalProximityToCreature, VerticalProximityToCreature(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound(stepInfo));
             Brain.UpdateInputValue(CreatureInput.RandomInput, RandomInput());
         }
         public static Creature Reproduce(IList<Creature> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound)
@@ -237,67 +237,67 @@ namespace MaceEvolve.Models
         {
             return Globals.Map(Energy, 0, MaxEnergy, 0, 1);
         }
-        public double HorizontalProximityToCreature()
+        public double HorizontalProximityToCreature(CreatureStepInfo stepInfo)
         {
-            if (CurrentStepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
             {
                 return 1;
             }
 
             //Visible creatures does not contain itself. No need to filter.
-            Creature closestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
+            Creature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
 
             double horizontalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
 
             return Globals.Map(horizontalDistanceToCreature, 0, SightRange, 0, 1);
         }
-        public double VerticalProximityToCreature()
+        public double VerticalProximityToCreature(CreatureStepInfo stepInfo)
         {
-            if (CurrentStepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
             {
                 return 1;
             }
 
             //Visible creatures does not contain itself. No need to filter.
-            Creature closestCreature = CurrentStepInfo.VisibleCreaturesOrderedByDistance[0];
+            Creature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
 
             double verticalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
 
             return Globals.Map(verticalDistanceToCreature, 0, SightRange, 0, 1);
         }
-        public double HorizontalProximityToFood()
+        public double HorizontalProximityToFood(CreatureStepInfo stepInfo)
         {
-            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
                 return 1;
             }
 
-            Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+            Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
             double horizontalDistanceToFood = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
 
             return Globals.Map(horizontalDistanceToFood, 0, SightRange, 0, 1);
         }
-        public double VerticalProximityToFood()
+        public double VerticalProximityToFood(CreatureStepInfo stepInfo)
         {
-            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
                 return 1;
             }
 
-            Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+            Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
             double verticalDistanceToFood = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
 
             return Globals.Map(verticalDistanceToFood, 0, SightRange, 0, 1);
         }
-        public double DistanceFromTopWorldBound()
+        public double DistanceFromTopWorldBound(CreatureStepInfo stepInfo)
         {
-            return Globals.Map(Y, GameHost.WorldBounds.Top, GameHost.WorldBounds.Bottom, 0, 1);
+            return Globals.Map(Y, stepInfo.EnvironmentInfo.WorldBounds.Top, stepInfo.EnvironmentInfo.WorldBounds.Bottom, 0, 1);
         }
-        public double DistanceFromLeftWorldBound()
+        public double DistanceFromLeftWorldBound(CreatureStepInfo stepInfo)
         {
-            return Globals.Map(X, GameHost.WorldBounds.Left, GameHost.WorldBounds.Right, 0, 1);
+            return Globals.Map(X, stepInfo.EnvironmentInfo.WorldBounds.Left, stepInfo.EnvironmentInfo.WorldBounds.Right, 0, 1);
         }
         public double RandomInput()
         {
@@ -313,14 +313,14 @@ namespace MaceEvolve.Models
             FoodEaten += 1;
             Energy += food.EnergyPerServing;
         }
-        public bool TryEatFoodInRange()
+        public bool TryEatFoodInRange(CreatureStepInfo stepInfo)
         {
-            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
                 return false;
             }
 
-            Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+            Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
             if (Globals.GetDistanceFrom(MX, MY, closestFood.MX, closestFood.MY) > Size / 2)
             {
@@ -331,51 +331,51 @@ namespace MaceEvolve.Models
 
             return true;
         }
-        public void MoveForward()
+        public void MoveForward(CreatureStepInfo stepInfo)
         {
             Y -= Speed;
-            if (MY < GameHost.WorldBounds.Top)
+            if (MY < stepInfo.EnvironmentInfo.WorldBounds.Top)
             {
                 Y += Speed;
-                //Y += GameHost.WorldBounds.Height;
+                //Y += WorldBounds.WorldBounds.Height;
             }
             Energy -= MoveCost;
         }
-        public void MoveBackward()
+        public void MoveBackward(CreatureStepInfo stepInfo)
         {
             Y += Speed;
-            if (MY > GameHost.WorldBounds.Bottom)
+            if (MY > stepInfo.EnvironmentInfo.WorldBounds.Bottom)
             {
                 Y -= Speed;
-                //Y -= GameHost.WorldBounds.Height;
+                //Y -= WorldBounds.WorldBounds.Height;
             }
             Energy -= MoveCost;
         }
-        public void MoveLeft()
+        public void MoveLeft(CreatureStepInfo stepInfo)
         {
             X -= Speed;
-            if (MX < GameHost.WorldBounds.Left)
+            if (MX < stepInfo.EnvironmentInfo.WorldBounds.Left)
             {
                 X += Speed;
-                //X += GameHost.WorldBounds.Width;
+                //X += WorldBounds.WorldBounds.Width;
             }
             Energy -= MoveCost;
         }
-        public void MoveRight()
+        public void MoveRight(CreatureStepInfo stepInfo)
         {
             X += Speed;
-            if (MX > GameHost.WorldBounds.Right)
+            if (MX > stepInfo.EnvironmentInfo.WorldBounds.Right)
             {
                 X -= Speed;
-                //X -= GameHost.WorldBounds.Width;
+                //X -= WorldBounds.WorldBounds.Width;
             }
             Energy -= MoveCost;
         }
-        public void MoveTowardsClosestFood()
+        public void MoveTowardsClosestFood(CreatureStepInfo stepInfo)
         {
-            if (CurrentStepInfo.VisibleFoodOrderedByDistance.Count > 0)
+            if (stepInfo.VisibleFoodOrderedByDistance.Count > 0)
             {
-                Food closestFood = CurrentStepInfo.VisibleFoodOrderedByDistance[0];
+                Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
                 double xDifference = X - closestFood.X;
                 double yDifference = Y - closestFood.Y;
@@ -386,14 +386,14 @@ namespace MaceEvolve.Models
                     {
                         if (yDifference >= Speed)
                         {
-                            MoveForward();
+                            MoveForward(stepInfo);
                         }
                     }
                     else if (yDifference < 0)
                     {
                         if (yDifference <= -Speed)
                         {
-                            MoveBackward();
+                            MoveBackward(stepInfo);
                         }
                     }
 
@@ -401,14 +401,14 @@ namespace MaceEvolve.Models
                     {
                         if (xDifference >= Speed)
                         {
-                            MoveLeft();
+                            MoveLeft(stepInfo);
                         }
                     }
                     else if (xDifference < 0)
                     {
                         if (xDifference <= -Speed)
                         {
-                            MoveRight();
+                            MoveRight(stepInfo);
                         }
                     }
                 }
