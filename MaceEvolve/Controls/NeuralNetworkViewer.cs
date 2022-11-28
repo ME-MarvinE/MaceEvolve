@@ -177,7 +177,7 @@ namespace MaceEvolve.Controls
                     }
                 }
 
-                NeuralNetworkStepInfo highestOutputNodeStepInfo = NeuralNetwork.PreviousStepInfo.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
+                NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = NeuralNetwork.PreviousStepInfo.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
 
                 //Draw nodes and self referencing connections.
                 foreach (var keyValuePair in DrawnNodeIdsToGameObject)
@@ -210,7 +210,7 @@ namespace MaceEvolve.Controls
                     }
 
                     //Draw the node.
-                    NeuralNetworkStepInfo nodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == nodeId);
+                    NeuralNetworkStepNodeInfo nodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == nodeId);
 
                     string previousOutputString = nodeNetworkStepInfo == null ? null : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
                     int nodeIdFontSize = NodeFontSize - 4;
@@ -241,9 +241,10 @@ namespace MaceEvolve.Controls
                 lblNodeInputOrAction.Visible = SelectedNodeId != null;
                 if (SelectedNodeId != null)
                 {
+                    NeuralNetworkStepNodeInfo selectedNodeStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == SelectedNodeId);
                     lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
-                    lblSelectedNodePreviousOutput.Text = $"Previous Output: {NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == SelectedNodeId).PreviousOutput}";
-                    lblSelectedNodeConnectionCount.Text = $"Connections: {NeuralNetwork.Connections.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
+                    lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "None" : selectedNodeStepInfo.PreviousOutput)}";
+                    lblSelectedNodeConnectionCount.Text = $"Connections: {selectedNodeStepInfo.Connections.Count}";
 
                     switch (selectedNode.NodeType)
                     {

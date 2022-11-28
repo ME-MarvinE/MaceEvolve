@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace MaceEvolve.Models
 {
@@ -20,7 +21,7 @@ namespace MaceEvolve.Models
         public ReadOnlyDictionary<CreatureInput, double> InputValues { get; }
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
-        public List<NeuralNetworkStepInfo> PreviousStepInfo { get; set; } = new List<NeuralNetworkStepInfo>();
+        public List<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; set; } = new List<NeuralNetworkStepNodeInfo>();
 
         public IReadOnlyDictionary<int, Node> NodeIdsToNodesDict { get; } = new Dictionary<int, Node>();
         public IReadOnlyDictionary<Node, int> NodesToNodeIdsDict { get; } = new Dictionary<Node, int>();
@@ -181,7 +182,16 @@ namespace MaceEvolve.Models
         {
             return nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
         }
-        public Dictionary<int, double> Step(bool outputNodesOnly, bool alwaysReevaluateNodesWithSelfReferencingConnections)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="outputNodesOnly"></param>
+        /// <param name="tryUsePreviousStepNodeOutput">Use the value in the last step when a connection is dependent on a circular reference.</param>
+        /// <param name="defaultNodeOutputValue">The value to use when the output of a node is dependent on a connection with a circular reference or the previous step info is not present.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="NotImplementedException"></exception>
+        public Dictionary<int, double> Step(bool outputNodesOnly, double defaultNodeOutputValue = 0)
         {
             if (outputNodesOnly)
             {
@@ -210,6 +220,8 @@ namespace MaceEvolve.Models
                 nodeQueue.AddRange(outputNodeIds);
                 nodeQueue.AddRange(inputNodeIds);
 
+                List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
+
                 while (nodeQueue.Count > 0)
                 {
                     int currentNodeId = nodeQueue[nodeQueue.Count - 1];
@@ -236,7 +248,6 @@ namespace MaceEvolve.Models
                         currentNodeWeightedSum = 0;
 
                         List<Connection> connectionsToCurrentNode = Connections.Where(x => x.TargetId == currentNodeId).ToList();
-                        bool currentNodeHasSelfReferencingConnections = connectionsToCurrentNode.Any(x => x.SourceId == currentNodeId);
 
                         foreach (var connection in connectionsToCurrentNode)
                         {
@@ -244,24 +255,17 @@ namespace MaceEvolve.Models
                             {
                                 double sourceNodeOutput;
                                 Node connectionSourceNode = NodeIdsToNodesDict[connection.SourceId];
+                                bool isSelfReferencingConnection = connection.SourceId == connection.TargetId;
 
-                                //If the source node is already being evaluated, meaning either the current connection is a circular reference or the source node is present earlier in the queue and is a circular reference,
-                                //The cached output of the source node must be used. If there is no cached value, initialise one with a value of 0.
-                                //OR
-                                //Whether the node is evaluated or not, if there is a self referencing connection, use the specified parameter to determine whether it should be evaluated again or not.
-                                //This is important because after a self referencing node's output is calculated, it is cached. When getting the value of that node again, something needs to decided whether to use the original output
-                                //or to calculate a new output using the cached output to resolve the circular reference instead of the initial value of 0.
-                                if (nodesBeingEvaluated.Contains(connection.SourceId) || !(currentNodeHasSelfReferencingConnections && !alwaysReevaluateNodesWithSelfReferencingConnections))
+                                //If the source node's output needs to be retrieved and it is currently being evaluated,
+                                //the only thing that can be done is use the cached value.
+                                if (cachedNodeOutputs.TryGetValue(connection.SourceId, out double cachedSourceNodeOutput))
                                 {
-                                    if (cachedNodeOutputs.TryGetValue(connection.SourceId, out double cachedSourceNodeOutput))
-                                    {
-                                        sourceNodeOutput = cachedSourceNodeOutput;
-                                    }
-                                    else
-                                    {
-                                        cachedNodeOutputs[connection.SourceId] = 0;
-                                        sourceNodeOutput = cachedNodeOutputs[connection.SourceId];
-                                    }
+                                    sourceNodeOutput = cachedSourceNodeOutput;
+                                }
+                                else if (nodesBeingEvaluated.Contains(connection.SourceId))
+                                {
+                                    sourceNodeOutput = defaultNodeOutputValue;
                                 }
                                 else
                                 {
@@ -284,157 +288,53 @@ namespace MaceEvolve.Models
                         cachedNodeOutputs[currentNodeId] = currentNodeOutput;
 
                         nodeQueue.Remove(currentNodeId);
-                    }
-                }
 
-                return cachedNodeOutputs;
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-        public Dictionary<int, double> LoggedStep(bool outputNodesOnly, bool alwaysReevaluateNodesWithSelfReferencingConnections)
-        {
-            //StepInfo
-            PreviousStepInfo.Clear();
+                        NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = currentStepNodeInfo.FirstOrDefault(x => x.NodeId == currentNodeId);
 
-            foreach (var nodeIdToNodeKeyValuePair in NodeIdsToNodesDict)
-            {
-                int nodeId = nodeIdToNodeKeyValuePair.Key;
-                Node node = nodeIdToNodeKeyValuePair.Value;
-
-                PreviousStepInfo.Add(new NeuralNetworkStepInfo()
-                {
-                    NodeId = nodeId,
-                    Bias = node.Bias,
-                    CreatureAction = node.CreatureAction,
-                    CreatureInput = node.CreatureInput,
-                    NodeType = node.NodeType
-                });
-            }
-
-            foreach (var connection in Connections)
-            {
-                NeuralNetworkStepInfo sourceStepInfo = PreviousStepInfo.First(x => x.NodeId == connection.SourceId);
-                NeuralNetworkStepInfo targetStepInfo = PreviousStepInfo.First(x => x.NodeId == connection.TargetId);
-
-                if (!sourceStepInfo.ConnectionsFrom.Contains(connection))
-                {
-                    sourceStepInfo.ConnectionsFrom.Add(connection);
-                }
-
-                if (!targetStepInfo.ConnectionsTo.Contains(connection))
-                {
-                    targetStepInfo.ConnectionsTo.Add(connection);
-                }
-            }
-
-            if (outputNodesOnly)
-            {
-                Dictionary<int, double> cachedNodeOutputs = new Dictionary<int, double>();
-                List<int> inputNodeIds = new List<int>();
-                List<int> outputNodeIds = new List<int>();
-
-                foreach (var nodeIdToNodeKeyValuePair in NodeIdsToNodesDict)
-                {
-                    int NodeId = nodeIdToNodeKeyValuePair.Key;
-                    Node Node = nodeIdToNodeKeyValuePair.Value;
-
-                    if (Node.NodeType == NodeType.Input)
-                    {
-                        inputNodeIds.Add(NodeId);
-                    }
-                    else if (Node.NodeType == NodeType.Output)
-                    {
-                        outputNodeIds.Add(NodeId);
-                    }
-                }
-
-                List<int> nodesBeingEvaluated = new List<int>();
-                List<int> nodeQueue = new List<int>();
-
-                nodeQueue.AddRange(outputNodeIds);
-                nodeQueue.AddRange(inputNodeIds);
-
-                while (nodeQueue.Count > 0)
-                {
-                    int currentNodeId = nodeQueue[nodeQueue.Count - 1];
-                    Node currentNode = NodeIdsToNodesDict[currentNodeId];
-                    nodesBeingEvaluated.Add(currentNodeId);
-                    NeuralNetworkStepInfo currentNodeStepInfo = PreviousStepInfo.First(x => x.NodeId == currentNodeId);
-                    double? currentNodeWeightedSum;
-
-                    if (currentNode.NodeType == NodeType.Input)
-                    {
-                        if (currentNode.CreatureInput == null)
+                        if (currentStepCurrentNodeInfo == null)
                         {
-                            throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureInput)} is null.");
-                        }
-
-                        currentNodeWeightedSum = InputValues[currentNode.CreatureInput.Value];
-                    }
-                    else
-                    {
-                        if (currentNode.NodeType == NodeType.Output && currentNode.CreatureAction == null)
-                        {
-                            throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureAction)} is null.");
-                        }
-
-                        currentNodeWeightedSum = 0;
-
-                        List<Connection> connectionsToCurrentNode = Connections.Where(x => x.TargetId == currentNodeId).ToList();
-                        bool currentNodeHasSelfReferencingConnections = connectionsToCurrentNode.Any(x => x.SourceId == currentNodeId);
-
-                        foreach (var connection in connectionsToCurrentNode)
-                        {
-                            if (connection.TargetId == currentNodeId)
+                            currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
                             {
-                                double sourceNodeOutput;
-                                Node connectionSourceNode = NodeIdsToNodesDict[connection.SourceId];
+                                NodeId = currentNodeId,
+                                Bias = currentNode.Bias,
+                                CreatureAction = currentNode.CreatureAction,
+                                CreatureInput = currentNode.CreatureInput,
+                                NodeType = currentNode.NodeType
+                            };
 
-                                //If the source node is already being evaluated, meaning either the current connection is a circular reference or the source node is present earlier in the queue and is a circular reference,
-                                //The cached output of the source node must be used. If there is no cached value, initialise one with a value of 0.
-                                //OR
-                                //Whether the node is evaluated or not, if there is a self referencing connection, use the specified parameter to determine whether it should be evaluated again or not.
-                                //This is important because after a self referencing node's output is calculated, it is cached. When getting the value of that node again, something needs to decided whether to use the original output
-                                //or to calculate a new output using the cached output to resolve the circular reference instead of the initial value of 0.
-                                if (nodesBeingEvaluated.Contains(connection.SourceId) || !(currentNodeHasSelfReferencingConnections && !alwaysReevaluateNodesWithSelfReferencingConnections))
-                                {
-                                    if (cachedNodeOutputs.TryGetValue(connection.SourceId, out double cachedSourceNodeOutput))
-                                    {
-                                        sourceNodeOutput = cachedSourceNodeOutput;
-                                    }
-                                    else
-                                    {
-                                        cachedNodeOutputs[connection.SourceId] = 0;
-                                        sourceNodeOutput = cachedNodeOutputs[connection.SourceId];
-                                    }
-                                }
-                                else
-                                {
-                                    nodeQueue.Add(connection.SourceId);
-                                    currentNodeWeightedSum = null;
-                                    break;
-                                }
-
-                                currentNodeWeightedSum += sourceNodeOutput * connection.Weight;
-                            }
+                            currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
                         }
-                    }
 
-                    if (currentNodeWeightedSum != null)
-                    {
-                        double currentNodeOutput = currentNode.NodeType == NodeType.Input ? currentNodeWeightedSum.Value : Globals.ReLU(currentNodeWeightedSum.Value + currentNode.Bias);
-
-                        nodesBeingEvaluated.Remove(currentNodeId);
-
-                        cachedNodeOutputs[currentNodeId] = currentNodeOutput;
-                        currentNodeStepInfo.PreviousOutput = currentNodeOutput;
-
-                        nodeQueue.Remove(currentNodeId);
+                        currentStepCurrentNodeInfo.PreviousOutput = currentNodeOutput;
                     }
                 }
+
+                foreach (var nodeInfo in currentStepNodeInfo)
+                {
+                    foreach (var connection in Connections)
+                    {
+                        bool sourceIdIsNodeId = connection.SourceId == nodeInfo.NodeId;
+                        bool targetIdIsNodeId = connection.TargetId == nodeInfo.NodeId;
+
+                        if (sourceIdIsNodeId || targetIdIsNodeId)
+                        {
+                            nodeInfo.Connections.Add(connection);
+                        }
+
+                        if (sourceIdIsNodeId)
+                        {
+                            nodeInfo.ConnectionsFrom.Add(connection);
+                        }
+
+                        if (targetIdIsNodeId)
+                        {
+                            nodeInfo.ConnectionsTo.Add(connection);
+                        }
+                    }
+                }
+
+                PreviousStepInfo.Clear();
+                PreviousStepInfo.AddRange(currentStepNodeInfo);
 
                 return cachedNodeOutputs;
             }
