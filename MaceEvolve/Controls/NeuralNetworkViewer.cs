@@ -212,7 +212,7 @@ namespace MaceEvolve.Controls
                     //Draw the node.
                     NeuralNetworkStepNodeInfo nodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == nodeId);
 
-                    string previousOutputString = nodeNetworkStepInfo == null ? null : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
+                    string previousOutputString = nodeNetworkStepInfo == null ? "N/A" : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
                     int nodeIdFontSize = NodeFontSize - 4;
                     int nodePreviousOutputFontSize = NodeFontSize;
 
@@ -242,9 +242,10 @@ namespace MaceEvolve.Controls
                 if (SelectedNodeId != null)
                 {
                     NeuralNetworkStepNodeInfo selectedNodeStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == SelectedNodeId);
+
                     lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
-                    lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "None" : selectedNodeStepInfo.PreviousOutput)}";
-                    lblSelectedNodeConnectionCount.Text = $"Connections: {selectedNodeStepInfo.Connections.Count}";
+                    lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "N/A" : selectedNodeStepInfo.PreviousOutput)}";
+                    lblSelectedNodeConnectionCount.Text = $"Connections: {NeuralNetwork.Connections.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
 
                     switch (selectedNode.NodeType)
                     {
