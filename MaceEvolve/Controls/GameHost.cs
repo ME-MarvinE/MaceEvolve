@@ -23,7 +23,7 @@ namespace MaceEvolve.Controls
         private Creature _bestCreature;
         private NeuralNetworkViewer _bestCreatureNeuralNetworkViewer;
         private NeuralNetworkViewer _selectedCreatureNeuralNetworkViewer;
-        private double _secondsUntilNewGeneration = 12;
+        private double _secondsUntilNewGeneration;
         private int _generationCount = 1;
         #endregion
 
@@ -76,8 +76,8 @@ namespace MaceEvolve.Controls
             }
         }
         public int MaxCreatureProcessNodes { get; set; } = 4;
-        public double MutationChance { get; set; } = 0.1;
-        public double MutationAttempts { get; set; } = 10;
+        public double MutationChance { get; set; } = 0.3;
+        public double MutationAttempts { get; set; } = 2;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
@@ -285,14 +285,14 @@ namespace MaceEvolve.Controls
                                 for (int j = 0; j < MutationAttempts; j++)
                                 {
                                     bool Mutated = MutateNetwork(newCreature.Brain,
-                                        createRandomNodeChance: MutationChance * 2,
-                                        removeRandomNodeChance: MutationChance * 0,
-                                        mutateRandomNodeBiasChance: MutationChance * 2,
+                                        createRandomNodeChance: MutationChance,
+                                        removeRandomNodeChance: MutationChance,
+                                        mutateRandomNodeBiasChance: MutationChance,
                                         createRandomConnectionChance: MutationChance,
                                         removeRandomConnectionChance: MutationChance,
-                                        mutateRandomConnectionSourceChance: MutationChance / 2,
-                                        mutateRandomConnectionTargetChance: MutationChance / 2,
-                                        mutateRandomConnectionWeightChance: MutationChance * 2);
+                                        mutateRandomConnectionSourceChance: MutationChance,
+                                        mutateRandomConnectionTargetChance: MutationChance,
+                                        mutateRandomConnectionWeightChance: MutationChance);
                                 }
 
                                 newCreatures.Add(newCreature);
@@ -369,47 +369,64 @@ namespace MaceEvolve.Controls
         }
         public bool MutateNetwork(NeuralNetwork network, double createRandomNodeChance, double removeRandomNodeChance, double mutateRandomNodeBiasChance, double createRandomConnectionChance, double removeRandomConnectionChance, double mutateRandomConnectionSourceChance, double mutateRandomConnectionTargetChance, double mutateRandomConnectionWeightChance)
         {
-            List<CreatureInput> possibleCreatureInputsToAdd = GetPossibleInputsToAdd(network).ToList();
-            List<CreatureAction> possibleCreatureActionsToAdd = GetPossibleActionsToAdd(network).ToList();
             int processNodeCount = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Process).Count();
-            bool mutationOccurred = false;
+            bool mutationAttempted = false;
 
             //Things should be removed before being added so that there isn't a chance that the newly added thing is deleted straight after.
             //Connections should be added after nodes are added so that there is a chance the newly created node gets a connection.
 
-            //Remove an existing node. Input nodes should not be removed.
-            List<Node> possibleNodesToRemove = NeuralNetwork.GetPossibleTargetNodes(network.NodeIdsToNodesDict.Values).ToList();
-            if (possibleNodesToRemove.Count > 0 && random.NextDouble() <= removeRandomNodeChance)
+            //Remove an existing node. Input nodes should not be removed. 
+            if (random.NextDouble() <= removeRandomNodeChance)
             {
-                Node nodeToRemove = possibleNodesToRemove[random.Next(possibleNodesToRemove.Count)];
-                int nodeIdToRemove = network.NodesToNodeIdsDict[nodeToRemove];
+                mutationAttempted = true;
 
-                network.RemoveNode(nodeIdToRemove, true);
-                mutationOccurred = true;
+                IEnumerable<Node> processNodes = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Process);
+                IEnumerable<Node> outputNodes = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Output);
+
+                List<Node> possibleNodesToRemove = new List<Node>(processNodes);
+
+                //There must be at least one target node in a network.
+                if (outputNodes.ElementAtOrDefault(1) != null)
+                {
+                    possibleNodesToRemove.AddRange(outputNodes);
+                }
+
+                if (possibleNodesToRemove.Count > 0)
+                {
+                    Node nodeToRemove = possibleNodesToRemove[random.Next(possibleNodesToRemove.Count)];
+                    int nodeIdToRemove = network.NodesToNodeIdsDict[nodeToRemove];
+
+                    network.RemoveNode(nodeIdToRemove, true);
+                }
             }
 
             //Change a random node's bias.
             if (random.NextDouble() <= mutateRandomNodeBiasChance)
             {
+                mutationAttempted = true;
+
                 List<Node> nodesList = network.NodeIdsToNodesDict.Values.ToList();
                 Node randomNode = nodesList[random.Next(nodesList.Count)];
                 randomNode.Bias = random.NextDouble(-1, 1);
-
-                mutationOccurred = true;
             }
 
             //Create a new node with a default connection.
             if (random.NextDouble() <= createRandomNodeChance)
             {
+                List<CreatureInput> possibleCreatureInputsToAdd = GetPossibleInputsToAdd(network).ToList();
+                List<CreatureAction> possibleCreatureActionsToAdd = GetPossibleActionsToAdd(network).ToList();
+
+                mutationAttempted = true;
+
                 Node nodeToAdd;
                 double nodeTypeRandomNum = random.NextDouble();
-                double chanceForSingleNodeType = createRandomNodeChance / 3;
+                double chanceForSingleNodeType = 1d / Globals.AllNodeTypes.Count;
 
                 if (nodeTypeRandomNum <= chanceForSingleNodeType && possibleCreatureInputsToAdd.Count > 0)
                 {
                     nodeToAdd = new Node(NodeType.Input, random.NextDouble(-1, 1), possibleCreatureInputsToAdd[random.Next(possibleCreatureInputsToAdd.Count)]);
                 }
-                else if ((nodeTypeRandomNum <= chanceForSingleNodeType * 2 || possibleCreatureInputsToAdd.Count == 0) && possibleCreatureActionsToAdd.Count > 0)
+                else if (nodeTypeRandomNum <= chanceForSingleNodeType * 2 && possibleCreatureActionsToAdd.Count > 0)
                 {
                     nodeToAdd = new Node(NodeType.Output, random.NextDouble(-1, 1), creatureAction: possibleCreatureActionsToAdd[random.Next(possibleCreatureActionsToAdd.Count)]);
                 }
@@ -424,8 +441,8 @@ namespace MaceEvolve.Controls
 
                 if (nodeToAdd != null)
                 {
-                    List<Node> possibleSourceNodes = NeuralNetwork.GetPossibleSourceNodes(network.NodeIdsToNodesDict.Values).ToList();
-                    List<Node> possibleTargetNodes = NeuralNetwork.GetPossibleTargetNodes(network.NodeIdsToNodesDict.Values).ToList();
+                    List<Node> possibleSourceNodes = NeuralNetwork.GetSourceNodes(network.NodeIdsToNodesDict.Values).ToList();
+                    List<Node> possibleTargetNodes = NeuralNetwork.GetTargetNodes(network.NodeIdsToNodesDict.Values).ToList();
 
                     network.AddNode(nodeToAdd);
                     int nodeToAddId = network.NodesToNodeIdsDict[nodeToAdd];
@@ -465,14 +482,14 @@ namespace MaceEvolve.Controls
 
                         network.Connections.Add(newConnection);
                     }
-
-                    mutationOccurred = true;
                 }
             }
 
             //Remove a random connection.
             if (network.Connections.Count > MinCreatureConnections && random.NextDouble() <= removeRandomConnectionChance)
             {
+                mutationAttempted = true;
+
                 Connection randomConnection = network.Connections[random.Next(network.Connections.Count)];
                 network.Connections.Remove(randomConnection);
             }
@@ -480,38 +497,38 @@ namespace MaceEvolve.Controls
             //Change a random connection's weight.
             if (network.Connections.Count > 0 && random.NextDouble() <= mutateRandomConnectionWeightChance)
             {
+                mutationAttempted = true;
+
                 Connection randomConnection = network.Connections[random.Next(network.Connections.Count)];
 
                 randomConnection.Weight = random.NextDouble(-ConnectionWeightBound, ConnectionWeightBound);
-
-                mutationOccurred = true;
             }
 
             //Change a random connection's source.
             if (network.Connections.Count > 0 && network.MutateConnectionSource(mutateRandomConnectionSourceChance, network.Connections[random.Next(network.Connections.Count)]))
             {
-                mutationOccurred = true;
+                mutationAttempted = true;
             }
 
             //Change a random connection's target.
             if (network.Connections.Count > 0 && network.MutateConnectionTarget(mutateRandomConnectionTargetChance, network.Connections[random.Next(network.Connections.Count)]))
             {
-                mutationOccurred = true;
+                mutationAttempted = true;
             }
 
             //Create a new connection.
             if (network.Connections.Count < MaxCreatureConnections && random.NextDouble() <= createRandomConnectionChance)
             {
+                mutationAttempted = true;
                 Connection newConnection = network.GenerateRandomConnections(1, 1, ConnectionWeightBound).FirstOrDefault();
 
                 if (newConnection != null)
                 {
                     network.Connections.Add(newConnection);
-                    mutationOccurred = true;
                 }
             }
 
-            return mutationOccurred;
+            return mutationAttempted;
         }
         public IEnumerable<CreatureInput> GetPossibleInputsToAdd(NeuralNetwork network)
         {

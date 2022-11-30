@@ -68,8 +68,8 @@ namespace MaceEvolve.Models
             List<Connection> generatedConnections = new List<Connection>();
             int targetConnectionAmount = Globals.Random.Next(minConnections, maxConnections + 1);
 
-            Dictionary<int, Node> possibleSourceNodes = GetPossibleSourceNodes(NodeIdsToNodesDict.Values).ToDictionary(x => NodesToNodeIdsDict[x], x => x);
-            Dictionary<int, Node> possibleTargetNodes = GetPossibleTargetNodes(NodeIdsToNodesDict.Values).ToDictionary(x => NodesToNodeIdsDict[x], x => x);
+            Dictionary<int, Node> possibleSourceNodes = GetSourceNodes(NodeIdsToNodesDict.Values).ToDictionary(x => NodesToNodeIdsDict[x], x => x);
+            Dictionary<int, Node> possibleTargetNodes = GetTargetNodes(NodeIdsToNodesDict.Values).ToDictionary(x => NodesToNodeIdsDict[x], x => x);
 
             if (possibleSourceNodes.Count == 0) { throw new InvalidOperationException("No possible source nodes."); }
             if (possibleTargetNodes.Count == 0) { throw new InvalidOperationException("No possible target nodes."); }
@@ -110,7 +110,7 @@ namespace MaceEvolve.Models
         }
         public bool MutateConnectionTarget(double mutationChance, Connection connection)
         {
-            List<Node> possibleTargetNodes = GetPossibleTargetNodes(NodeIdsToNodesDict.Values).ToList();
+            List<Node> possibleTargetNodes = GetTargetNodes(NodeIdsToNodesDict.Values).ToList();
 
             if (possibleTargetNodes.Count > 0 && Globals.Random.NextDouble() <= mutationChance)
             {
@@ -126,7 +126,7 @@ namespace MaceEvolve.Models
         }
         public bool MutateConnectionSource(double mutationChance, Connection connection)
         {
-            List<Node> possibleSourceNodes = GetPossibleSourceNodes(NodeIdsToNodesDict.Values).ToList();
+            List<Node> possibleSourceNodes = GetSourceNodes(NodeIdsToNodesDict.Values).ToList();
 
             if (possibleSourceNodes.Count > 0 && Globals.Random.NextDouble() <= mutationChance)
             {
@@ -174,11 +174,11 @@ namespace MaceEvolve.Models
 
             return connectionPaths;
         }
-        public static IEnumerable<Node> GetPossibleSourceNodes(IEnumerable<Node> nodes)
+        public static IEnumerable<Node> GetSourceNodes(IEnumerable<Node> nodes)
         {
             return nodes.Where(x => x.NodeType == NodeType.Input || x.NodeType == NodeType.Process);
         }
-        public static IEnumerable<Node> GetPossibleTargetNodes(IEnumerable<Node> nodes)
+        public static IEnumerable<Node> GetTargetNodes(IEnumerable<Node> nodes)
         {
             return nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
         }
