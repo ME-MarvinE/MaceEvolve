@@ -1,9 +1,7 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Extensions;
-using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace MaceEvolve.Core.Models
@@ -17,7 +15,6 @@ namespace MaceEvolve.Core.Models
         #region Properties
         public NeuralNetwork Brain { get; set; }
         private double MoveCost { get; set; } = 0.5;
-        public Genome Genome;
         public double Energy
         {
             get
