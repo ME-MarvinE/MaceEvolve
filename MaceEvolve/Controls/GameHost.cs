@@ -218,8 +218,7 @@ namespace MaceEvolve.Controls
 
             List<GraphicalCreature> newCreatures = new List<GraphicalCreature>();
 
-            Creature c = Creature.Reproduce(successfulCreatures.Cast<Creature>().ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-            GraphicalCreature newCreature = new GraphicalCreature() { Brain = c.Brain };
+            GraphicalCreature newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
             newCreature.X = random.Next(WorldBounds.Left + WorldBounds.Width);
             newCreature.Y = random.Next(WorldBounds.Top + WorldBounds.Height);
             newCreature.Size = 10;
@@ -274,8 +273,7 @@ namespace MaceEvolve.Controls
                         {
                             if (newCreatures.Count < MaxCreatureAmount)
                             {
-                                Creature c = Creature.Reproduce(new List<Creature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-                                GraphicalCreature newCreature = new GraphicalCreature() { Brain = c.Brain };
+                                GraphicalCreature newCreature = Creature.Reproduce(new List<GraphicalCreature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
                                 newCreature.X = random.Next(WorldBounds.Left + WorldBounds.Width);
                                 newCreature.Y = random.Next(WorldBounds.Top + WorldBounds.Height);
                                 newCreature.Size = 10;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MaceEvolve.Core.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace MaceEvolve.Core.Models
@@ -7,12 +8,12 @@ namespace MaceEvolve.Core.Models
     {
         #region Properties
         public IReadOnlyList<Food> ExistingFood { get; }
-        public IReadOnlyList<Creature> ExistingCreatures { get; }
+        public IReadOnlyList<ICreature> ExistingCreatures { get; }
         public Rectangle WorldBounds { get; }
         #endregion
 
         #region Constructors
-        public EnvironmentInfo(IReadOnlyList<Creature> existingCreatures, IReadOnlyList<Food> existingFood, Rectangle worldBounds)
+        public EnvironmentInfo(IReadOnlyList<ICreature> existingCreatures, IReadOnlyList<Food> existingFood, Rectangle worldBounds)
         {
             if (existingCreatures == null) { throw new ArgumentNullException(nameof(existingCreatures)); }
             if (existingFood == null) { throw new ArgumentNullException(nameof(existingFood)); }

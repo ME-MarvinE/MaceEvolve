@@ -1,12 +1,13 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Extensions;
+using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace MaceEvolve.Core.Models
 {
-    public class Creature : GameObject
+    public class Creature : GameObject, ICreature
     {
         #region Fields
         private double _energy;
@@ -14,7 +15,7 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public NeuralNetwork Brain { get; set; }
-        private double MoveCost { get; set; } = 0.5;
+        public double MoveCost { get; set; } = 0.5;
         public double Energy
         {
             get
@@ -77,7 +78,7 @@ namespace MaceEvolve.Core.Models
                     throw new NotImplementedException();
             }
         }
-        public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> gameObjects) where T : GameObject
+        public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> gameObjects) where T : IGameObject
         {
             return gameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange);
         }
@@ -126,12 +127,12 @@ namespace MaceEvolve.Core.Models
             Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound(stepInfo));
             Brain.UpdateInputValue(CreatureInput.RandomInput, RandomInput());
         }
-        public static Creature Reproduce(IList<Creature> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound)
+        public static T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound) where T : ICreature, new()
         {
-            Dictionary<Creature, List<Connection>> availableParentConnections = parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
-            Dictionary<Creature, Dictionary<int, int>> parentToOffspringNodesMap = new Dictionary<Creature, Dictionary<int, int>>();
+            Dictionary<T, List<Connection>> availableParentConnections = parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
+            Dictionary<T, Dictionary<int, int>> parentToOffspringNodesMap = new Dictionary<T, Dictionary<int, int>>();
 
-            Creature offspring = new Creature()
+            T offspring = new T()
             {
                 Brain = new NeuralNetwork(new List<Node>(), inputs, actions, new List<Connection>())
             };
@@ -145,7 +146,7 @@ namespace MaceEvolve.Core.Models
 
             while (offspring.Brain.Connections.Count < averageNumberOfParentConnections)
             {
-                Creature randomParent = parents[Globals.Random.Next(parents.Count)];
+                T randomParent = parents[Globals.Random.Next(parents.Count)];
                 List<Connection> randomParentAvailableConnections = availableParentConnections[randomParent];
 
                 if (randomParentAvailableConnections.Count > 0)
@@ -220,6 +221,10 @@ namespace MaceEvolve.Core.Models
 
             return offspring;
         }
+        T ICreature.Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound)
+        {
+            return Reproduce(parents, inputs, actions, nodeBiasMaxVariancePercentage, connectionWeightMaxVariancePercentage, connectionWeightBound);
+        }
 
         #region CreatureValues
         //x values map from 0 to 1.
@@ -235,7 +240,7 @@ namespace MaceEvolve.Core.Models
             }
 
             //Visible creatures does not contain itself. No need to filter.
-            Creature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
 
             double horizontalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
 
@@ -249,7 +254,7 @@ namespace MaceEvolve.Core.Models
             }
 
             //Visible creatures does not contain itself. No need to filter.
-            Creature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
 
             double verticalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
 

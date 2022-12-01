@@ -10,14 +10,14 @@ using System.Timers;
 
 namespace MaceEvolve.Core.Models
 {
-    public class GameHost
+    public class GameHost<T> where T : class, ICreature, new()
     {
         #region Fields
         protected static Random random = new Random();
         #endregion
 
         #region Properties
-        public List<Creature> Creatures { get; set; } = new List<Creature>();
+        public List<T> Creatures { get; set; } = new List<T>();
         public List<Food> Food { get; set; } = new List<Food>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
         public int MaxCreatureAmount { get; set; } = 150;
@@ -41,8 +41,8 @@ namespace MaceEvolve.Core.Models
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
-        public Creature SelectedCreature { get; set; }
-        public Creature BestCreature { get; set; }
+        public T SelectedCreature { get; set; }
+        public T BestCreature { get; set; }
         #endregion
 
         #region Constructors
@@ -67,20 +67,20 @@ namespace MaceEvolve.Core.Models
 
             Creatures.AddRange(GenerateCreatures());
         }
-        public List<Creature> NewGenerationSexual()
+        public List<T> NewGenerationSexual()
         {
-            List<Creature> creaturesList = new List<Creature>(Creatures);
-            IEnumerable<Creature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<Creature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
+            List<T> creaturesList = new List<T>(Creatures);
+            IEnumerable<T> successfulCreatures = GetSuccessfulCreatures(creaturesList);
+            Dictionary<T, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
 
             if (!successfulCreaturesFitnesses.Any())
             {
-                return new List<Creature>();
+                return new List<T>();
             }
 
-            List<Creature> newCreatures = new List<Creature>();
+            List<T> newCreatures = new List<T>();
 
-            Creature newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
+            T newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
             newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
             newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
             newCreature.Size = 10;
@@ -107,24 +107,24 @@ namespace MaceEvolve.Core.Models
 
             return newCreatures;
         }
-        public List<Creature> NewGenerationAsexual()
+        public List<T> NewGenerationAsexual()
         {
-            List<Creature> creaturesList = new List<Creature>(Creatures);
-            IEnumerable<Creature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<Creature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
+            List<T> creaturesList = new List<T>(Creatures);
+            IEnumerable<T> successfulCreatures = GetSuccessfulCreatures(creaturesList);
+            Dictionary<T, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
 
             if (!successfulCreaturesFitnesses.Any())
             {
-                return new List<Creature>();
+                return new List<T>();
             }
 
-            List<Creature> newCreatures = new List<Creature>();
+            List<T> newCreatures = new List<T>();
 
             while (newCreatures.Count < MaxCreatureAmount)
             {
                 foreach (var creatureFitnessPair in successfulCreaturesFitnesses.OrderByDescending(x => x.Value))
                 {
-                    Creature successfulCreature = creatureFitnessPair.Key;
+                    T successfulCreature = creatureFitnessPair.Key;
 
                     if (random.NextDouble() <= creatureFitnessPair.Value && newCreatures.Count < MaxCreatureAmount)
                     {
@@ -134,7 +134,7 @@ namespace MaceEvolve.Core.Models
                         {
                             if (newCreatures.Count < MaxCreatureAmount)
                             {
-                                Creature newCreature = Creature.Reproduce(new List<Creature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
+                                T newCreature = Creature.Reproduce(new List<T>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
                                 newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
                                 newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
                                 newCreature.Size = 10;
@@ -166,13 +166,13 @@ namespace MaceEvolve.Core.Models
 
             return newCreatures;
         }
-        public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> creatures)
+        public IEnumerable<T> GetSuccessfulCreatures(IEnumerable<T> creatures)
         {
             if (creatures == null) { throw new ArgumentNullException(); }
 
             if (!creatures.Any())
             {
-                return new List<Creature>();
+                return new List<T>();
             }
 
             if (UseSuccessBounds)
@@ -188,20 +188,20 @@ namespace MaceEvolve.Core.Models
                 double indexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
                 int topPercentileStartingIndex = (int)(creatures.Count() * indexMultiplierForTopPercentile) - 1;
 
-                List<Creature> orderedCreatures = creatures.OrderBy(x => x.FoodEaten).ToList();
+                List<T> orderedCreatures = creatures.OrderBy(x => x.FoodEaten).ToList();
                 return orderedCreatures.SkipWhile(x => orderedCreatures.IndexOf(x) < topPercentileStartingIndex).Where(x => x.FoodEaten > 0);
             }
         }
-        public Dictionary<Creature, double> GetFitnesses(IEnumerable<Creature> creatures)
+        public Dictionary<T, double> GetFitnesses(IEnumerable<T> creatures)
         {
             if (creatures == null) { throw new ArgumentNullException(); }
 
             if (!creatures.Any())
             {
-                return new Dictionary<Creature, double>();
+                return new Dictionary<T, double>();
             }
 
-            Dictionary<Creature, double> successfulCreaturesFitnesses = new Dictionary<Creature, double>();
+            Dictionary<T, double> successfulCreaturesFitnesses = new Dictionary<T, double>();
 
             if (UseSuccessBounds)
             {
@@ -222,7 +222,7 @@ namespace MaceEvolve.Core.Models
 
                 if (mostFoodEaten == 0)
                 {
-                    return new Dictionary<Creature, double>();
+                    return new Dictionary<T, double>();
                 }
 
                 successfulCreaturesFitnesses = creatures.ToDictionary(
@@ -407,14 +407,14 @@ namespace MaceEvolve.Core.Models
         }
         public void Update()
         {
-            Creature newBestCreature = null;
+            T newBestCreature = null;
 
             double successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
             double successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
             Food.RemoveAll(x => x.Servings <= 0);
 
-            foreach (Creature creature in Creatures)
+            foreach (T creature in Creatures)
             {
                 if (!creature.IsDead)
                 {
@@ -512,13 +512,13 @@ namespace MaceEvolve.Core.Models
                 });
             }
         }
-        public List<Creature> GenerateCreatures()
+        public List<T> GenerateCreatures()
         {
-            List<Creature> creatures = new List<Creature>();
+            List<T> creatures = new List<T>();
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                Creature newCreature = new Creature()
+                T newCreature = new T()
                 {
                     Brain = new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList()),
                     X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
