@@ -16,6 +16,7 @@ namespace MaceEvolve.Core.Models
         #region Fields
         protected static Random random = new Random();
         private TCreature _bestCreature;
+        private TCreature _selectedCreature;
         #endregion
 
         #region Properties
@@ -43,7 +44,23 @@ namespace MaceEvolve.Core.Models
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
-        public TCreature SelectedCreature { get; set; }
+        public TCreature SelectedCreature
+        {
+            get
+            {
+                return _selectedCreature;
+            }
+            set
+            {
+                if (_selectedCreature != value)
+                {
+                    var oldSelectedCreature = _selectedCreature;
+                    _selectedCreature = value;
+
+                    OnSelectedCreatureChanged(this, new ValueChangedEventArgs<TCreature>(oldSelectedCreature, _selectedCreature));
+                }
+            }
+        }
         public TCreature BestCreature
         {
             get
@@ -65,6 +82,7 @@ namespace MaceEvolve.Core.Models
 
         #region Events
         public event EventHandler<ValueChangedEventArgs<TCreature>> BestCreatureChanged;
+        public event EventHandler<ValueChangedEventArgs<TCreature>> SelectedCreatureChanged;
         #endregion
 
         #region Constructors
@@ -494,7 +512,7 @@ namespace MaceEvolve.Core.Models
 
             Tick();
         }
-        public void Tick()
+        private void Tick()
         {
             if (TicksUntilNextGeneration <= 0)
             {
@@ -562,6 +580,10 @@ namespace MaceEvolve.Core.Models
         protected void OnBestCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
         {
             BestCreatureChanged?.Invoke(this, e);
+        }
+        protected void OnSelectedCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
+        {
+            SelectedCreatureChanged?.Invoke(this, e);
         }
         #endregion
     }
