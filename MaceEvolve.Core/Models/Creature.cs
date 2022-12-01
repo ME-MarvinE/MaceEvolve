@@ -267,7 +267,7 @@ namespace MaceEvolve.Core.Models
                 return 1;
             }
 
-            Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
             double horizontalDistanceToFood = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
 
@@ -280,7 +280,7 @@ namespace MaceEvolve.Core.Models
                 return 1;
             }
 
-            Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
             double verticalDistanceToFood = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
 
@@ -301,7 +301,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Actions
-        private void Eat(Food food)
+        private void Eat(IFood food)
         {
             Energy -= food.ServingDigestionCost;
             food.Servings -= 1;
@@ -315,7 +315,7 @@ namespace MaceEvolve.Core.Models
                 return false;
             }
 
-            Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
             if (Globals.GetDistanceFrom(MX, MY, closestFood.MX, closestFood.MY) > Size / 2)
             {
@@ -372,7 +372,7 @@ namespace MaceEvolve.Core.Models
         {
             if (stepInfo.VisibleFoodOrderedByDistance.Count > 0)
             {
-                Food closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+                IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
                 double xDifference = X - closestFood.X;
                 double yDifference = Y - closestFood.Y;

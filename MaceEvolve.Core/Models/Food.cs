@@ -2,7 +2,7 @@
 
 namespace MaceEvolve.Core.Models
 {
-    public abstract class Food : GameObject
+    public class Food : GameObject, IFood
     {
         #region Properties
         public int Servings { get; set; } = 1;

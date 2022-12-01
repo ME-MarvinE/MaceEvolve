@@ -7,9 +7,9 @@ namespace MaceEvolve.Core.Models
     {
         #region Properties
         public EnvironmentInfo EnvironmentInfo { get; set; }
-        public IReadOnlyList<Food> VisibleFood { get; set; }
+        public IReadOnlyList<IFood> VisibleFood { get; set; }
         public IReadOnlyList<ICreature> VisibleCreatures { get; set; }
-        public IReadOnlyList<Food> VisibleFoodOrderedByDistance { get; set; }
+        public IReadOnlyList<IFood> VisibleFoodOrderedByDistance { get; set; }
         public IReadOnlyList<ICreature> VisibleCreaturesOrderedByDistance { get; set; }
         #endregion
     }

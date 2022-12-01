@@ -7,13 +7,13 @@ namespace MaceEvolve.Core.Models
     public class EnvironmentInfo
     {
         #region Properties
-        public IReadOnlyList<Food> ExistingFood { get; }
+        public IReadOnlyList<IFood> ExistingFood { get; }
         public IReadOnlyList<ICreature> ExistingCreatures { get; }
         public Rectangle WorldBounds { get; }
         #endregion
 
         #region Constructors
-        public EnvironmentInfo(IReadOnlyList<ICreature> existingCreatures, IReadOnlyList<Food> existingFood, Rectangle worldBounds)
+        public EnvironmentInfo(IReadOnlyList<ICreature> existingCreatures, IReadOnlyList<IFood> existingFood, Rectangle worldBounds)
         {
             if (existingCreatures == null) { throw new ArgumentNullException(nameof(existingCreatures)); }
             if (existingFood == null) { throw new ArgumentNullException(nameof(existingFood)); }
