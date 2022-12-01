@@ -1,9 +1,9 @@
-﻿using MaceEvolve.Enums;
+﻿using MaceEvolve.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MaceEvolve.Models
+namespace MaceEvolve.Core.Models
 {
     public class Genome
     {

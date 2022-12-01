@@ -1,12 +1,11 @@
-﻿using System.Drawing;
+﻿using MaceEvolve.Core.Interfaces;
 
-namespace MaceEvolve.Models
+namespace MaceEvolve.Core.Models
 {
-    public class GameObject
+    public class GameObject : IGameObject
     {
         #region Fields
         private Rectangle _rectangle = new Rectangle(0, 0, 0, 0);
-        private Color _color = Color.Black;
         #endregion
 
         #region Properties
@@ -58,17 +57,6 @@ namespace MaceEvolve.Models
                 Rectangle.Height = value;
             }
         }
-        public Color Color
-        {
-            get
-            {
-                return _color;
-            }
-            set
-            {
-                _color = value;
-            }
-        }
         public Rectangle Rectangle
         {
             get
@@ -81,12 +69,6 @@ namespace MaceEvolve.Models
             }
         }
 
-        #endregion
-
-        #region Constructors
-        public GameObject()
-        {
-        }
         #endregion
     }
 }

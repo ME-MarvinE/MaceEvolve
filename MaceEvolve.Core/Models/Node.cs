@@ -1,6 +1,6 @@
-﻿using MaceEvolve.Enums;
+﻿using MaceEvolve.Core.Enums;
 
-namespace MaceEvolve.Models
+namespace MaceEvolve.Core.Models
 {
     public class Node
     {

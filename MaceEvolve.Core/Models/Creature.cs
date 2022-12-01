@@ -1,11 +1,12 @@
-﻿using MaceEvolve.Enums;
-using MaceEvolve.Extensions;
+﻿using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Extensions;
+using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace MaceEvolve.Models
+namespace MaceEvolve.Core.Models
 {
     public class Creature : GameObject
     {
@@ -81,14 +82,7 @@ namespace MaceEvolve.Models
         }
         public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> gameObjects) where T : GameObject
         {
-            if (typeof(T) == typeof(Creature))
-            {
-                return gameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange && x != this);
-            }
-            else
-            {
-                return gameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange);
-            }
+            return gameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange);
         }
         public void Die()
         {
@@ -118,7 +112,7 @@ namespace MaceEvolve.Models
 
             stepInfo.EnvironmentInfo = environmentInfo;
             stepInfo.VisibleFood = GetVisibleGameObjects(stepInfo.EnvironmentInfo.ExistingFood).ToList();
-            stepInfo.VisibleCreatures = GetVisibleGameObjects(stepInfo.EnvironmentInfo.ExistingCreatures).ToList();
+            stepInfo.VisibleCreatures = GetVisibleGameObjects(stepInfo.EnvironmentInfo.ExistingCreatures).Where(x => x != this).ToList();
             stepInfo.VisibleFoodOrderedByDistance = stepInfo.VisibleFood.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
             stepInfo.VisibleCreaturesOrderedByDistance = stepInfo.VisibleCreatures.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
 
@@ -292,11 +286,11 @@ namespace MaceEvolve.Models
         }
         public double DistanceFromTopWorldBound(CreatureStepInfo stepInfo)
         {
-            return Globals.Map(Y, stepInfo.EnvironmentInfo.WorldBounds.Top, stepInfo.EnvironmentInfo.WorldBounds.Bottom, 0, 1);
+            return Globals.Map(Y, stepInfo.EnvironmentInfo.WorldBounds.Y, stepInfo.EnvironmentInfo.WorldBounds.Y + stepInfo.EnvironmentInfo.WorldBounds.Height, 0, 1);
         }
         public double DistanceFromLeftWorldBound(CreatureStepInfo stepInfo)
         {
-            return Globals.Map(X, stepInfo.EnvironmentInfo.WorldBounds.Left, stepInfo.EnvironmentInfo.WorldBounds.Right, 0, 1);
+            return Globals.Map(X, stepInfo.EnvironmentInfo.WorldBounds.X, stepInfo.EnvironmentInfo.WorldBounds.X + stepInfo.EnvironmentInfo.WorldBounds.Width, 0, 1);
         }
         public double RandomInput()
         {
@@ -333,7 +327,7 @@ namespace MaceEvolve.Models
         public void MoveForward(CreatureStepInfo stepInfo)
         {
             Y -= Speed;
-            if (MY < stepInfo.EnvironmentInfo.WorldBounds.Top)
+            if (MY < stepInfo.EnvironmentInfo.WorldBounds.Y)
             {
                 Y += Speed;
                 //Y += WorldBounds.WorldBounds.Height;
@@ -343,7 +337,8 @@ namespace MaceEvolve.Models
         public void MoveBackward(CreatureStepInfo stepInfo)
         {
             Y += Speed;
-            if (MY > stepInfo.EnvironmentInfo.WorldBounds.Bottom)
+            double worldBoundsBottom = stepInfo.EnvironmentInfo.WorldBounds.Y + stepInfo.EnvironmentInfo.WorldBounds.Height;
+            if (MY > worldBoundsBottom)
             {
                 Y -= Speed;
                 //Y -= WorldBounds.WorldBounds.Height;
@@ -353,7 +348,7 @@ namespace MaceEvolve.Models
         public void MoveLeft(CreatureStepInfo stepInfo)
         {
             X -= Speed;
-            if (MX < stepInfo.EnvironmentInfo.WorldBounds.Left)
+            if (MX < stepInfo.EnvironmentInfo.WorldBounds.X)
             {
                 X += Speed;
                 //X += WorldBounds.WorldBounds.Width;
@@ -363,7 +358,8 @@ namespace MaceEvolve.Models
         public void MoveRight(CreatureStepInfo stepInfo)
         {
             X += Speed;
-            if (MX > stepInfo.EnvironmentInfo.WorldBounds.Right)
+            double worldBoundsRight = stepInfo.EnvironmentInfo.WorldBounds.X + stepInfo.EnvironmentInfo.WorldBounds.Width;
+            if (MX > worldBoundsRight)
             {
                 X -= Speed;
                 //X -= WorldBounds.WorldBounds.Width;

@@ -1,4 +1,4 @@
-﻿namespace MaceEvolve.Models
+﻿namespace MaceEvolve.Core.Models
 {
     public class Apple : Food
     {

@@ -1,4 +1,4 @@
-﻿namespace MaceEvolve.Enums
+﻿namespace MaceEvolve.Core.Enums
 {
     public enum CreatureProcess
     {

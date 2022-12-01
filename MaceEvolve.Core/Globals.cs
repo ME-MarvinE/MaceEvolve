@@ -1,10 +1,10 @@
-﻿using MaceEvolve.Enums;
+﻿using MaceEvolve.Core.Enums;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
 
-namespace MaceEvolve
+namespace MaceEvolve.Core
 {
     public static class Globals
     {
@@ -78,17 +78,17 @@ namespace MaceEvolve
         {
             return Math.Abs(x - targetX) + Math.Abs(y - targetY);
         }
-        public static double Hypotenuse(int a, int b)
+        public static double Hypotenuse(double a, double b)
         {
             return Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
         }
-        public static Point Middle(int x, int y, int width, int height)
+        public static double MiddleX(double x, double width)
         {
-            return new Point(x + width / 2, y + height / 2);
+            return x + width / 2;
         }
-        public static Point Middle(double x, double y, double width, double height)
+        public static double MiddleY(double y, double height)
         {
-            return new Point((int)(x + width / 2),(int)(y + height / 2));
+            return y + height / 2;
         }
         #endregion
     }

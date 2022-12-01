@@ -1,200 +1,64 @@
-﻿using MaceEvolve.Core;
-using MaceEvolve.Core.Enums;
+﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Extensions;
-using MaceEvolve.Core.Models;
-using MaceEvolve.Models;
+using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Windows.Forms;
-using Rectangle = System.Drawing.Rectangle;
+using System.Timers;
 
-namespace MaceEvolve.Controls
+namespace MaceEvolve.Core.Models
 {
-    public partial class GameHost : UserControl
+    public class GameHost
     {
         #region Fields
         protected static Random random = new Random();
-        private int _targetFPS = 10;
-        private int _targetTPS = 10;
-        private GraphicalCreature _selectedCreature;
-        private GraphicalCreature _bestCreature;
-        private NeuralNetworkViewer _bestCreatureNeuralNetworkViewer;
-        private NeuralNetworkViewer _selectedCreatureNeuralNetworkViewer;
-        private double _secondsUntilNewGeneration;
-        private int _generationCount = 1;
         #endregion
 
         #region Properties
-        public List<GraphicalCreature> Creatures { get; set; } = new List<GraphicalCreature>();
-        public List<GraphicalFood> Food { get; set; } = new List<GraphicalFood>();
+        public List<Creature> Creatures { get; set; } = new List<Creature>();
+        public List<Food> Food { get; set; } = new List<Food>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
         public int MaxCreatureAmount { get; set; } = 150;
         public int MaxFoodAmount { get; set; } = 350;
-        public int TargetFPS
-        {
-            get
-            {
-                return _targetFPS;
-            }
-            set
-            {
-                _targetFPS = value;
-                DrawTimer.Interval = 1000 / TargetFPS;
-            }
-        }
-        public int TargetTPS
-        {
-            get
-            {
-                return _targetTPS;
-            }
-            set
-            {
-                _targetTPS = value;
-                GameTimer.Interval = 1000 / _targetTPS;
-            }
-        }
         public Rectangle WorldBounds { get; set; }
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
-        public double NewGenerationInterval { get; set; } = 36;
-        public double SecondsUntilNewGeneration
-        {
-            get
-            {
-                return _secondsUntilNewGeneration;
-            }
-            set
-            {
-                _secondsUntilNewGeneration = value;
-                lblGenEndsIn.Text = $"Ends in {string.Format("{0:0}", SecondsUntilNewGeneration)}s";
-            }
-        }
+        public int GenerationTickLength { get; set; }
+        public int TicksUntilNextGeneration { get; set; }
         public int MaxCreatureProcessNodes { get; set; } = 4;
-        public double MutationChance { get; set; } = 0.3;
+        public double MutationChance { get; set; } = 0.25;
         public double MutationAttempts { get; set; } = 2;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
-        public int GenerationCount
-        {
-            get
-            {
-                return _generationCount;
-            }
-            set
-            {
-                _generationCount = value;
-                lblGenerationCount.Text = $"Gen {GenerationCount}";
-            }
-        }
+        public int GenerationCount { get; set; } = 1;
         public double ReproductionNodeBiasVariance = 0.05;
         public double ReproductionConnectionWeightVariance = 0.05;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
-        public GraphicalCreature SelectedCreature
-        {
-            get
-            {
-                return _selectedCreature;
-            }
-            set
-            {
-                _selectedCreature = value;
-                _selectedCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(_selectedCreature?.Brain, _selectedCreatureNeuralNetworkViewer);
-            }
-        }
-        public GraphicalCreature BestCreature
-        {
-            get
-            {
-                return _bestCreature;
-            }
-            set
-            {
-                _bestCreature = value;
-                _bestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(_bestCreature?.Brain, _bestCreatureNeuralNetworkViewer);
-            }
-        }
-        public Color GenLabelTextColor
-        {
-            get
-            {
-                return lblGenerationCount.ForeColor;
-            }
-            set
-            {
-                lblGenerationCount.ForeColor = value;
-            }
-        }
-        public Color GenEndsInLabelTextColor
-        {
-            get
-            {
-                return lblGenEndsIn.ForeColor;
-            }
-            set
-            {
-                lblGenEndsIn.ForeColor = value;
-            }
-        }
-        public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
-        {
-            get
-            {
-                return UpdateOrCreateNetworkViewer(_selectedCreature?.Brain, _selectedCreatureNeuralNetworkViewer);
-            }
-        }
-        public NeuralNetworkViewer BestCreatureNeuralNetworkViewer
-
-        {
-            get
-            {
-                return UpdateOrCreateNetworkViewer(_bestCreature?.Brain, _bestCreatureNeuralNetworkViewer);
-            }
-        }
+        public Creature SelectedCreature { get; set; }
+        public Creature BestCreature { get; set; }
         #endregion
 
         #region Constructors
         public GameHost()
         {
-            InitializeComponent();
+            CreatureSpeed = UseSuccessBounds ? 3.5 : 2.75;
+
+            Reset();
         }
         #endregion
 
         #region Methods
-        public void Start()
-        {
-            GameTimer.Start();
-            DrawTimer.Start();
-            Stopwatch.Start();
-            NewGenerationTimer.Start();
-        }
-        public void Stop()
-        {
-            GameTimer.Stop();
-            DrawTimer.Stop();
-            Stopwatch.Stop();
-            NewGenerationTimer.Stop();
-        }
         public void Reset()
         {
-            WorldBounds = new Rectangle(Bounds.Location, Bounds.Size);
-
-            Point middleOfWorldBounds = Middle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height);
-            //SuccessBounds = new Rectangle(WorldBounds.Location.X, WorldBounds.Location.Y, 150, 150);
-            SuccessBounds = new Rectangle(middleOfWorldBounds.X - 75, middleOfWorldBounds.Y - 75, 150, 150);
-
             Stopwatch.Reset();
-            SecondsUntilNewGeneration = NewGenerationInterval;
+            TicksUntilNextGeneration = GenerationTickLength;
             Creatures.Clear();
             ResetFood();
             GenerationCount = 1;
@@ -202,28 +66,24 @@ namespace MaceEvolve.Controls
             SelectedCreature = null;
 
             Creatures.AddRange(GenerateCreatures());
-
-            Invalidate();
         }
-        public List<GraphicalCreature> NewGenerationSexual()
+        public List<Creature> NewGenerationSexual()
         {
-            List<GraphicalCreature> creaturesList = new List<GraphicalCreature>(Creatures);
-            IEnumerable<GraphicalCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<GraphicalCreature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
+            List<Creature> creaturesList = new List<Creature>(Creatures);
+            IEnumerable<Creature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
+            Dictionary<Creature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
 
             if (!successfulCreaturesFitnesses.Any())
             {
-                return new List<GraphicalCreature>();
+                return new List<Creature>();
             }
 
-            List<GraphicalCreature> newCreatures = new List<GraphicalCreature>();
+            List<Creature> newCreatures = new List<Creature>();
 
-            Creature c = Creature.Reproduce(successfulCreatures.Cast<Creature>().ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-            GraphicalCreature newCreature = new GraphicalCreature() { Brain = c.Brain };
-            newCreature.X = random.Next(WorldBounds.Left + WorldBounds.Width);
-            newCreature.Y = random.Next(WorldBounds.Top + WorldBounds.Height);
+            Creature newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
+            newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
+            newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
             newCreature.Size = 10;
-            newCreature.Color = Color.FromArgb(255, 64, 64, random.Next(256));
             newCreature.Speed = CreatureSpeed;
             newCreature.Metabolism = 0.1;
             newCreature.Energy = MaxCreatureEnergy;
@@ -247,24 +107,24 @@ namespace MaceEvolve.Controls
 
             return newCreatures;
         }
-        public List<GraphicalCreature> NewGenerationAsexual()
+        public List<Creature> NewGenerationAsexual()
         {
-            List<GraphicalCreature> creaturesList = new List<GraphicalCreature>(Creatures);
-            IEnumerable<GraphicalCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<GraphicalCreature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
+            List<Creature> creaturesList = new List<Creature>(Creatures);
+            IEnumerable<Creature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
+            Dictionary<Creature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
 
             if (!successfulCreaturesFitnesses.Any())
             {
-                return new List<GraphicalCreature>();
+                return new List<Creature>();
             }
 
-            List<GraphicalCreature> newCreatures = new List<GraphicalCreature>();
+            List<Creature> newCreatures = new List<Creature>();
 
             while (newCreatures.Count < MaxCreatureAmount)
             {
                 foreach (var creatureFitnessPair in successfulCreaturesFitnesses.OrderByDescending(x => x.Value))
                 {
-                    GraphicalCreature successfulCreature = creatureFitnessPair.Key;
+                    Creature successfulCreature = creatureFitnessPair.Key;
 
                     if (random.NextDouble() <= creatureFitnessPair.Value && newCreatures.Count < MaxCreatureAmount)
                     {
@@ -274,12 +134,10 @@ namespace MaceEvolve.Controls
                         {
                             if (newCreatures.Count < MaxCreatureAmount)
                             {
-                                Creature c = Creature.Reproduce(new List<Creature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-                                GraphicalCreature newCreature = new GraphicalCreature() { Brain = c.Brain };
-                                newCreature.X = random.Next(WorldBounds.Left + WorldBounds.Width);
-                                newCreature.Y = random.Next(WorldBounds.Top + WorldBounds.Height);
+                                Creature newCreature = Creature.Reproduce(new List<Creature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
+                                newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
+                                newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
                                 newCreature.Size = 10;
-                                newCreature.Color = Color.FromArgb(255, 64, 64, random.Next(256));
                                 newCreature.Speed = CreatureSpeed;
                                 newCreature.Metabolism = 0.1;
                                 newCreature.Energy = MaxCreatureEnergy;
@@ -308,18 +166,20 @@ namespace MaceEvolve.Controls
 
             return newCreatures;
         }
-        public IEnumerable<GraphicalCreature> GetSuccessfulCreatures(IEnumerable<GraphicalCreature> creatures)
+        public IEnumerable<Creature> GetSuccessfulCreatures(IEnumerable<Creature> creatures)
         {
             if (creatures == null) { throw new ArgumentNullException(); }
 
             if (!creatures.Any())
             {
-                return new List<GraphicalCreature>();
+                return new List<Creature>();
             }
 
             if (UseSuccessBounds)
             {
-                return creatures.Where(x => x.X > SuccessBounds.Left && x.X < SuccessBounds.Right && x.Y > SuccessBounds.Top && x.Y < SuccessBounds.Bottom).ToList();
+                double successBoundsRight = SuccessBounds.X + SuccessBounds.Width;
+                double successBoundsBottom = SuccessBounds.Y + SuccessBounds.Height;
+                return creatures.Where(x => x.X > SuccessBounds.X && x.X < successBoundsRight && x.Y > SuccessBounds.Y && x.Y < successBoundsBottom).ToList();
             }
             else
             {
@@ -328,28 +188,29 @@ namespace MaceEvolve.Controls
                 double indexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
                 int topPercentileStartingIndex = (int)(creatures.Count() * indexMultiplierForTopPercentile) - 1;
 
-                List<GraphicalCreature> orderedCreatures = creatures.OrderBy(x => x.FoodEaten).ToList();
+                List<Creature> orderedCreatures = creatures.OrderBy(x => x.FoodEaten).ToList();
                 return orderedCreatures.SkipWhile(x => orderedCreatures.IndexOf(x) < topPercentileStartingIndex).Where(x => x.FoodEaten > 0);
             }
         }
-        public Dictionary<GraphicalCreature, double> GetFitnesses(IEnumerable<GraphicalCreature> creatures)
+        public Dictionary<Creature, double> GetFitnesses(IEnumerable<Creature> creatures)
         {
             if (creatures == null) { throw new ArgumentNullException(); }
 
             if (!creatures.Any())
             {
-                return new Dictionary<GraphicalCreature, double>();
+                return new Dictionary<Creature, double>();
             }
 
-            Dictionary<GraphicalCreature, double> successfulCreaturesFitnesses = new Dictionary<GraphicalCreature, double>();
+            Dictionary<Creature, double> successfulCreaturesFitnesses = new Dictionary<Creature, double>();
 
             if (UseSuccessBounds)
             {
-                Point middleOfSuccessBounds = Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
+                double successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
+                double successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
                 foreach (var creature in creatures)
                 {
-                    double distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, middleOfSuccessBounds.X, middleOfSuccessBounds.Y);
+                    double distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
                     double successBoundsHypotenuse = Globals.Hypotenuse(SuccessBounds.Width, SuccessBounds.Height);
 
                     successfulCreaturesFitnesses.Add(creature, Globals.Map(distanceFromMiddle, 0, successBoundsHypotenuse, 1, 0)); ;
@@ -361,7 +222,7 @@ namespace MaceEvolve.Controls
 
                 if (mostFoodEaten == 0)
                 {
-                    return new Dictionary<GraphicalCreature, double>();
+                    return new Dictionary<Creature, double>();
                 }
 
                 successfulCreaturesFitnesses = creatures.ToDictionary(
@@ -544,18 +405,20 @@ namespace MaceEvolve.Controls
             //Return any actions that aren't already used by a node in the network.
             return PossibleCreatureActions.Where(x => !network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Output && x == y.Value.CreatureAction));
         }
-        private void GameTimer_Tick(object sender, EventArgs e)
+        public void Update()
         {
-            GraphicalCreature newBestCreature = null;
-            Point middleOfSuccessBounds = Middle(SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
+            Creature newBestCreature = null;
+
+            double successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
+            double successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
             Food.RemoveAll(x => x.Servings <= 0);
 
-            foreach (GraphicalCreature creature in Creatures)
+            foreach (Creature creature in Creatures)
             {
                 if (!creature.IsDead)
                 {
-                    EnvironmentInfo environmentInfo = new EnvironmentInfo(Creatures.AsReadOnly(), Food.AsReadOnly(), new Core.Models.Rectangle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height));
+                    EnvironmentInfo environmentInfo = new EnvironmentInfo(Creatures.AsReadOnly(), Food.AsReadOnly(), WorldBounds);
 
                     creature.Live(environmentInfo);
 
@@ -569,8 +432,8 @@ namespace MaceEvolve.Controls
 
                 if (UseSuccessBounds)
                 {
-                    double distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, middleOfSuccessBounds.X, middleOfSuccessBounds.Y);
-                    double? newBestCreatureDistanceFromMiddle = newBestCreature == null ? null : Globals.GetDistanceFrom(newBestCreature.MX, newBestCreature.MY, middleOfSuccessBounds.X, middleOfSuccessBounds.Y);
+                    double distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
+                    double? newBestCreatureDistanceFromMiddle = newBestCreature == null ? (double?)null : Globals.GetDistanceFrom(newBestCreature.MX, newBestCreature.MY, successBoundsMiddleX, successBoundsMiddleY);
 
                     if (newBestCreatureDistanceFromMiddle == null || distanceFromMiddle < newBestCreatureDistanceFromMiddle)
                     {
@@ -590,15 +453,14 @@ namespace MaceEvolve.Controls
             {
                 if (Food.Count < MaxFoodAmount)
                 {
-                    Food.Add(new GraphicalFood()
+                    Food.Add(new Apple()
                     {
-                        X = random.Next(WorldBounds.Left + WorldBounds.Width),
-                        Y = random.Next(WorldBounds.Top + WorldBounds.Height),
+                        X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
+                        Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
                         Servings = 1,
                         EnergyPerServing = 30,
                         ServingDigestionCost = 0.05,
-                        Size = 7,
-                        Color = Color.Green
+                        Size = 7
                     });
                 }
             }
@@ -607,85 +469,14 @@ namespace MaceEvolve.Controls
             {
                 BestCreature = newBestCreature;
             }
+
+            Tick();
         }
-        private void GameHost_Paint(object sender, PaintEventArgs e)
+        public void Tick()
         {
-            e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
-            e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-
-            foreach (GraphicalCreature creature in Creatures)
+            if (TicksUntilNextGeneration <= 0)
             {
-                Color creatureColor;
-
-                if (creature.IsDead)
-                {
-                    creatureColor = Color.FromArgb(255, 165, 41, 41);
-                }
-                else
-                {
-                    creatureColor = Color.FromArgb(creature.Color.A, creature.Color.R, creature.Color.G, creature.Color.B);
-                }
-
-                Color? creatureRingColor;
-
-                if (creature == SelectedCreature)
-                {
-                    creatureRingColor = Color.White;
-                }
-                else if (creature == BestCreature)
-                {
-                    creatureRingColor = Color.Gold;
-                }
-                else
-                {
-                    creatureRingColor = null;
-                }
-
-                using (SolidBrush brush = new SolidBrush(creatureColor))
-                {
-                    e.Graphics.FillEllipse(brush, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
-                }
-
-                if (creatureRingColor != null)
-                {
-                    using (Pen pen = new Pen(creatureRingColor.Value, 2))
-                    {
-                        e.Graphics.DrawEllipse(pen, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
-                    }
-                }
-            }
-
-            foreach (GraphicalFood food in Food)
-            {
-                using (SolidBrush brush = new SolidBrush(food.Color))
-                {
-                    e.Graphics.FillEllipse(brush, (float)food.X, (float)food.Y, (float)food.Size, (float)food.Size);
-                }
-            }
-
-            if (UseSuccessBounds)
-            {
-                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), SuccessBounds);
-            }
-        }
-        private void GameHost_Load(object sender, EventArgs e)
-        {
-            DoubleBuffered = true;
-            TargetTPS = 60;
-            TargetFPS = TargetTPS;
-            CreatureSpeed = UseSuccessBounds ? 3.5 : 2.75;
-
-            Reset();
-        }
-        private void DrawTimer_Tick(object sender, EventArgs e)
-        {
-            Invalidate();
-        }
-        public void NewGenerationTimer_Tick(object sender, EventArgs e)
-        {
-            if (SecondsUntilNewGeneration <= 0)
-            {
-                SecondsUntilNewGeneration = NewGenerationInterval;
+                TicksUntilNextGeneration = GenerationTickLength;
                 Creatures = NewGenerationAsexual();
 
                 if (Creatures.Count > 0)
@@ -696,14 +487,12 @@ namespace MaceEvolve.Controls
                 }
                 else
                 {
-                    Rectangle oldWorldBounds = new Rectangle(WorldBounds.Location, WorldBounds.Size);
                     Reset();
-                    WorldBounds = oldWorldBounds;
                 }
             }
             else
             {
-                SecondsUntilNewGeneration -= 0.1;
+                TicksUntilNextGeneration -= 1;
             }
         }
         public void ResetFood()
@@ -712,31 +501,29 @@ namespace MaceEvolve.Controls
 
             for (int i = 0; i < MaxFoodAmount; i++)
             {
-                Food.Add(new GraphicalFood()
+                Food.Add(new Apple()
                 {
-                    X = random.Next(WorldBounds.Left + WorldBounds.Width),
-                    Y = random.Next(WorldBounds.Top + WorldBounds.Height),
+                    X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
+                    Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
                     Servings = 1,
                     EnergyPerServing = 30,
                     ServingDigestionCost = 0.05,
-                    Size = 7,
-                    Color = Color.Green
+                    Size = 7
                 });
             }
         }
-        public List<GraphicalCreature> GenerateCreatures()
+        public List<Creature> GenerateCreatures()
         {
-            List<GraphicalCreature> creatures = new List<GraphicalCreature>();
+            List<Creature> creatures = new List<Creature>();
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
-                GraphicalCreature newCreature = new GraphicalCreature()
+                Creature newCreature = new Creature()
                 {
                     Brain = new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList()),
-                    X = random.Next(WorldBounds.Left + WorldBounds.Width),
-                    Y = random.Next(WorldBounds.Top + WorldBounds.Height),
+                    X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
+                    Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
                     Size = 10,
-                    Color = Color.FromArgb(255, 64, 64, Math.Max(96, random.Next(256))),
                     Speed = CreatureSpeed,
                     Metabolism = 0.1,
                     Energy = MaxCreatureEnergy,
@@ -749,61 +536,6 @@ namespace MaceEvolve.Controls
             }
 
             return creatures;
-        }
-        private void GameHost_MouseClick(object sender, MouseEventArgs e)
-        {
-            Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
-            IEnumerable<GraphicalCreature> creaturesOrderedByDistanceToMouse = Creatures.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.MX, x.MY));
-
-            GraphicalCreature oldSelectedCreature = SelectedCreature;
-            GraphicalCreature newSelectedCreature = creaturesOrderedByDistanceToMouse.FirstOrDefault();
-
-            SelectedCreature = newSelectedCreature;
-
-            if (newSelectedCreature != null && oldSelectedCreature != newSelectedCreature)
-            {
-                NetworkViewerForm networkViewerForm = new NetworkViewerForm(SelectedCreatureNeuralNetworkViewer);
-                networkViewerForm.Show();
-            }
-
-            Invalidate();
-        }
-        public static void ChangeNetworkViewerNetwork(NeuralNetworkViewer networkViewer, NeuralNetwork newNeuralNetwork)
-        {
-            networkViewer.NeuralNetwork = newNeuralNetwork;
-            networkViewer.ResetDrawnNodes();
-        }
-        public NeuralNetworkViewer UpdateOrCreateNetworkViewer(NeuralNetwork neuralNetwork, NeuralNetworkViewer networkViewer = null)
-        {
-            NeuralNetworkViewer returnedNetworkViewer = networkViewer;
-
-            bool createNewNetworkViewer = returnedNetworkViewer == null || returnedNetworkViewer.IsDisposed;
-
-            if (createNewNetworkViewer)
-            {
-                returnedNetworkViewer = new NeuralNetworkViewer();
-                returnedNetworkViewer.Dock = DockStyle.Fill;
-                returnedNetworkViewer.BackColor = BackColor;
-                returnedNetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
-                returnedNetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
-                returnedNetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
-                returnedNetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
-                returnedNetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
-                returnedNetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
-                returnedNetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
-            }
-
-            returnedNetworkViewer.NeuralNetwork = neuralNetwork;
-
-            return returnedNetworkViewer;
-        }
-        public static Point Middle(int x, int y, int width, int height)
-        {
-            return new Point(x + width / 2, y + height / 2);
-        }
-        public static Point Middle(double x, double y, double width, double height)
-        {
-            return new Point((int)(x + width / 2), (int)(y + height / 2));
         }
         #endregion
     }

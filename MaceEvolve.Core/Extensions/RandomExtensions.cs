@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MaceEvolve.Extensions
+namespace MaceEvolve.Core.Extensions
 {
     public static class RandomExtensions
     {

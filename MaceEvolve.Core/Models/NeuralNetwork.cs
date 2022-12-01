@@ -1,5 +1,5 @@
-﻿using MaceEvolve.Enums;
-using MaceEvolve.Extensions;
+﻿using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Extensions;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace MaceEvolve.Models
+namespace MaceEvolve.Core.Models
 {
     public class NeuralNetwork
     {

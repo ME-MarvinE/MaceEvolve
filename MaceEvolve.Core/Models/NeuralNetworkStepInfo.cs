@@ -1,7 +1,7 @@
-﻿using MaceEvolve.Enums;
+﻿using MaceEvolve.Core.Enums;
 using System.Collections.Generic;
 
-namespace MaceEvolve.Models
+namespace MaceEvolve.Core.Models
 {
     public class NeuralNetworkStepNodeInfo
     {

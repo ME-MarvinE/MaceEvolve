@@ -1,4 +1,6 @@
-﻿namespace MaceEvolve.Models
+﻿using MaceEvolve.Core.Interfaces;
+
+namespace MaceEvolve.Core.Models
 {
     public abstract class Food : GameObject
     {

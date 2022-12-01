@@ -1,5 +1,6 @@
-﻿using MaceEvolve.Enums;
-using MaceEvolve.Models;
+﻿using MaceEvolve.Core;
+using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
