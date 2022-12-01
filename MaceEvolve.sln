@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32228.430
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaceEvolve", "MaceEvolve\MaceEvolve.csproj", "{FF603C39-F895-45CA-991E-A17D49F418B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaceEvolve", "MaceEvolve\MaceEvolve.csproj", "{FF603C39-F895-45CA-991E-A17D49F418B8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaceEvolve.Core", "MaceEvolve.Core\MaceEvolve.Core.csproj", "{D7816DC7-D846-445C-ADD1-EF22DA404626}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{FF603C39-F895-45CA-991E-A17D49F418B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF603C39-F895-45CA-991E-A17D49F418B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF603C39-F895-45CA-991E-A17D49F418B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7816DC7-D846-445C-ADD1-EF22DA404626}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7816DC7-D846-445C-ADD1-EF22DA404626}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7816DC7-D846-445C-ADD1-EF22DA404626}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7816DC7-D846-445C-ADD1-EF22DA404626}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
