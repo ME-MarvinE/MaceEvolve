@@ -83,6 +83,7 @@ namespace MaceEvolve.Core.Models
         #region Events
         public event EventHandler<ValueChangedEventArgs<TCreature>> BestCreatureChanged;
         public event EventHandler<ValueChangedEventArgs<TCreature>> SelectedCreatureChanged;
+        public event EventHandler<NewGenerationEventArgs> NewGenerationStarted;
         #endregion
 
         #region Constructors
@@ -516,6 +517,8 @@ namespace MaceEvolve.Core.Models
         {
             if (TicksUntilNextGeneration <= 0)
             {
+                int oldGenerationCount = GenerationCount;
+
                 TicksUntilNextGeneration = TicksPerGeneration;
                 Creatures = NewGenerationAsexual();
 
@@ -529,6 +532,8 @@ namespace MaceEvolve.Core.Models
                 {
                     Reset();
                 }
+
+                OnNewGenerationStarted(this, new NewGenerationEventArgs(oldGenerationCount, GenerationCount));
             }
             else
             {
@@ -584,6 +589,10 @@ namespace MaceEvolve.Core.Models
         protected void OnSelectedCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
         {
             SelectedCreatureChanged?.Invoke(this, e);
+        }
+        protected void OnNewGenerationStarted(object sender, NewGenerationEventArgs e)
+        {
+            NewGenerationStarted?.Invoke(this, e);
         }
         #endregion
     }
