@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Timers;
 
 namespace MaceEvolve.Core.Models
@@ -14,6 +15,7 @@ namespace MaceEvolve.Core.Models
     {
         #region Fields
         protected static Random random = new Random();
+        private TCreature _bestCreature;
         #endregion
 
         #region Properties
@@ -42,7 +44,27 @@ namespace MaceEvolve.Core.Models
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
         public TCreature SelectedCreature { get; set; }
-        public TCreature BestCreature { get; set; }
+        public TCreature BestCreature
+        {
+            get
+            {
+                return _bestCreature;
+            }
+            set
+            {
+                if (_bestCreature != value)
+                {
+                    var oldBestCreature = _bestCreature;
+                    _bestCreature = value;
+
+                    OnBestCreatureChanged(this, new ValueChangedEventArgs<TCreature>(oldBestCreature, _bestCreature));
+                }
+            }
+        }
+        #endregion
+
+        #region Events
+        public event EventHandler<ValueChangedEventArgs<TCreature>> BestCreatureChanged;
         #endregion
 
         #region Constructors
@@ -536,6 +558,10 @@ namespace MaceEvolve.Core.Models
             }
 
             return creatures;
+        }
+        protected void OnBestCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
+        {
+            BestCreatureChanged?.Invoke(this, e);
         }
         #endregion
     }
