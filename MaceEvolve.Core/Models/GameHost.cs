@@ -15,8 +15,8 @@ namespace MaceEvolve.Core.Models
     {
         #region Fields
         protected static Random random = new Random();
-        private TCreature _bestCreature;
-        private TCreature _selectedCreature;
+        protected TCreature bestCreature;
+        protected TCreature selectedCreature;
         #endregion
 
         #region Properties
@@ -48,16 +48,16 @@ namespace MaceEvolve.Core.Models
         {
             get
             {
-                return _selectedCreature;
+                return selectedCreature;
             }
             set
             {
-                if (_selectedCreature != value)
+                if (selectedCreature != value)
                 {
-                    var oldSelectedCreature = _selectedCreature;
-                    _selectedCreature = value;
+                    var oldSelectedCreature = selectedCreature;
+                    selectedCreature = value;
 
-                    OnSelectedCreatureChanged(this, new ValueChangedEventArgs<TCreature>(oldSelectedCreature, _selectedCreature));
+                    OnSelectedCreatureChanged(this, new ValueChangedEventArgs<TCreature>(oldSelectedCreature, selectedCreature));
                 }
             }
         }
@@ -65,16 +65,16 @@ namespace MaceEvolve.Core.Models
         {
             get
             {
-                return _bestCreature;
+                return bestCreature;
             }
             set
             {
-                if (_bestCreature != value)
+                if (bestCreature != value)
                 {
-                    var oldBestCreature = _bestCreature;
-                    _bestCreature = value;
+                    var oldBestCreature = bestCreature;
+                    bestCreature = value;
 
-                    OnBestCreatureChanged(this, new ValueChangedEventArgs<TCreature>(oldBestCreature, _bestCreature));
+                    OnBestCreatureChanged(this, new ValueChangedEventArgs<TCreature>(oldBestCreature, bestCreature));
                 }
             }
         }
