@@ -9,6 +9,5 @@ namespace MaceEvolve.Core.Interfaces
         double MX { get; }
         double MY { get; }
         double Size { get; set; }
-        Rectangle Rectangle { get; set; }
     }
 }
