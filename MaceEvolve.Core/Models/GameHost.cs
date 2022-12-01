@@ -30,7 +30,7 @@ namespace MaceEvolve.Core.Models
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
-        public int GenerationTickLength { get; set; }
+        public int TicksPerGeneration { get; set; }
         public int TicksUntilNextGeneration { get; set; }
         public int MaxCreatureProcessNodes { get; set; } = 4;
         public double MutationChance { get; set; } = 0.25;
@@ -98,7 +98,7 @@ namespace MaceEvolve.Core.Models
         public void Reset()
         {
             Stopwatch.Reset();
-            TicksUntilNextGeneration = GenerationTickLength;
+            TicksUntilNextGeneration = TicksPerGeneration;
             Creatures.Clear();
             ResetFood();
             GenerationCount = 1;
@@ -516,7 +516,7 @@ namespace MaceEvolve.Core.Models
         {
             if (TicksUntilNextGeneration <= 0)
             {
-                TicksUntilNextGeneration = GenerationTickLength;
+                TicksUntilNextGeneration = TicksPerGeneration;
                 Creatures = NewGenerationAsexual();
 
                 if (Creatures.Count > 0)
