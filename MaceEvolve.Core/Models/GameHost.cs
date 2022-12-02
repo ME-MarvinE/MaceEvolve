@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Timers;
 
 namespace MaceEvolve.Core.Models
 {
@@ -21,24 +19,21 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public List<TCreature> Creatures { get; set; } = new List<TCreature>();
-        public List<IFood> Food { get; set; } = new List<IFood>();
+        public List<TFood> Food { get; set; } = new List<TFood>();
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
         public int MaxCreatureAmount { get; set; } = 150;
         public int MaxFoodAmount { get; set; } = 350;
-        public Rectangle WorldBounds { get; set; }
+        public Rectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
         public Rectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
-        public int TicksPerGeneration { get; set; }
-        public int TicksUntilNextGeneration { get; set; }
         public int MaxCreatureProcessNodes { get; set; } = 4;
         public double MutationChance { get; set; } = 0.25;
         public double MutationAttempts { get; set; } = 2;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
-        public int GenerationCount { get; set; } = 1;
         public double ReproductionNodeBiasVariance = 0.05;
         public double ReproductionConnectionWeightVariance = 0.05;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
@@ -83,32 +78,18 @@ namespace MaceEvolve.Core.Models
         #region Events
         public event EventHandler<ValueChangedEventArgs<TCreature>> BestCreatureChanged;
         public event EventHandler<ValueChangedEventArgs<TCreature>> SelectedCreatureChanged;
-        public event EventHandler<NewGenerationEventArgs> NewGenerationStarted;
-        #endregion
-
-        #region Constructors
-        public GameHost()
-        {
-            CreatureSpeed = UseSuccessBounds ? 3.5 : 2.75;
-
-            Reset();
-        }
         #endregion
 
         #region Methods
-        public void Reset()
+        public virtual void Reset()
         {
             Stopwatch.Reset();
-            TicksUntilNextGeneration = TicksPerGeneration;
             Creatures.Clear();
-            ResetFood();
-            GenerationCount = 1;
+            Food.Clear();
             BestCreature = null;
             SelectedCreature = null;
-
-            Creatures.AddRange(GenerateCreatures());
         }
-        public List<TCreature> NewGenerationSexual()
+        public virtual List<TCreature> NewGenerationSexual()
         {
             List<TCreature> creaturesList = new List<TCreature>(Creatures);
             IEnumerable<TCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
@@ -148,7 +129,7 @@ namespace MaceEvolve.Core.Models
 
             return newCreatures;
         }
-        public List<TCreature> NewGenerationAsexual()
+        public virtual List<TCreature> NewGenerationAsexual()
         {
             List<TCreature> creaturesList = new List<TCreature>(Creatures);
             IEnumerable<TCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
@@ -207,7 +188,7 @@ namespace MaceEvolve.Core.Models
 
             return newCreatures;
         }
-        public IEnumerable<TCreature> GetSuccessfulCreatures(IEnumerable<TCreature> creatures)
+        public virtual IEnumerable<TCreature> GetSuccessfulCreatures(IEnumerable<TCreature> creatures)
         {
             if (creatures == null) { throw new ArgumentNullException(); }
 
@@ -233,7 +214,7 @@ namespace MaceEvolve.Core.Models
                 return orderedCreatures.SkipWhile(x => orderedCreatures.IndexOf(x) < topPercentileStartingIndex).Where(x => x.FoodEaten > 0);
             }
         }
-        public Dictionary<TCreature, double> GetFitnesses(IEnumerable<TCreature> creatures)
+        public virtual Dictionary<TCreature, double> GetFitnesses(IEnumerable<TCreature> creatures)
         {
             if (creatures == null) { throw new ArgumentNullException(); }
 
@@ -273,7 +254,7 @@ namespace MaceEvolve.Core.Models
 
             return successfulCreaturesFitnesses;
         }
-        public bool MutateNetwork(NeuralNetwork network, double createRandomNodeChance, double removeRandomNodeChance, double mutateRandomNodeBiasChance, double createRandomConnectionChance, double removeRandomConnectionChance, double mutateRandomConnectionSourceChance, double mutateRandomConnectionTargetChance, double mutateRandomConnectionWeightChance)
+        public virtual bool MutateNetwork(NeuralNetwork network, double createRandomNodeChance, double removeRandomNodeChance, double mutateRandomNodeBiasChance, double createRandomConnectionChance, double removeRandomConnectionChance, double mutateRandomConnectionSourceChance, double mutateRandomConnectionTargetChance, double mutateRandomConnectionWeightChance)
         {
             int processNodeCount = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Process).Count();
             bool mutationAttempted = false;
@@ -436,17 +417,17 @@ namespace MaceEvolve.Core.Models
 
             return mutationAttempted;
         }
-        public IEnumerable<CreatureInput> GetPossibleInputsToAdd(NeuralNetwork network)
+        public virtual IEnumerable<CreatureInput> GetPossibleInputsToAdd(NeuralNetwork network)
         {
             //Return any inputs that aren't already used by a node in the network.
             return PossibleCreatureInputs.Where(x => !network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Input && x == y.Value.CreatureInput));
         }
-        public IEnumerable<CreatureAction> GetPossibleActionsToAdd(NeuralNetwork network)
+        public virtual IEnumerable<CreatureAction> GetPossibleActionsToAdd(NeuralNetwork network)
         {
             //Return any actions that aren't already used by a node in the network.
             return PossibleCreatureActions.Where(x => !network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Output && x == y.Value.CreatureAction));
         }
-        public void Update()
+        public virtual void Update()
         {
             TCreature newBestCreature = null;
 
@@ -510,43 +491,14 @@ namespace MaceEvolve.Core.Models
             {
                 BestCreature = newBestCreature;
             }
-
-            Tick();
         }
-        private void Tick()
+        public virtual List<TFood> GenerateFood()
         {
-            if (TicksUntilNextGeneration <= 0)
-            {
-                int oldGenerationCount = GenerationCount;
-
-                TicksUntilNextGeneration = TicksPerGeneration;
-                Creatures = NewGenerationAsexual();
-
-                if (Creatures.Count > 0)
-                {
-                    ResetFood();
-                    SelectedCreature = null;
-                    GenerationCount += 1;
-                }
-                else
-                {
-                    Reset();
-                }
-
-                OnNewGenerationStarted(this, new NewGenerationEventArgs(oldGenerationCount, GenerationCount));
-            }
-            else
-            {
-                TicksUntilNextGeneration -= 1;
-            }
-        }
-        public void ResetFood()
-        {
-            Food.Clear();
+            List<TFood> food = new List<TFood>();
 
             for (int i = 0; i < MaxFoodAmount; i++)
             {
-                Food.Add(new TFood()
+                food.Add(new TFood()
                 {
                     X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
                     Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
@@ -556,8 +508,10 @@ namespace MaceEvolve.Core.Models
                     Size = 7
                 });
             }
+
+            return food;
         }
-        public List<TCreature> GenerateCreatures()
+        public virtual List<TCreature> GenerateCreatures()
         {
             List<TCreature> creatures = new List<TCreature>();
 
@@ -582,17 +536,13 @@ namespace MaceEvolve.Core.Models
 
             return creatures;
         }
-        protected void OnBestCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
+        protected virtual void OnBestCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
         {
             BestCreatureChanged?.Invoke(this, e);
         }
-        protected void OnSelectedCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
+        protected virtual void OnSelectedCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
         {
             SelectedCreatureChanged?.Invoke(this, e);
-        }
-        protected void OnNewGenerationStarted(object sender, NewGenerationEventArgs e)
-        {
-            NewGenerationStarted?.Invoke(this, e);
         }
         #endregion
     }

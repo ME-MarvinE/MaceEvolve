@@ -30,11 +30,17 @@ namespace MaceEvolve
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.StartButton = new System.Windows.Forms.Button();
             this.StopButton = new System.Windows.Forms.Button();
             this.ResetButton = new System.Windows.Forms.Button();
             this.NextGenButton = new System.Windows.Forms.Button();
             this.btnTrackBestCreature = new System.Windows.Forms.Button();
+            this.DrawTimer = new System.Windows.Forms.Timer(this.components);
+            this.GameTimer = new System.Windows.Forms.Timer(this.components);
+            this.lblGenEndsIn = new System.Windows.Forms.Label();
+            this.lblGenerationCount = new System.Windows.Forms.Label();
+            this.NewGenerationTimer = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // StartButton
@@ -107,12 +113,52 @@ namespace MaceEvolve
             this.btnTrackBestCreature.UseVisualStyleBackColor = false;
             this.btnTrackBestCreature.Click += new System.EventHandler(this.btnTrackBestCreature_Click);
             // 
+            // DrawTimer
+            // 
+            this.DrawTimer.Interval = 17;
+            this.DrawTimer.Tick += new System.EventHandler(this.DrawTimer_Tick);
+            // 
+            // GameTimer
+            // 
+            this.GameTimer.Interval = 17;
+            this.GameTimer.Tick += new System.EventHandler(this.GameTimer_Tick);
+            // 
+            // lblGenEndsIn
+            // 
+            this.lblGenEndsIn.AutoSize = true;
+            this.lblGenEndsIn.BackColor = System.Drawing.Color.Transparent;
+            this.lblGenEndsIn.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.lblGenEndsIn.ForeColor = System.Drawing.Color.White;
+            this.lblGenEndsIn.Location = new System.Drawing.Point(15, 44);
+            this.lblGenEndsIn.Name = "lblGenEndsIn";
+            this.lblGenEndsIn.Size = new System.Drawing.Size(80, 21);
+            this.lblGenEndsIn.TabIndex = 4;
+            this.lblGenEndsIn.Text = "Ends In 0s";
+            // 
+            // lblGenerationCount
+            // 
+            this.lblGenerationCount.AutoSize = true;
+            this.lblGenerationCount.BackColor = System.Drawing.Color.Transparent;
+            this.lblGenerationCount.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblGenerationCount.ForeColor = System.Drawing.Color.White;
+            this.lblGenerationCount.Location = new System.Drawing.Point(12, 12);
+            this.lblGenerationCount.Name = "lblGenerationCount";
+            this.lblGenerationCount.Size = new System.Drawing.Size(75, 32);
+            this.lblGenerationCount.TabIndex = 5;
+            this.lblGenerationCount.Text = "Gen 1";
+            // 
+            // NewGenerationTimer
+            // 
+            this.NewGenerationTimer.Tick += new System.EventHandler(this.NewGenerationTimer_Tick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.ClientSize = new System.Drawing.Size(784, 661);
+            this.Controls.Add(this.lblGenEndsIn);
+            this.Controls.Add(this.lblGenerationCount);
             this.Controls.Add(this.btnTrackBestCreature);
             this.Controls.Add(this.NextGenButton);
             this.Controls.Add(this.ResetButton);
@@ -121,7 +167,10 @@ namespace MaceEvolve
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Mace Evolution";
+            this.Paint += new System.Windows.Forms.PaintEventHandler(this.MainForm_Paint);
+            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -131,5 +180,10 @@ namespace MaceEvolve
         private Button ResetButton;
         private Button NextGenButton;
         private Button btnTrackBestCreature;
+        private Timer DrawTimer;
+        private Timer GameTimer;
+        private Label lblGenEndsIn;
+        private Label lblGenerationCount;
+        private Timer NewGenerationTimer;
     }
 }
