@@ -1,6 +1,8 @@
-﻿namespace MaceEvolve.Core.Models
+﻿using MaceEvolve.Core.Interfaces;
+
+namespace MaceEvolve.Core.Models
 {
-    public class Rectangle
+    public class Rectangle : IRectangle
     {
         public double X { get; set; }
         public double Y { get; set; }

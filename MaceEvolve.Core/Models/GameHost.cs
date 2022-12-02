@@ -23,8 +23,8 @@ namespace MaceEvolve.Core.Models
         public Stopwatch Stopwatch { get; set; } = new Stopwatch();
         public int MaxCreatureAmount { get; set; } = 150;
         public int MaxFoodAmount { get; set; } = 350;
-        public Rectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
-        public Rectangle SuccessBounds { get; set; }
+        public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
+        public IRectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public double CreatureSpeed { get; set; }
