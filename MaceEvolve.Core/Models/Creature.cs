@@ -119,10 +119,14 @@ namespace MaceEvolve.Core.Models
         public void UpdateInputValues(CreatureStepInfo stepInfo)
         {
             Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy());
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(stepInfo));
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood(stepInfo));
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToCreature, VerticalProximityToCreature(stepInfo));
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToLeft, ProximityToCreatureToLeft(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToRight, ProximityToCreatureToRight(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToFront, ProximityToCreatureToFront(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToBack, ProximityToCreatureToBack(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToLeft, ProximityToFoodToLeft(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToRight, ProximityToFoodToRight(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToFront, ProximityToFoodToFront(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToBack, ProximityToFoodToBack(stepInfo));
             Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound(stepInfo));
             Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound(stepInfo));
             Brain.UpdateInputValue(CreatureInput.RandomInput, RandomInput());
@@ -232,59 +236,189 @@ namespace MaceEvolve.Core.Models
         {
             return Globals.Map(Energy, 0, MaxEnergy, 0, 1);
         }
-        public double HorizontalProximityToCreature(CreatureStepInfo stepInfo)
+        public double ProximityToCreatureToLeft(CreatureStepInfo stepInfo)
         {
             if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
             {
-                return 1;
+                return 0;
             }
 
-            //Visible creatures does not contain itself. No need to filter.
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX < MX);
 
-            double horizontalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
+            if (closestCreature == null)
+            {
+                return 0;
+            }
 
-            return Globals.Map(horizontalDistanceToCreature, 0, SightRange, 0, 1);
+            double distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
+
+            if (distanceFromClosestCreatureToLeft < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestCreatureToLeft, 0, SightRange, 1, 0);
         }
-        public double VerticalProximityToCreature(CreatureStepInfo stepInfo)
+        public double ProximityToCreatureToRight(CreatureStepInfo stepInfo)
         {
             if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
             {
-                return 1;
+                return 0;
             }
 
-            //Visible creatures does not contain itself. No need to filter.
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX > MX);
 
-            double verticalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
+            if (closestCreature == null)
+            {
+                return 0;
+            }
 
-            return Globals.Map(verticalDistanceToCreature, 0, SightRange, 0, 1);
+            double distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
+
+            if (distanceFromClosestCreatureToRight < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestCreatureToRight, 0, SightRange, 1, 0);
         }
-        public double HorizontalProximityToFood(CreatureStepInfo stepInfo)
+        public double ProximityToCreatureToFront(CreatureStepInfo stepInfo)
+        {
+            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            {
+                return 0;
+            }
+
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY < MY);
+
+            if (closestCreature == null)
+            {
+                return 0;
+            }
+
+            double distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
+
+            if (distanceFromClosestCreatureToFront < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestCreatureToFront, 0, SightRange, 1, 0);
+        }
+        public double ProximityToCreatureToBack(CreatureStepInfo stepInfo)
+        {
+            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            {
+                return 0;
+            }
+
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY > MY);
+
+            if (closestCreature == null)
+            {
+                return 0;
+            }
+
+            double distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
+
+            if (distanceFromClosestCreatureToBack < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestCreatureToBack, 0, SightRange, 1, 0);
+        }
+        public double ProximityToFoodToLeft(CreatureStepInfo stepInfo)
         {
             if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
-                return 1;
+                return 0;
             }
 
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX < MX);
 
-            double horizontalDistanceToFood = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
+            if (closestFood == null)
+            {
+                return 0;
+            }
 
-            return Globals.Map(horizontalDistanceToFood, 0, SightRange, 0, 1);
+            double distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
+
+            if (distanceFromClosestFoodToLeft < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestFoodToLeft, 0, SightRange, 1, 0);
         }
-        public double VerticalProximityToFood(CreatureStepInfo stepInfo)
+        public double ProximityToFoodToRight(CreatureStepInfo stepInfo)
         {
             if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
             {
-                return 1;
+                return 0;
             }
 
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX > MX);
 
-            double verticalDistanceToFood = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
+            if (closestFood == null)
+            {
+                return 0;
+            }
 
-            return Globals.Map(verticalDistanceToFood, 0, SightRange, 0, 1);
+            double distanceFromClosestFoodToRight = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
+
+            if (distanceFromClosestFoodToRight < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestFoodToRight, 0, SightRange, 1, 0);
+        }
+        public double ProximityToFoodToFront(CreatureStepInfo stepInfo)
+        {
+            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            {
+                return 0;
+            }
+
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY < MY);
+
+            if (closestFood == null)
+            {
+                return 0;
+            }
+
+            double distanceFromClosestFoodToFront = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
+
+            if (distanceFromClosestFoodToFront < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestFoodToFront, 0, SightRange, 1, 0);
+        }
+        public double ProximityToFoodToBack(CreatureStepInfo stepInfo)
+        {
+            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            {
+                return 0;
+            }
+
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY > MY);
+
+            if (closestFood == null)
+            {
+                return 0;
+            }
+
+            double distanceFromClosestFoodToBack = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
+
+            if (distanceFromClosestFoodToBack < 0)
+            {
+                return 0;
+            }
+
+            return Globals.Map(distanceFromClosestFoodToBack, 0, SightRange, 1, 0);
         }
         public double DistanceFromTopWorldBound(CreatureStepInfo stepInfo)
         {

@@ -3,10 +3,14 @@
     public enum CreatureInput
     {
         PercentMaxEnergy,
-        VerticalProximityToCreature,
-        HorizontalProximityToCreature,
-        VerticalProximityToFood,
-        HorizontalProximityToFood,
+        ProximityToCreatureToLeft,
+        ProximityToCreatureToRight,
+        ProximityToCreatureToFront,
+        ProximityToCreatureToBack,
+        ProximityToFoodToLeft,
+        ProximityToFoodToRight,
+        ProximityToFoodToFront,
+        ProximityToFoodToBack,
         DistanceFromTopWorldBound,
         DistanceFromLeftWorldBound,
         RandomInput

@@ -1,11 +1,9 @@
-using MaceEvolve.WinForms.Controls;
 using MaceEvolve.Core;
-using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
+using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.Models;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -63,7 +61,7 @@ namespace MaceEvolve.WinForms
                 lblGenEndsIn.Text = $"Ends in {string.Format("{0:0.0}", SecondsUntilNewGeneration)}s";
             }
         }
-        public double SecondsPerGeneration { get; set; } = 5;
+        public double SecondsPerGeneration { get; set; } = 30;
         public int GenerationCount
         {
             get

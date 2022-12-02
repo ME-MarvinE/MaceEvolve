@@ -31,10 +31,14 @@ namespace MaceEvolve.Core.Interfaces
         #region CreatureValues
         //x values map from 0 to 1.
         double PercentMaxEnergy();
-        double HorizontalProximityToCreature(CreatureStepInfo stepInfo);
-        double VerticalProximityToCreature(CreatureStepInfo stepInfo);
-        double HorizontalProximityToFood(CreatureStepInfo stepInfo);
-        double VerticalProximityToFood(CreatureStepInfo stepInfo);
+        double ProximityToCreatureToLeft(CreatureStepInfo stepInfo);
+        double ProximityToCreatureToRight(CreatureStepInfo stepInfo);
+        double ProximityToCreatureToFront(CreatureStepInfo stepInfo);
+        double ProximityToCreatureToBack(CreatureStepInfo stepInfo);
+        double ProximityToFoodToLeft(CreatureStepInfo stepInfo);
+        double ProximityToFoodToRight(CreatureStepInfo stepInfo);
+        double ProximityToFoodToFront(CreatureStepInfo stepInfo);
+        double ProximityToFoodToBack(CreatureStepInfo stepInfo);
         double DistanceFromTopWorldBound(CreatureStepInfo stepInfo);
         double DistanceFromLeftWorldBound(CreatureStepInfo stepInfo);
         double RandomInput();
