@@ -8,7 +8,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace MaceEvolve.Controls
+namespace MaceEvolve.WinForms.Controls
 {
     public partial class NeuralNetworkViewer : UserControl
     {

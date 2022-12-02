@@ -1,8 +1,8 @@
 ﻿using MaceEvolve.Core.Models;
-using MaceEvolve.Interfaces;
+using MaceEvolve.WinForms.Interfaces;
 using System.Drawing;
 
-namespace MaceEvolve.Models
+namespace MaceEvolve.WinForms.Models
 {
     public class GraphicalFood : Food, IGraphical
     {

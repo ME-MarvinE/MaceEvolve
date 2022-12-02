@@ -1,7 +1,7 @@
-﻿using MaceEvolve.Controls;
+﻿using MaceEvolve.WinForms.Controls;
 using System.Windows.Forms;
 
-namespace MaceEvolve
+namespace MaceEvolve.WinForms
 {
     public partial class NetworkViewerForm : Form
     {

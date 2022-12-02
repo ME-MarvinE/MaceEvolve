@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace MaceEvolve
+namespace MaceEvolve.WinForms
 {
     partial class MainForm
     {

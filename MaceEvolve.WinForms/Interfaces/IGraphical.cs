@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace MaceEvolve.Interfaces
+namespace MaceEvolve.WinForms.Interfaces
 {
     public interface IGraphical
     {

@@ -1,8 +1,8 @@
-using MaceEvolve.Controls;
+using MaceEvolve.WinForms.Controls;
 using MaceEvolve.Core;
 using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
-using MaceEvolve.Models;
+using MaceEvolve.WinForms.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +11,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace MaceEvolve
+namespace MaceEvolve.WinForms
 {
     public partial class MainForm : Form
     {

@@ -1,4 +1,4 @@
-﻿namespace MaceEvolve
+﻿namespace MaceEvolve.WinForms
 {
     partial class NetworkViewerForm
     {

@@ -1,4 +1,4 @@
-﻿namespace MaceEvolve.Controls
+﻿namespace MaceEvolve.WinForms.Controls
 {
     partial class NeuralNetworkViewer
     {
