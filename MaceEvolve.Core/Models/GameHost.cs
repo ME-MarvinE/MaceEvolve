@@ -4,6 +4,7 @@ using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 
@@ -33,6 +34,8 @@ namespace MaceEvolve.Core.Models
         public double MutationAttempts { get; set; } = 2;
         public double ConnectionWeightBound { get; set; } = 4;
         public double MaxCreatureEnergy { get; set; } = 150;
+        public double FoodSize { get; set; } = 7;
+        public double CreatureSize { get; set; } = 10;
         public double SuccessfulCreaturesPercentile { get; set; } = 10;
         public double ReproductionNodeBiasVariance = 0.05;
         public double ReproductionConnectionWeightVariance = 0.05;
@@ -105,7 +108,7 @@ namespace MaceEvolve.Core.Models
             TCreature newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
             newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
             newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
-            newCreature.Size = 10;
+            newCreature.Size = CreatureSize;
             newCreature.Speed = CreatureSpeed;
             newCreature.Metabolism = 0.1;
             newCreature.Energy = MaxCreatureEnergy;
@@ -159,7 +162,7 @@ namespace MaceEvolve.Core.Models
                                 TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
                                 newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
                                 newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
-                                newCreature.Size = 10;
+                                newCreature.Size = CreatureSize;
                                 newCreature.Speed = CreatureSpeed;
                                 newCreature.Metabolism = 0.1;
                                 newCreature.Energy = MaxCreatureEnergy;
@@ -482,7 +485,7 @@ namespace MaceEvolve.Core.Models
                         Servings = 1,
                         EnergyPerServing = 30,
                         ServingDigestionCost = 0.05,
-                        Size = 7
+                        Size = FoodSize
                     });
                 }
             }
@@ -505,7 +508,7 @@ namespace MaceEvolve.Core.Models
                     Servings = 1,
                     EnergyPerServing = 30,
                     ServingDigestionCost = 0.05,
-                    Size = 7
+                    Size = FoodSize
                 });
             }
 
@@ -522,7 +525,7 @@ namespace MaceEvolve.Core.Models
                     Brain = new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList()),
                     X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
                     Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
-                    Size = 10,
+                    Size = CreatureSize,
                     Speed = CreatureSpeed,
                     Metabolism = 0.1,
                     Energy = MaxCreatureEnergy,
@@ -544,6 +547,42 @@ namespace MaceEvolve.Core.Models
         {
             SelectedCreatureChanged?.Invoke(this, e);
         }
+        //public void RunSimulation(long ticksToRunFor, int ticksPerGeneration = 15000)
+        //{
+        //    if (ticksPerGeneration < 1)
+        //    {
+        //        throw new ArgumentOutOfRangeException($"{nameof(ticksPerGeneration)} must be greater than 0");
+        //    }
+
+        //    long ticks = 0;
+        //    int ticksInCurrentGeneration = 0;
+
+        //    while (ticks < ticksToRunFor)
+        //    {
+        //        Update();
+        //        ticks += 1;
+        //        ticksInCurrentGeneration += 1;
+
+        //        if (ticksInCurrentGeneration >= ticksPerGeneration)
+        //        {
+        //            ticksInCurrentGeneration = 0;
+
+        //            List<TCreature> newGenerationCreatures = NewGenerationAsexual();
+
+        //            if (newGenerationCreatures.Count > 0)
+        //            {
+        //                Reset();
+        //                Food.AddRange(GenerateFood());
+        //                Creatures = newGenerationCreatures;
+        //            }
+        //            else
+        //            {
+        //                Reset();
+        //            }
+        //        }
+        //    }
+        //}
+
         #endregion
     }
 }
