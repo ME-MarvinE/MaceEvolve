@@ -41,6 +41,7 @@ namespace MaceEvolve.WinForms
             this.lblGenEndsIn = new System.Windows.Forms.Label();
             this.lblGenerationCount = new System.Windows.Forms.Label();
             this.NewGenerationTimer = new System.Windows.Forms.Timer(this.components);
+            this.lblSimulationRunning = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // StartButton
@@ -129,7 +130,7 @@ namespace MaceEvolve.WinForms
             this.lblGenEndsIn.BackColor = System.Drawing.Color.Transparent;
             this.lblGenEndsIn.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.lblGenEndsIn.ForeColor = System.Drawing.Color.White;
-            this.lblGenEndsIn.Location = new System.Drawing.Point(15, 44);
+            this.lblGenEndsIn.Location = new System.Drawing.Point(15, 72);
             this.lblGenEndsIn.Name = "lblGenEndsIn";
             this.lblGenEndsIn.Size = new System.Drawing.Size(80, 21);
             this.lblGenEndsIn.TabIndex = 4;
@@ -141,7 +142,7 @@ namespace MaceEvolve.WinForms
             this.lblGenerationCount.BackColor = System.Drawing.Color.Transparent;
             this.lblGenerationCount.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.lblGenerationCount.ForeColor = System.Drawing.Color.White;
-            this.lblGenerationCount.Location = new System.Drawing.Point(12, 12);
+            this.lblGenerationCount.Location = new System.Drawing.Point(12, 40);
             this.lblGenerationCount.Name = "lblGenerationCount";
             this.lblGenerationCount.Size = new System.Drawing.Size(75, 32);
             this.lblGenerationCount.TabIndex = 5;
@@ -151,12 +152,25 @@ namespace MaceEvolve.WinForms
             // 
             this.NewGenerationTimer.Tick += new System.EventHandler(this.NewGenerationTimer_Tick);
             // 
+            // lblSimulationRunning
+            // 
+            this.lblSimulationRunning.AutoSize = true;
+            this.lblSimulationRunning.BackColor = System.Drawing.Color.Transparent;
+            this.lblSimulationRunning.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.lblSimulationRunning.ForeColor = System.Drawing.Color.White;
+            this.lblSimulationRunning.Location = new System.Drawing.Point(12, 9);
+            this.lblSimulationRunning.Name = "lblSimulationRunning";
+            this.lblSimulationRunning.Size = new System.Drawing.Size(105, 32);
+            this.lblSimulationRunning.TabIndex = 6;
+            this.lblSimulationRunning.Text = "Stopped";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.ClientSize = new System.Drawing.Size(784, 661);
+            this.Controls.Add(this.lblSimulationRunning);
             this.Controls.Add(this.lblGenEndsIn);
             this.Controls.Add(this.lblGenerationCount);
             this.Controls.Add(this.btnTrackBestCreature);
@@ -185,5 +199,6 @@ namespace MaceEvolve.WinForms
         private Label lblGenEndsIn;
         private Label lblGenerationCount;
         private Timer NewGenerationTimer;
+        private Label lblSimulationRunning;
     }
 }

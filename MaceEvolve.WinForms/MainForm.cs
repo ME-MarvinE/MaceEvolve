@@ -1,4 +1,5 @@
 using MaceEvolve.Core;
+using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.Models;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaceEvolve.WinForms
@@ -21,10 +23,23 @@ namespace MaceEvolve.WinForms
         private int _generationCount = 1;
         private NeuralNetworkViewer _bestCreatureNeuralNetworkViewer;
         private NeuralNetworkViewer _selectedCreatureNeuralNetworkViewer;
+        private bool _simulationRunning;
         #endregion
 
         #region Properties
-        public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; } = new GameHost<GraphicalCreature, GraphicalFood>();
+        public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; } = new GameHost<GraphicalCreature, GraphicalFood>() { FoodSize = 7, CreatureSize = 10 };
+        private bool SimulationRunning
+        {
+            get
+            {
+                return _simulationRunning;
+            }
+            set
+            {
+                _simulationRunning = value;
+                lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
+            }
+        }
         public int TargetFPS
         {
             get
@@ -110,6 +125,7 @@ namespace MaceEvolve.WinForms
         #region Methods
         public void Start()
         {
+            SimulationRunning = true;
             GameTimer.Start();
             DrawTimer.Start();
             NewGenerationTimer.Start();
@@ -117,6 +133,7 @@ namespace MaceEvolve.WinForms
         }
         public void Stop()
         {
+            SimulationRunning = false;
             GameTimer.Stop();
             DrawTimer.Stop();
             NewGenerationTimer.Stop();
