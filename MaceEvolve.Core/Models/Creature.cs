@@ -238,12 +238,7 @@ namespace MaceEvolve.Core.Models
         }
         public double ProximityToCreatureToLeft(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX < MX);
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX <= MX);
 
             if (closestCreature == null)
             {
@@ -252,21 +247,11 @@ namespace MaceEvolve.Core.Models
 
             double distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
 
-            if (distanceFromClosestCreatureToLeft < 0)
-            {
-                return 0;
-            }
-
             return Globals.Map(distanceFromClosestCreatureToLeft, 0, SightRange, 1, 0);
         }
         public double ProximityToCreatureToRight(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX > MX);
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX >= MX);
 
             if (closestCreature == null)
             {
@@ -275,21 +260,11 @@ namespace MaceEvolve.Core.Models
 
             double distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
 
-            if (distanceFromClosestCreatureToRight < 0)
-            {
-                return 0;
-            }
-
             return Globals.Map(distanceFromClosestCreatureToRight, 0, SightRange, 1, 0);
         }
         public double ProximityToCreatureToFront(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY < MY);
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY <= MY);
 
             if (closestCreature == null)
             {
@@ -298,21 +273,11 @@ namespace MaceEvolve.Core.Models
 
             double distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
 
-            if (distanceFromClosestCreatureToFront < 0)
-            {
-                return 0;
-            }
-
             return Globals.Map(distanceFromClosestCreatureToFront, 0, SightRange, 1, 0);
         }
         public double ProximityToCreatureToBack(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY > MY);
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY >= MY);
 
             if (closestCreature == null)
             {
@@ -321,21 +286,11 @@ namespace MaceEvolve.Core.Models
 
             double distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
 
-            if (distanceFromClosestCreatureToBack < 0)
-            {
-                return 0;
-            }
-
             return Globals.Map(distanceFromClosestCreatureToBack, 0, SightRange, 1, 0);
         }
         public double ProximityToFoodToLeft(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX < MX);
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= MX);
 
             if (closestFood == null)
             {
@@ -344,21 +299,11 @@ namespace MaceEvolve.Core.Models
 
             double distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
 
-            if (distanceFromClosestFoodToLeft < 0)
-            {
-                return 0;
-            }
-
             return Globals.Map(distanceFromClosestFoodToLeft, 0, SightRange, 1, 0);
         }
         public double ProximityToFoodToRight(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX > MX);
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX >= MX);
 
             if (closestFood == null)
             {
@@ -367,21 +312,11 @@ namespace MaceEvolve.Core.Models
 
             double distanceFromClosestFoodToRight = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
 
-            if (distanceFromClosestFoodToRight < 0)
-            {
-                return 0;
-            }
-
             return Globals.Map(distanceFromClosestFoodToRight, 0, SightRange, 1, 0);
         }
         public double ProximityToFoodToFront(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY < MY);
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY <= MY);
 
             if (closestFood == null)
             {
@@ -390,21 +325,11 @@ namespace MaceEvolve.Core.Models
 
             double distanceFromClosestFoodToFront = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
 
-            if (distanceFromClosestFoodToFront < 0)
-            {
-                return 0;
-            }
-
             return Globals.Map(distanceFromClosestFoodToFront, 0, SightRange, 1, 0);
         }
         public double ProximityToFoodToBack(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
-            {
-                return 0;
-            }
-
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY > MY);
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY >= MY);
 
             if (closestFood == null)
             {
@@ -412,11 +337,6 @@ namespace MaceEvolve.Core.Models
             }
 
             double distanceFromClosestFoodToBack = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
-
-            if (distanceFromClosestFoodToBack < 0)
-            {
-                return 0;
-            }
 
             return Globals.Map(distanceFromClosestFoodToBack, 0, SightRange, 1, 0);
         }
