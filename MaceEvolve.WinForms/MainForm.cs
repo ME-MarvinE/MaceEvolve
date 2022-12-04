@@ -1,5 +1,4 @@
 using MaceEvolve.Core;
-using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.Models;
@@ -8,7 +7,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaceEvolve.WinForms
@@ -17,78 +15,18 @@ namespace MaceEvolve.WinForms
     {
         #region Fields
         private Random _random = new Random();
-        private int _targetFPS = 10;
-        private int _targetTPS = 10;
-        private float _secondsUntilNewGeneration;
-        private int _generationCount = 1;
         private NeuralNetworkViewer _bestCreatureNeuralNetworkViewer;
         private NeuralNetworkViewer _selectedCreatureNeuralNetworkViewer;
-        private bool _simulationRunning;
         #endregion
 
         #region Properties
-        public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; } = new GameHost<GraphicalCreature, GraphicalFood>() { FoodSize = 7, CreatureSize = 10 };
-        private bool SimulationRunning
-        {
-            get
-            {
-                return _simulationRunning;
-            }
-            set
-            {
-                _simulationRunning = value;
-                lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
-            }
-        }
-        public int TargetFPS
-        {
-            get
-            {
-                return _targetFPS;
-            }
-            set
-            {
-                _targetFPS = value;
-                DrawTimer.Interval = 1000 / TargetFPS;
-            }
-        }
-        public int TargetTPS
-        {
-            get
-            {
-                return _targetTPS;
-            }
-            set
-            {
-                _targetTPS = value;
-                GameTimer.Interval = 1000 / _targetTPS;
-            }
-        }
-        public float SecondsUntilNewGeneration
-        {
-            get
-            {
-                return _secondsUntilNewGeneration;
-            }
-            set
-            {
-                _secondsUntilNewGeneration = value;
-                lblGenEndsIn.Text = $"Ends in {string.Format("{0:0.0}", SecondsUntilNewGeneration)}s";
-            }
-        }
-        public float SecondsPerGeneration { get; set; } = 30;
-        public int GenerationCount
-        {
-            get
-            {
-                return _generationCount;
-            }
-            set
-            {
-                _generationCount = value;
-                lblGenerationCount.Text = $"Gen {GenerationCount}";
-            }
-        }
+        public int SimulationTPS { get; set; }
+        public long TicksPerGeneration { get; set; }
+        public int GenerationCount { get; set; }
+        public bool SimulationRunning { get; set; }
+        public int GenerationsToRunFor { get; set; }
+        public int TicksInCurrentGeneration { get; set; }
+        public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
         {
             get
@@ -104,6 +42,41 @@ namespace MaceEvolve.WinForms
                 return UpdateOrCreateNetworkViewer(MainGameHost.BestCreature?.Brain, _bestCreatureNeuralNetworkViewer);
             }
         }
+        public float SimulationMspt
+        {
+            get
+            {
+                return (1f / SimulationTPS) * 1000;
+            }
+        }
+        public long TicksWhenSimulationEnds
+        {
+            get
+            {
+                return TicksPerGeneration * GenerationsToRunFor;
+            }
+        }
+        public long TicksUntilSimulationIsCompleted
+        {
+            get
+            {
+                return TicksWhenSimulationEnds - TicksElapsed;
+            }
+        }
+        public long TicksElapsed
+        {
+            get
+            {
+                return TicksPerGeneration * (GenerationCount - 1) + TicksInCurrentGeneration;
+            }
+        }
+        public long TicksUntilCurrentGenerationIsCompleted
+        {
+            get
+            {
+                return TicksPerGeneration - TicksInCurrentGeneration;
+            }
+        }
         #endregion
 
         #region Constructors
@@ -111,34 +84,10 @@ namespace MaceEvolve.WinForms
         {
             InitializeComponent();
             DoubleBuffered = true;
-            TargetTPS = 60;
-
-            MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
-            MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
-
-            TargetFPS = TargetTPS;
-            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
-            Reset();
         }
         #endregion
 
         #region Methods
-        public void Start()
-        {
-            SimulationRunning = true;
-            GameTimer.Start();
-            DrawTimer.Start();
-            NewGenerationTimer.Start();
-            MainGameHost.Stopwatch.Start();
-        }
-        public void Stop()
-        {
-            SimulationRunning = false;
-            GameTimer.Stop();
-            DrawTimer.Stop();
-            NewGenerationTimer.Stop();
-            MainGameHost.Stopwatch.Stop();
-        }
         public void Reset()
         {
             MainGameHost.Reset();
@@ -152,10 +101,9 @@ namespace MaceEvolve.WinForms
 
             MainGameHost.Food.AddRange(GenerateFood());
             MainGameHost.Creatures.AddRange(GenerateCreatures());
-            SecondsUntilNewGeneration = SecondsPerGeneration;
-            GenerationCount = 1;
 
-            Invalidate();
+            TicksInCurrentGeneration = 0;
+            GenerationCount = 1;
         }
         public List<GraphicalFood> GenerateFood()
         {
@@ -228,7 +176,7 @@ namespace MaceEvolve.WinForms
                 returnedNetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
                 returnedNetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
                 returnedNetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
-                returnedNetworkViewer.DrawTimer.Interval = 1000 / TargetFPS;
+                returnedNetworkViewer.DrawTimer.Interval = GameTimer.Interval;
             }
 
             returnedNetworkViewer.NeuralNetwork = neuralNetwork;
@@ -245,36 +193,68 @@ namespace MaceEvolve.WinForms
         }
         private void StartButton_Click(object sender, EventArgs e)
         {
-            Start();
+            SimulationRunning = true;
         }
         private void StopButton_Click(object sender, EventArgs e)
         {
-            Stop();
+            SimulationRunning = false;
         }
         private void ResetButton_Click(object sender, EventArgs e)
         {
             Reset();
         }
-        private void NextGenButton_Click(object sender, EventArgs e)
+        private void btnForwardGen_Click(object sender, EventArgs e)
         {
-            SecondsUntilNewGeneration = 0;
-            NewGenerationTimer_Tick(this, e);
+            //Doesn't work if loop runs from 0 to x.
+            for (long i = TicksUntilCurrentGenerationIsCompleted; i > 0; i--)
+            {
+                UpdateSimulation();
+            }
+        }
+        private void btnForwardGens_Click(object sender, EventArgs e)
+        {
+            //Doesn't work if loop runs from 0 to x.
+            long TicksIn100Generations = TicksPerGeneration * 100;
+            for (long i = TicksIn100Generations; i > 0; i--)
+            {
+                UpdateSimulation();
+            }
+        }
+        private void btnForwardAllGens_Click(object sender, EventArgs e)
+        {
+            //Doesn't work if loop runs from 0 to x.
+            for (long i = TicksUntilSimulationIsCompleted; i > 0; i--)
+            {
+                UpdateSimulation();
+            }
         }
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
         {
             NetworkViewerForm networkViewerForm = new NetworkViewerForm(BestCreatureNeuralNetworkViewer);
             networkViewerForm.Show();
         }
-        private void DrawTimer_Tick(object sender, EventArgs e)
-        {
-            Invalidate();
-        }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            MainGameHost.Update();
+            if (SimulationRunning && GenerationCount <= GenerationsToRunFor)
+            {
+                UpdateSimulation();
+            }
+
+            Invalidate();
         }
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
+            TimeSpan timeInCurrentGeneration = TimeSpan.FromMilliseconds(TicksInCurrentGeneration * SimulationMspt);
+            TimeSpan timePerGeneration = TimeSpan.FromMilliseconds(TicksPerGeneration * SimulationMspt);
+            TimeSpan timeInSimulation = TimeSpan.FromMilliseconds(TicksElapsed * SimulationMspt);
+            TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
+            TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
+
+            lblGenEndsIn.Text = $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
+                $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
+            lblGenerationCount.Text = $"Gen {GenerationCount}";
+            lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
+
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
@@ -322,7 +302,7 @@ namespace MaceEvolve.WinForms
 
             foreach (GraphicalFood food in MainGameHost.Food)
             {
-                using (SolidBrush brush = new SolidBrush(food.Color))
+                using (SolidBrush brush = new SolidBrush(Color.Green))
                 {
                     e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
                 }
@@ -351,27 +331,52 @@ namespace MaceEvolve.WinForms
 
             Invalidate();
         }
-        private void NewGenerationTimer_Tick(object sender, EventArgs e)
+        public void NewGeneration()
         {
-            SecondsUntilNewGeneration -= 0.1f;
-            if (SecondsUntilNewGeneration <= 0)
-            {
-                SecondsUntilNewGeneration = SecondsPerGeneration;
-                List<GraphicalCreature> newGenerationCreatures = NewGenerationAsexual();
+            List<GraphicalCreature> newGenerationCreatures = NewGenerationAsexual();
 
-                if (newGenerationCreatures.Count > 0)
-                {
-                    MainGameHost.Reset();
-                    MainGameHost.Food.AddRange(GenerateFood());
-                    MainGameHost.Creatures = newGenerationCreatures;
-                    GenerationCount += 1;
-                }
-                else
-                {
-                    Reset();
-                }
+            if (newGenerationCreatures.Count > 0)
+            {
+                MainGameHost.Reset();
+                MainGameHost.Food.AddRange(GenerateFood());
+                MainGameHost.Creatures = newGenerationCreatures;
+
+                TicksInCurrentGeneration = 0;
+                GenerationCount += 1;
+            }
+            else
+            {
+                Reset();
+            }
+        }
+        public void UpdateSimulation()
+        {
+            MainGameHost.Update();
+            TicksInCurrentGeneration += 1;
+
+            if (TicksInCurrentGeneration >= TicksPerGeneration)
+            {
+                NewGeneration();
             }
         }
         #endregion
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            GenerationsToRunFor = 2000;
+            SimulationTPS = 60;
+            TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
+
+            MainGameHost = new GameHost<GraphicalCreature, GraphicalFood>();
+            MainGameHost.CreatureSize = 10;
+            MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
+            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
+
+            MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
+            MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
+            GameTimer.Interval = (int)SimulationMspt;
+
+            Reset();
+        }
     }
 }
