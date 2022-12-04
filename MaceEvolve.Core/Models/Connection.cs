@@ -5,7 +5,7 @@
         #region Properties
         public int SourceId { get; set; }
         public int TargetId { get; set; }
-        public double Weight { get; set; }
+        public float Weight { get; set; }
         #endregion
     }
 }

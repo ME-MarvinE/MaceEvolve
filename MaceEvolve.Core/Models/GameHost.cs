@@ -28,17 +28,17 @@ namespace MaceEvolve.Core.Models
         public IRectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
-        public double CreatureSpeed { get; set; }
+        public float CreatureSpeed { get; set; }
         public int MaxCreatureProcessNodes { get; set; } = 4;
-        public double MutationChance { get; set; } = 0.25;
-        public double MutationAttempts { get; set; } = 2;
-        public double ConnectionWeightBound { get; set; } = 4;
-        public double MaxCreatureEnergy { get; set; } = 150;
-        public double FoodSize { get; set; } = 7;
-        public double CreatureSize { get; set; } = 10;
-        public double SuccessfulCreaturesPercentile { get; set; } = 10;
-        public double ReproductionNodeBiasVariance = 0.05;
-        public double ReproductionConnectionWeightVariance = 0.05;
+        public float MutationChance { get; set; } = 0.25f;
+        public int MutationAttempts { get; set; } = 2;
+        public float ConnectionWeightBound { get; set; } = 4;
+        public float MaxCreatureEnergy { get; set; } = 150;
+        public float FoodSize { get; set; } = 7;
+        public float CreatureSize { get; set; } = 10;
+        public float SuccessfulCreaturesPercentile { get; set; } = 10;
+        public float ReproductionNodeBiasVariance = 0.05f;
+        public float ReproductionConnectionWeightVariance = 0.05f;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
@@ -96,7 +96,7 @@ namespace MaceEvolve.Core.Models
         {
             List<TCreature> creaturesList = new List<TCreature>(Creatures);
             IEnumerable<TCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<TCreature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
+            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
 
             if (!successfulCreaturesFitnesses.Any())
             {
@@ -106,11 +106,11 @@ namespace MaceEvolve.Core.Models
             List<TCreature> newCreatures = new List<TCreature>();
 
             TCreature newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-            newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
-            newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
+            newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
+            newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
             newCreature.Size = CreatureSize;
             newCreature.Speed = CreatureSpeed;
-            newCreature.Metabolism = 0.1;
+            newCreature.Metabolism = 0.1f;
             newCreature.Energy = MaxCreatureEnergy;
             newCreature.MaxEnergy = MaxCreatureEnergy;
             newCreature.SightRange = 100;
@@ -136,7 +136,7 @@ namespace MaceEvolve.Core.Models
         {
             List<TCreature> creaturesList = new List<TCreature>(Creatures);
             IEnumerable<TCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<TCreature, double> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
+            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
 
             if (!successfulCreaturesFitnesses.Any())
             {
@@ -151,7 +151,7 @@ namespace MaceEvolve.Core.Models
                 {
                     TCreature successfulCreature = creatureFitnessPair.Key;
 
-                    if (random.NextDouble() <= creatureFitnessPair.Value && newCreatures.Count < MaxCreatureAmount)
+                    if (random.NextFloat() <= creatureFitnessPair.Value && newCreatures.Count < MaxCreatureAmount)
                     {
                         int numberOfChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(creatureFitnessPair.Value, 0, 1, 0, MaxCreatureAmount / 10) : successfulCreature.FoodEaten;
 
@@ -160,11 +160,11 @@ namespace MaceEvolve.Core.Models
                             if (newCreatures.Count < MaxCreatureAmount)
                             {
                                 TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-                                newCreature.X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width);
-                                newCreature.Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height);
+                                newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
+                                newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                                 newCreature.Size = CreatureSize;
                                 newCreature.Speed = CreatureSpeed;
-                                newCreature.Metabolism = 0.1;
+                                newCreature.Metabolism = 0.1f;
                                 newCreature.Energy = MaxCreatureEnergy;
                                 newCreature.MaxEnergy = MaxCreatureEnergy;
                                 newCreature.SightRange = 100;
@@ -202,41 +202,41 @@ namespace MaceEvolve.Core.Models
 
             if (UseSuccessBounds)
             {
-                double successBoundsRight = SuccessBounds.X + SuccessBounds.Width;
-                double successBoundsBottom = SuccessBounds.Y + SuccessBounds.Height;
+                float successBoundsRight = SuccessBounds.X + SuccessBounds.Width;
+                float successBoundsBottom = SuccessBounds.Y + SuccessBounds.Height;
                 return creatures.Where(x => x.X > SuccessBounds.X && x.X < successBoundsRight && x.Y > SuccessBounds.Y && x.Y < successBoundsBottom).ToList();
             }
             else
             {
                 //return creatures.Where(x => x.FoodEaten > 0).ToList();
 
-                double indexMultiplierForTopPercentile = (1 - (double)SuccessfulCreaturesPercentile / 100);
+                float indexMultiplierForTopPercentile = (1 - SuccessfulCreaturesPercentile / 100);
                 int topPercentileStartingIndex = (int)(creatures.Count() * indexMultiplierForTopPercentile) - 1;
 
                 List<TCreature> orderedCreatures = creatures.OrderBy(x => x.FoodEaten).ToList();
                 return orderedCreatures.SkipWhile(x => orderedCreatures.IndexOf(x) < topPercentileStartingIndex).Where(x => x.FoodEaten > 0);
             }
         }
-        public virtual Dictionary<TCreature, double> GetFitnesses(IEnumerable<TCreature> creatures)
+        public virtual Dictionary<TCreature, float> GetFitnesses(IEnumerable<TCreature> creatures)
         {
             if (creatures == null) { throw new ArgumentNullException(); }
 
             if (!creatures.Any())
             {
-                return new Dictionary<TCreature, double>();
+                return new Dictionary<TCreature, float>();
             }
 
-            Dictionary<TCreature, double> successfulCreaturesFitnesses = new Dictionary<TCreature, double>();
+            Dictionary<TCreature, float> successfulCreaturesFitnesses = new Dictionary<TCreature, float>();
 
             if (UseSuccessBounds)
             {
-                double successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
-                double successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
+                float successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
+                float successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
                 foreach (var creature in creatures)
                 {
-                    double distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
-                    double successBoundsHypotenuse = Globals.Hypotenuse(SuccessBounds.Width, SuccessBounds.Height);
+                    float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
+                    float successBoundsHypotenuse = Globals.Hypotenuse(SuccessBounds.Width, SuccessBounds.Height);
 
                     successfulCreaturesFitnesses.Add(creature, Globals.Map(distanceFromMiddle, 0, successBoundsHypotenuse, 1, 0)); ;
                 }
@@ -247,17 +247,17 @@ namespace MaceEvolve.Core.Models
 
                 if (mostFoodEaten == 0)
                 {
-                    return new Dictionary<TCreature, double>();
+                    return new Dictionary<TCreature, float>();
                 }
 
                 successfulCreaturesFitnesses = creatures.ToDictionary(
                     x => x,
-                    x => (double)x.FoodEaten / mostFoodEaten);
+                    x => (float)x.FoodEaten / mostFoodEaten);
             }
 
             return successfulCreaturesFitnesses;
         }
-        public virtual bool MutateNetwork(NeuralNetwork network, double createRandomNodeChance, double removeRandomNodeChance, double mutateRandomNodeBiasChance, double createRandomConnectionChance, double removeRandomConnectionChance, double mutateRandomConnectionSourceChance, double mutateRandomConnectionTargetChance, double mutateRandomConnectionWeightChance)
+        public virtual bool MutateNetwork(NeuralNetwork network, float createRandomNodeChance, float removeRandomNodeChance, float mutateRandomNodeBiasChance, float createRandomConnectionChance, float removeRandomConnectionChance, float mutateRandomConnectionSourceChance, float mutateRandomConnectionTargetChance, float mutateRandomConnectionWeightChance)
         {
             int processNodeCount = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Process).Count();
             bool mutationAttempted = false;
@@ -266,7 +266,7 @@ namespace MaceEvolve.Core.Models
             //Connections should be added after nodes are added so that there is a chance the newly created node gets a connection.
 
             //Remove an existing node. Input nodes should not be removed. 
-            if (random.NextDouble() <= removeRandomNodeChance)
+            if (random.NextFloat() <= removeRandomNodeChance)
             {
                 mutationAttempted = true;
 
@@ -291,17 +291,17 @@ namespace MaceEvolve.Core.Models
             }
 
             //Change a random node's bias.
-            if (random.NextDouble() <= mutateRandomNodeBiasChance)
+            if (random.NextFloat() <= mutateRandomNodeBiasChance)
             {
                 mutationAttempted = true;
 
                 List<Node> nodesList = network.NodeIdsToNodesDict.Values.ToList();
                 Node randomNode = nodesList[random.Next(nodesList.Count)];
-                randomNode.Bias = random.NextDouble(-1, 1);
+                randomNode.Bias = random.NextFloat(-1, 1);
             }
 
             //Create a new node with a default connection.
-            if (random.NextDouble() <= createRandomNodeChance)
+            if (random.NextFloat() <= createRandomNodeChance)
             {
                 List<CreatureInput> possibleCreatureInputsToAdd = GetPossibleInputsToAdd(network).ToList();
                 List<CreatureAction> possibleCreatureActionsToAdd = GetPossibleActionsToAdd(network).ToList();
@@ -309,20 +309,20 @@ namespace MaceEvolve.Core.Models
                 mutationAttempted = true;
 
                 Node nodeToAdd;
-                double nodeTypeRandomNum = random.NextDouble();
-                double chanceForSingleNodeType = 1d / Globals.AllNodeTypes.Count;
+                float nodeTypeRandomNum = random.NextFloat();
+                float chanceForSingleNodeType = 1f / Globals.AllNodeTypes.Count;
 
                 if (nodeTypeRandomNum <= chanceForSingleNodeType && possibleCreatureInputsToAdd.Count > 0)
                 {
-                    nodeToAdd = new Node(NodeType.Input, random.NextDouble(-1, 1), possibleCreatureInputsToAdd[random.Next(possibleCreatureInputsToAdd.Count)]);
+                    nodeToAdd = new Node(NodeType.Input, random.NextFloat(-1, 1), possibleCreatureInputsToAdd[random.Next(possibleCreatureInputsToAdd.Count)]);
                 }
                 else if (nodeTypeRandomNum <= chanceForSingleNodeType * 2 && possibleCreatureActionsToAdd.Count > 0)
                 {
-                    nodeToAdd = new Node(NodeType.Output, random.NextDouble(-1, 1), creatureAction: possibleCreatureActionsToAdd[random.Next(possibleCreatureActionsToAdd.Count)]);
+                    nodeToAdd = new Node(NodeType.Output, random.NextFloat(-1, 1), creatureAction: possibleCreatureActionsToAdd[random.Next(possibleCreatureActionsToAdd.Count)]);
                 }
                 else if (processNodeCount < MaxCreatureProcessNodes)
                 {
-                    nodeToAdd = new Node(NodeType.Process, random.NextDouble(-1, 1));
+                    nodeToAdd = new Node(NodeType.Process, random.NextFloat(-1, 1));
                 }
                 else
                 {
@@ -339,7 +339,7 @@ namespace MaceEvolve.Core.Models
 
                     if (network.Connections.Count < MaxCreatureConnections && possibleSourceNodes.Count > 0 && possibleTargetNodes.Count > 0)
                     {
-                        Connection newConnection = new Connection() { Weight = random.NextDouble(-ConnectionWeightBound, ConnectionWeightBound) };
+                        Connection newConnection = new Connection() { Weight = random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound) };
 
                         switch (nodeToAdd.NodeType)
                         {
@@ -376,7 +376,7 @@ namespace MaceEvolve.Core.Models
             }
 
             //Remove a random connection.
-            if (network.Connections.Count > MinCreatureConnections && random.NextDouble() <= removeRandomConnectionChance)
+            if (network.Connections.Count > MinCreatureConnections && random.NextFloat() <= removeRandomConnectionChance)
             {
                 mutationAttempted = true;
 
@@ -385,13 +385,13 @@ namespace MaceEvolve.Core.Models
             }
 
             //Change a random connection's weight.
-            if (network.Connections.Count > 0 && random.NextDouble() <= mutateRandomConnectionWeightChance)
+            if (network.Connections.Count > 0 && random.NextFloat() <= mutateRandomConnectionWeightChance)
             {
                 mutationAttempted = true;
 
                 Connection randomConnection = network.Connections[random.Next(network.Connections.Count)];
 
-                randomConnection.Weight = random.NextDouble(-ConnectionWeightBound, ConnectionWeightBound);
+                randomConnection.Weight = random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound);
             }
 
             //Change a random connection's source.
@@ -434,8 +434,8 @@ namespace MaceEvolve.Core.Models
         {
             TCreature newBestCreature = null;
 
-            double successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
-            double successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
+            float successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
+            float successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
             Food.RemoveAll(x => x.Servings <= 0);
 
@@ -457,8 +457,8 @@ namespace MaceEvolve.Core.Models
 
                 if (UseSuccessBounds)
                 {
-                    double distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
-                    double? newBestCreatureDistanceFromMiddle = newBestCreature == null ? (double?)null : Globals.GetDistanceFrom(newBestCreature.MX, newBestCreature.MY, successBoundsMiddleX, successBoundsMiddleY);
+                    float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
+                    float? newBestCreatureDistanceFromMiddle = newBestCreature == null ? (float?)null : Globals.GetDistanceFrom(newBestCreature.MX, newBestCreature.MY, successBoundsMiddleX, successBoundsMiddleY);
 
                     if (newBestCreatureDistanceFromMiddle == null || distanceFromMiddle < newBestCreatureDistanceFromMiddle)
                     {
@@ -474,17 +474,17 @@ namespace MaceEvolve.Core.Models
                 }
             }
 
-            if (random.NextDouble() <= 0.8)
+            if (random.NextFloat() <= 0.8)
             {
                 if (Food.Count < MaxFoodAmount)
                 {
                     Food.Add(new TFood()
                     {
-                        X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
-                        Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
+                        X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
+                        Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                         Servings = 1,
                         EnergyPerServing = 30,
-                        ServingDigestionCost = 0.05,
+                        ServingDigestionCost = 0.05f,
                         Size = FoodSize
                     });
                 }
@@ -503,11 +503,11 @@ namespace MaceEvolve.Core.Models
             {
                 food.Add(new TFood()
                 {
-                    X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
-                    Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
+                    X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
+                    Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                     Servings = 1,
                     EnergyPerServing = 30,
-                    ServingDigestionCost = 0.05,
+                    ServingDigestionCost = 0.05f,
                     Size = FoodSize
                 });
             }
@@ -523,11 +523,11 @@ namespace MaceEvolve.Core.Models
                 TCreature newCreature = new TCreature()
                 {
                     Brain = new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList()),
-                    X = random.NextDouble(0, WorldBounds.X + WorldBounds.Width),
-                    Y = random.NextDouble(0, WorldBounds.Y + WorldBounds.Height),
+                    X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
+                    Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                     Size = CreatureSize,
                     Speed = CreatureSpeed,
-                    Metabolism = 0.1,
+                    Metabolism = 0.1f,
                     Energy = MaxCreatureEnergy,
                     MaxEnergy = MaxCreatureEnergy,
                     SightRange = 100

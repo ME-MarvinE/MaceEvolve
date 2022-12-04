@@ -2,9 +2,9 @@
 {
     public interface IRectangle
     {
-        double X { get; set; }
-        double Y { get; set; }
-        double Width { get; set; }
-        double Height { get; set; }
+        float X { get; set; }
+        float Y { get; set; }
+        float Width { get; set; }
+        float Height { get; set; }
     }
 }

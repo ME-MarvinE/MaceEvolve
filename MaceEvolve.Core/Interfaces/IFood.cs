@@ -4,6 +4,6 @@
     {
         int Servings { get; set; }
         int EnergyPerServing { get; set; }
-        double ServingDigestionCost { get; set; }
+        float ServingDigestionCost { get; set; }
     }
 }

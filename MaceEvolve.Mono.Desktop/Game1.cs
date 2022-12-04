@@ -30,11 +30,11 @@ namespace MaceEvolve.Mono.Desktop
         public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public SpriteFont UIFont { get; set; }
         public GameWindow BestCreatureNetworkViewerWindow { get; set; }
-        public double SimulationMspt
+        public float SimulationMspt
         {
             get
             {
-                return (1d / SimulationTPS) * 1000;
+                return (1f / SimulationTPS) * 1000;
             }
         }
         public long TicksWhenSimulationEnds
@@ -95,15 +95,15 @@ namespace MaceEvolve.Mono.Desktop
             Window.Title = "Mace Evolve";
             BackgroundColor = new Color(32, 32, 32);
 
-            GenerationsToRunFor = 100;
+            GenerationsToRunFor = 2000;
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
-            TargetElapsedTime = TimeSpan.FromSeconds(1d / SimulationTPS);
+            TargetElapsedTime = TimeSpan.FromSeconds(1f / SimulationTPS);
 
             MainGameHost = new GameHost<GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 5;
-            MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7;
-            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 1.5 * 1.3 : 1.5;
+            MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
+            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 1.5f * 1.3f : 1.5f;
 
             Reset();
 
@@ -170,21 +170,21 @@ namespace MaceEvolve.Mono.Desktop
                     creatureRingColor = null;
                 }
 
-                _spriteBatch.DrawCircle(Convert.ToSingle(creature.MX), Convert.ToSingle(creature.MY), Convert.ToSingle(creature.Size), 18, creatureColor, Convert.ToSingle(creature.Size));
+                _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size, 18, creatureColor, creature.Size);
 
                 if (creatureRingColor != null)
                 {
-                    _spriteBatch.DrawCircle(Convert.ToSingle(creature.MX), Convert.ToSingle(creature.MY), Convert.ToSingle(creature.Size + 2), 18, creatureRingColor.Value, Convert.ToSingle(creature.Size * 0.3));
+                    _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size + 2, 18, creatureRingColor.Value, creature.Size * 0.3f);
                 }
             }
             foreach (var food in MainGameHost.Food)
             {
-                _spriteBatch.DrawCircle(Convert.ToSingle(food.MX), Convert.ToSingle(food.MY), Convert.ToSingle(food.Size), 18, food.Color, Convert.ToSingle(food.Size));
+                _spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
             }
 
             if (MainGameHost.UseSuccessBounds)
             {
-                _spriteBatch.DrawRectangle(Convert.ToSingle(MainGameHost.SuccessBounds.X), Convert.ToSingle(MainGameHost.SuccessBounds.Y), Convert.ToSingle(MainGameHost.SuccessBounds.Width), Convert.ToSingle(MainGameHost.SuccessBounds.Height), new Color(Color.Green, 100));
+                _spriteBatch.DrawRectangle(MainGameHost.SuccessBounds.X, MainGameHost.SuccessBounds.Y, MainGameHost.SuccessBounds.Width, MainGameHost.SuccessBounds.Height, new Color(Color.Green, 100));
             }
 
             _spriteBatch.DrawString(UIFont, $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}", new Vector2(10, 10), Color.White);
@@ -296,8 +296,8 @@ namespace MaceEvolve.Mono.Desktop
             Rectangle gameBounds = _graphics.GraphicsDevice.PresentationParameters.Bounds;
             MainGameHost.WorldBounds = new Core.Models.Rectangle(gameBounds.X, gameBounds.Y, gameBounds.Width, gameBounds.Height);
 
-            double MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
-            double MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
+            float MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
+            float MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
 
             MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 

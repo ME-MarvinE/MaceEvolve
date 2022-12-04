@@ -19,7 +19,7 @@ namespace MaceEvolve.WinForms
         private Random _random = new Random();
         private int _targetFPS = 10;
         private int _targetTPS = 10;
-        private double _secondsUntilNewGeneration;
+        private float _secondsUntilNewGeneration;
         private int _generationCount = 1;
         private NeuralNetworkViewer _bestCreatureNeuralNetworkViewer;
         private NeuralNetworkViewer _selectedCreatureNeuralNetworkViewer;
@@ -64,7 +64,7 @@ namespace MaceEvolve.WinForms
                 GameTimer.Interval = 1000 / _targetTPS;
             }
         }
-        public double SecondsUntilNewGeneration
+        public float SecondsUntilNewGeneration
         {
             get
             {
@@ -76,7 +76,7 @@ namespace MaceEvolve.WinForms
                 lblGenEndsIn.Text = $"Ends in {string.Format("{0:0.0}", SecondsUntilNewGeneration)}s";
             }
         }
-        public double SecondsPerGeneration { get; set; } = 30;
+        public float SecondsPerGeneration { get; set; } = 30;
         public int GenerationCount
         {
             get
@@ -117,7 +117,7 @@ namespace MaceEvolve.WinForms
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
 
             TargetFPS = TargetTPS;
-            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 3.5 : 2.75;
+            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
             Reset();
         }
         #endregion
@@ -145,8 +145,8 @@ namespace MaceEvolve.WinForms
 
             MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
 
-            double MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
-            double MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
+            float MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
+            float MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
 
             MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 
@@ -199,6 +199,10 @@ namespace MaceEvolve.WinForms
             return new Point(x + width / 2, y + height / 2);
         }
         public static Point Middle(double x, double y, double width, double height)
+        {
+            return new Point((int)(x + width / 2), (int)(y + height / 2));
+        }
+        public static Point Middle(float x, float y, float width, float height)
         {
             return new Point((int)(x + width / 2), (int)(y + height / 2));
         }
@@ -304,14 +308,14 @@ namespace MaceEvolve.WinForms
 
                 using (SolidBrush brush = new SolidBrush(creatureColor))
                 {
-                    e.Graphics.FillEllipse(brush, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
+                    e.Graphics.FillEllipse(brush, creature.X, creature.Y, creature.Size, creature.Size);
                 }
 
                 if (creatureRingColor != null)
                 {
                     using (Pen pen = new Pen(creatureRingColor.Value, 2))
                     {
-                        e.Graphics.DrawEllipse(pen, (float)creature.X, (float)creature.Y, (float)creature.Size, (float)creature.Size);
+                        e.Graphics.DrawEllipse(pen, creature.X, creature.Y, creature.Size, creature.Size);
                     }
                 }
             }
@@ -320,7 +324,7 @@ namespace MaceEvolve.WinForms
             {
                 using (SolidBrush brush = new SolidBrush(food.Color))
                 {
-                    e.Graphics.FillEllipse(brush, (float)food.X, (float)food.Y, (float)food.Size, (float)food.Size);
+                    e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
                 }
             }
 
@@ -349,7 +353,7 @@ namespace MaceEvolve.WinForms
         }
         private void NewGenerationTimer_Tick(object sender, EventArgs e)
         {
-            SecondsUntilNewGeneration -= 0.1;
+            SecondsUntilNewGeneration -= 0.1f;
             if (SecondsUntilNewGeneration <= 0)
             {
                 SecondsUntilNewGeneration = SecondsPerGeneration;
