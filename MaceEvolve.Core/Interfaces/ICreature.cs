@@ -20,7 +20,6 @@ namespace MaceEvolve.Core.Interfaces
 
         #region Methods
         void ExecuteAction(CreatureAction creatureAction, CreatureStepInfo stepInfo);
-        IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> gameObjects) where T : IGameObject;
         void Die();
         void Live(EnvironmentInfo currentEnvironmentInfo);
         CreatureStepInfo CreateStepInfo(EnvironmentInfo environmentInfo);

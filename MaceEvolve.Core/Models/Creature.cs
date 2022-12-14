@@ -78,9 +78,9 @@ namespace MaceEvolve.Core.Models
                     throw new NotImplementedException();
             }
         }
-        public IEnumerable<T> GetVisibleGameObjects<T>(IEnumerable<T> gameObjects) where T : IGameObject
+        public bool IsWithinSight(IGameObject gameObject)
         {
-            return gameObjects.Where(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y) <= SightRange);
+            return Globals.GetDistanceFrom(X, Y, gameObject.X, gameObject.Y) <= SightRange;
         }
         public void Die()
         {
@@ -109,8 +109,8 @@ namespace MaceEvolve.Core.Models
             CreatureStepInfo stepInfo = new CreatureStepInfo();
 
             stepInfo.EnvironmentInfo = environmentInfo;
-            stepInfo.VisibleFood = GetVisibleGameObjects(stepInfo.EnvironmentInfo.ExistingFood).ToList();
-            stepInfo.VisibleCreatures = GetVisibleGameObjects(stepInfo.EnvironmentInfo.ExistingCreatures).Where(x => x != this).ToList();
+            stepInfo.VisibleFood = stepInfo.EnvironmentInfo.ExistingFood.Where(x => IsWithinSight(x)).ToList();
+            stepInfo.VisibleCreatures = stepInfo.EnvironmentInfo.ExistingCreatures.Where(x => IsWithinSight(x) && x != this).ToList();
             stepInfo.VisibleFoodOrderedByDistance = stepInfo.VisibleFood.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
             stepInfo.VisibleCreaturesOrderedByDistance = stepInfo.VisibleCreatures.OrderBy(x => Globals.GetDistanceFrom(X, Y, x.X, x.Y)).ToList();
 
