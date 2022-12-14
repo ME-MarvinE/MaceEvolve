@@ -4,7 +4,6 @@ using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 
@@ -36,7 +35,7 @@ namespace MaceEvolve.Core.Models
         public float MaxCreatureEnergy { get; set; } = 150;
         public float FoodSize { get; set; } = 7;
         public float CreatureSize { get; set; } = 10;
-        public float SuccessfulCreaturesPercentile { get; set; } = 10;
+        public float MinimumSuccessfulCreatureFitness { get; set; } = 0.9f;
         public float ReproductionNodeBiasVariance = 0.05f;
         public float ReproductionConnectionWeightVariance = 0.05f;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
@@ -94,51 +93,11 @@ namespace MaceEvolve.Core.Models
         }
         public virtual List<TCreature> NewGenerationSexual()
         {
-            List<TCreature> creaturesList = new List<TCreature>(Creatures);
-            IEnumerable<TCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
+            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(Creatures);
+            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = successfulCreaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            List<TCreature> topPercentileCreatureFitnessesOrderedDescendingList = topPercentileCreatureFitnessesOrderedDescending.Keys.ToList();
 
-            if (!successfulCreaturesFitnesses.Any())
-            {
-                return new List<TCreature>();
-            }
-
-            List<TCreature> newCreatures = new List<TCreature>();
-
-            TCreature newCreature = Creature.Reproduce(successfulCreatures.ToList(), PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-            newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
-            newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
-            newCreature.Size = CreatureSize;
-            newCreature.Speed = CreatureSpeed;
-            newCreature.Metabolism = 0.1f;
-            newCreature.Energy = MaxCreatureEnergy;
-            newCreature.MaxEnergy = MaxCreatureEnergy;
-            newCreature.SightRange = 100;
-
-            for (int i = 0; i < MutationAttempts; i++)
-            {
-                bool mutated = MutateNetwork(newCreature.Brain,
-                    createRandomNodeChance: MutationChance * 0,
-                    removeRandomNodeChance: MutationChance * 0,
-                    mutateRandomNodeBiasChance: MutationChance * 2,
-                    createRandomConnectionChance: MutationChance,
-                    removeRandomConnectionChance: MutationChance,
-                    mutateRandomConnectionSourceChance: MutationChance / 2,
-                    mutateRandomConnectionTargetChance: MutationChance / 2,
-                    mutateRandomConnectionWeightChance: MutationChance * 2);
-            }
-
-            newCreatures.Add(newCreature);
-
-            return newCreatures;
-        }
-        public virtual List<TCreature> NewGenerationAsexual()
-        {
-            List<TCreature> creaturesList = new List<TCreature>(Creatures);
-            IEnumerable<TCreature> successfulCreatures = GetSuccessfulCreatures(creaturesList);
-            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(successfulCreatures);
-
-            if (!successfulCreaturesFitnesses.Any())
+            if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
             {
                 return new List<TCreature>();
             }
@@ -147,43 +106,46 @@ namespace MaceEvolve.Core.Models
 
             while (newCreatures.Count < MaxCreatureAmount)
             {
-                foreach (var creatureFitnessPair in successfulCreaturesFitnesses.OrderByDescending(x => x.Value))
+                foreach (var keyValuePair in topPercentileCreatureFitnessesOrderedDescending)
                 {
-                    TCreature successfulCreature = creatureFitnessPair.Key;
+                    TCreature successfulCreature = keyValuePair.Key;
+                    float successfulCreatureFitness = keyValuePair.Value;
 
-                    if (random.NextFloat() <= creatureFitnessPair.Value && newCreatures.Count < MaxCreatureAmount)
+                    if (random.NextFloat() <= successfulCreatureFitness)
                     {
-                        int numberOfChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(creatureFitnessPair.Value, 0, 1, 0, MaxCreatureAmount / 10) : successfulCreature.FoodEaten;
+                        int numberOfChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(successfulCreatureFitness, 0, 1, 0, MaxCreatureAmount / 10) : successfulCreature.FoodEaten;
 
                         for (int i = 0; i < numberOfChildrenToCreate; i++)
                         {
-                            if (newCreatures.Count < MaxCreatureAmount)
+                            if (newCreatures.Count >= MaxCreatureAmount)
                             {
-                                TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
-                                newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
-                                newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
-                                newCreature.Size = CreatureSize;
-                                newCreature.Speed = CreatureSpeed;
-                                newCreature.Metabolism = 0.1f;
-                                newCreature.Energy = MaxCreatureEnergy;
-                                newCreature.MaxEnergy = MaxCreatureEnergy;
-                                newCreature.SightRange = 100;
-
-                                for (int j = 0; j < MutationAttempts; j++)
-                                {
-                                    bool Mutated = MutateNetwork(newCreature.Brain,
-                                        createRandomNodeChance: MutationChance,
-                                        removeRandomNodeChance: MutationChance / 20,
-                                        mutateRandomNodeBiasChance: MutationChance,
-                                        createRandomConnectionChance: MutationChance,
-                                        removeRandomConnectionChance: MutationChance,
-                                        mutateRandomConnectionSourceChance: MutationChance,
-                                        mutateRandomConnectionTargetChance: MutationChance,
-                                        mutateRandomConnectionWeightChance: MutationChance);
-                                }
-
-                                newCreatures.Add(newCreature);
+                                break;
                             }
+
+                            TCreature newCreature = Creature.Reproduce(topPercentileCreatureFitnessesOrderedDescendingList, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
+                            newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
+                            newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
+                            newCreature.Size = CreatureSize;
+                            newCreature.Speed = CreatureSpeed;
+                            newCreature.Metabolism = 0.1f;
+                            newCreature.Energy = MaxCreatureEnergy;
+                            newCreature.MaxEnergy = MaxCreatureEnergy;
+                            newCreature.SightRange = 100;
+
+                            for (int j = 0; j < MutationAttempts; j++)
+                            {
+                                bool mutated = MutateNetwork(newCreature.Brain,
+                                    createRandomNodeChance: MutationChance,
+                                    removeRandomNodeChance: MutationChance / 20,
+                                    mutateRandomNodeBiasChance: MutationChance,
+                                    createRandomConnectionChance: MutationChance,
+                                    removeRandomConnectionChance: MutationChance,
+                                    mutateRandomConnectionSourceChance: MutationChance,
+                                    mutateRandomConnectionTargetChance: MutationChance,
+                                    mutateRandomConnectionWeightChance: MutationChance);
+                            }
+
+                            newCreatures.Add(newCreature);
                         }
                     }
                 }
@@ -191,31 +153,66 @@ namespace MaceEvolve.Core.Models
 
             return newCreatures;
         }
-        public virtual IEnumerable<TCreature> GetSuccessfulCreatures(IEnumerable<TCreature> creatures)
+        public virtual List<TCreature> NewGenerationAsexual()
         {
-            if (creatures == null) { throw new ArgumentNullException(); }
+            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(Creatures);
+            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = successfulCreaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
 
-            if (!creatures.Any())
+            if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
             {
                 return new List<TCreature>();
             }
 
-            if (UseSuccessBounds)
-            {
-                float successBoundsRight = SuccessBounds.X + SuccessBounds.Width;
-                float successBoundsBottom = SuccessBounds.Y + SuccessBounds.Height;
-                return creatures.Where(x => x.X > SuccessBounds.X && x.X < successBoundsRight && x.Y > SuccessBounds.Y && x.Y < successBoundsBottom).ToList();
-            }
-            else
-            {
-                //return creatures.Where(x => x.FoodEaten > 0).ToList();
+            List<TCreature> newCreatures = new List<TCreature>();
 
-                float indexMultiplierForTopPercentile = (1 - SuccessfulCreaturesPercentile / 100);
-                int topPercentileStartingIndex = (int)(creatures.Count() * indexMultiplierForTopPercentile) - 1;
+            while (newCreatures.Count < MaxCreatureAmount)
+            {
+                foreach (var keyValuePair in topPercentileCreatureFitnessesOrderedDescending)
+                {
+                    TCreature successfulCreature = keyValuePair.Key;
+                    float successfulCreatureFitness = keyValuePair.Value;
 
-                List<TCreature> orderedCreatures = creatures.OrderBy(x => x.FoodEaten).ToList();
-                return orderedCreatures.SkipWhile(x => orderedCreatures.IndexOf(x) < topPercentileStartingIndex).Where(x => x.FoodEaten > 0);
+                    if (random.NextFloat() <= successfulCreatureFitness)
+                    {
+                        int numberOfChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(successfulCreatureFitness, 0, 1, 0, MaxCreatureAmount / 10) : successfulCreature.FoodEaten;
+
+                        for (int i = 0; i < numberOfChildrenToCreate; i++)
+                        {
+                            if (newCreatures.Count >= MaxCreatureAmount)
+                            {
+                                break;
+                            }
+
+                            TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList(), ReproductionNodeBiasVariance, ReproductionConnectionWeightVariance, ConnectionWeightBound);
+                            newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
+                            newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
+                            newCreature.Size = CreatureSize;
+                            newCreature.Speed = CreatureSpeed;
+                            newCreature.Metabolism = 0.1f;
+                            newCreature.Energy = MaxCreatureEnergy;
+                            newCreature.MaxEnergy = MaxCreatureEnergy;
+                            newCreature.SightRange = 100;
+
+                            for (int j = 0; j < MutationAttempts; j++)
+                            {
+                                bool mutated = MutateNetwork(newCreature.Brain,
+                                    createRandomNodeChance: MutationChance,
+                                    removeRandomNodeChance: MutationChance / 20,
+                                    mutateRandomNodeBiasChance: MutationChance,
+                                    createRandomConnectionChance: MutationChance,
+                                    removeRandomConnectionChance: MutationChance,
+                                    mutateRandomConnectionSourceChance: MutationChance,
+                                    mutateRandomConnectionTargetChance: MutationChance,
+                                    mutateRandomConnectionWeightChance: MutationChance);
+                            }
+
+                            newCreatures.Add(newCreature);
+                        }
+                    }
+                }
             }
+
+            return newCreatures;
         }
         public virtual Dictionary<TCreature, float> GetFitnesses(IEnumerable<TCreature> creatures)
         {
