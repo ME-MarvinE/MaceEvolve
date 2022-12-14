@@ -77,8 +77,8 @@ namespace MaceEvolve.Mono.Desktop
                 _graphics.ApplyChanges();
             }
 
-            _graphics.PreferredBackBufferWidth = 800;
-            _graphics.PreferredBackBufferHeight = 700;
+            _graphics.PreferredBackBufferWidth = 800 - 17;
+            _graphics.PreferredBackBufferHeight = 700 - 40;
 
             _graphics.ApplyChanges();
 
@@ -95,7 +95,7 @@ namespace MaceEvolve.Mono.Desktop
             Window.Title = "Mace Evolve";
             BackgroundColor = new Color(32, 32, 32);
 
-            GenerationsToRunFor = 2000;
+            GenerationsToRunFor = 100000;
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
             TargetElapsedTime = TimeSpan.FromSeconds(1f / SimulationTPS);
@@ -103,7 +103,7 @@ namespace MaceEvolve.Mono.Desktop
             MainGameHost = new GameHost<GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 5;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
-            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 1.5f * 1.3f : 1.5f;
+            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
 
             Reset();
 

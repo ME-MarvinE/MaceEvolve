@@ -363,7 +363,7 @@ namespace MaceEvolve.WinForms
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            GenerationsToRunFor = 2000;
+            GenerationsToRunFor = 100000;
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
 
