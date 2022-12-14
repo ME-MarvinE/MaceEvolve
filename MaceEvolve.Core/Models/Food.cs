@@ -7,7 +7,7 @@ namespace MaceEvolve.Core.Models
         #region Properties
         public int Servings { get; set; } = 1;
         public int EnergyPerServing { get; set; } = 10;
-        public double ServingDigestionCost { get; set; } = 0.05;
+        public float ServingDigestionCost { get; set; } = 0.05f;
         #endregion
     }
 }

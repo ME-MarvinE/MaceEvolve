@@ -8,12 +8,12 @@ namespace MaceEvolve.Core.Interfaces
     {
         #region Properties
         NeuralNetwork Brain { get; set; }
-        double MoveCost { get; set; }
-        double Energy { get; set; }
-        double MaxEnergy { get; set; }
-        double Speed { get; set; }
+        float MoveCost { get; set; }
+        float Energy { get; set; }
+        float MaxEnergy { get; set; }
+        float Speed { get; set; }
         int SightRange { get; set; }
-        double Metabolism { get; set; }
+        float Metabolism { get; set; }
         int FoodEaten { get; set; }
         bool IsDead { get; set; }
         #endregion
@@ -25,19 +25,23 @@ namespace MaceEvolve.Core.Interfaces
         void Live(EnvironmentInfo currentEnvironmentInfo);
         CreatureStepInfo CreateStepInfo(EnvironmentInfo environmentInfo);
         void UpdateInputValues(CreatureStepInfo stepInfo);
-        T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound) where T : ICreature, new();
+        T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float nodeBiasMaxVariancePercentage, float connectionWeightMaxVariancePercentage, float connectionWeightBound) where T : ICreature, new();
         #endregion
 
         #region CreatureValues
         //x values map from 0 to 1.
-        double PercentMaxEnergy();
-        double HorizontalProximityToCreature(CreatureStepInfo stepInfo);
-        double VerticalProximityToCreature(CreatureStepInfo stepInfo);
-        double HorizontalProximityToFood(CreatureStepInfo stepInfo);
-        double VerticalProximityToFood(CreatureStepInfo stepInfo);
-        double DistanceFromTopWorldBound(CreatureStepInfo stepInfo);
-        double DistanceFromLeftWorldBound(CreatureStepInfo stepInfo);
-        double RandomInput();
+        float PercentMaxEnergy();
+        float ProximityToCreatureToLeft(CreatureStepInfo stepInfo);
+        float ProximityToCreatureToRight(CreatureStepInfo stepInfo);
+        float ProximityToCreatureToFront(CreatureStepInfo stepInfo);
+        float ProximityToCreatureToBack(CreatureStepInfo stepInfo);
+        float ProximityToFoodToLeft(CreatureStepInfo stepInfo);
+        float ProximityToFoodToRight(CreatureStepInfo stepInfo);
+        float ProximityToFoodToFront(CreatureStepInfo stepInfo);
+        float ProximityToFoodToBack(CreatureStepInfo stepInfo);
+        float DistanceFromTopWorldBound(CreatureStepInfo stepInfo);
+        float DistanceFromLeftWorldBound(CreatureStepInfo stepInfo);
+        float RandomInput();
         #endregion
 
         #region Actions

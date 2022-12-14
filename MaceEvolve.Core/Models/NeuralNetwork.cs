@@ -5,20 +5,19 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace MaceEvolve.Core.Models
 {
     public class NeuralNetwork
     {
         #region Fields
-        private Dictionary<CreatureInput, double> _inputValues = new Dictionary<CreatureInput, double>();
+        private Dictionary<CreatureInput, float> _inputValues = new Dictionary<CreatureInput, float>();
         private Dictionary<int, Node> _nodeIdsToNodesDict = new Dictionary<int, Node>();
         private Dictionary<Node, int> _nodesToNodeIdsDict = new Dictionary<Node, int>();
         #endregion
 
         #region Properties
-        public ReadOnlyDictionary<CreatureInput, double> InputValues { get; }
+        public ReadOnlyDictionary<CreatureInput, float> InputValues { get; }
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
         public List<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; set; } = new List<NeuralNetworkStepNodeInfo>();
@@ -48,8 +47,8 @@ namespace MaceEvolve.Core.Models
 
             Actions = actions;
             Connections = connections;
-            _inputValues = inputs.ToDictionary(x => x, x => 0d);
-            InputValues = new ReadOnlyDictionary<CreatureInput, double>(_inputValues);
+            _inputValues = inputs.ToDictionary(x => x, x => 0f);
+            InputValues = new ReadOnlyDictionary<CreatureInput, float>(_inputValues);
 
             foreach (var node in nodes)
             {
@@ -59,11 +58,11 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public void UpdateInputValue(CreatureInput creatureInput, double value)
+        public void UpdateInputValue(CreatureInput creatureInput, float value)
         {
             _inputValues[creatureInput] = value;
         }
-        public List<Connection> GenerateRandomConnections(int minConnections, int maxConnections, double weightBound)
+        public List<Connection> GenerateRandomConnections(int minConnections, int maxConnections, float weightBound)
         {
             List<Connection> generatedConnections = new List<Connection>();
             int targetConnectionAmount = Globals.Random.Next(minConnections, maxConnections + 1);
@@ -79,7 +78,7 @@ namespace MaceEvolve.Core.Models
                 int randomConnectionSource = possibleSourceNodes.Keys.ToList()[Globals.Random.Next(0, possibleSourceNodes.Count)];
                 int randomConnectionTarget = possibleTargetNodes.Keys.ToList()[Globals.Random.Next(0, possibleTargetNodes.Count)];
 
-                Connection newConnection = new Connection() { SourceId = randomConnectionSource, TargetId = randomConnectionTarget, Weight = Globals.Random.NextDouble(-weightBound, weightBound) };
+                Connection newConnection = new Connection() { SourceId = randomConnectionSource, TargetId = randomConnectionTarget, Weight = Globals.Random.NextFloat(-weightBound, weightBound) };
                 generatedConnections.Add(newConnection);
             }
 
@@ -87,11 +86,11 @@ namespace MaceEvolve.Core.Models
         }
         public static List<Node> GenerateInputNodes(IEnumerable<CreatureInput> possibleInputs)
         {
-            return possibleInputs.Select(x => new Node(NodeType.Input, Globals.Random.NextDouble(-1, 1), creatureInput: x)).ToList();
+            return possibleInputs.Select(x => new Node(NodeType.Input, Globals.Random.NextFloat(-1, 1), creatureInput: x)).ToList();
         }
         public static List<Node> GenerateOutputNodes(IEnumerable<CreatureAction> possibleOutputs)
         {
-            return possibleOutputs.Select(x => new Node(NodeType.Output, Globals.Random.NextDouble(-1, 1), creatureAction: x)).ToList();
+            return possibleOutputs.Select(x => new Node(NodeType.Output, Globals.Random.NextFloat(-1, 1), creatureAction: x)).ToList();
         }
         public static List<Node> GenerateProcessNodes(int maxProcessNodes)
         {
@@ -99,7 +98,7 @@ namespace MaceEvolve.Core.Models
 
             for (int i = 0; i < maxProcessNodes; i++)
             {
-                processNodes.Add(new Node(NodeType.Process, Globals.Random.NextDouble(-1, 1)));
+                processNodes.Add(new Node(NodeType.Process, Globals.Random.NextFloat(-1, 1)));
             }
 
             return processNodes;
@@ -108,11 +107,11 @@ namespace MaceEvolve.Core.Models
         {
             return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(this));
         }
-        public bool MutateConnectionTarget(double mutationChance, Connection connection)
+        public bool MutateConnectionTarget(float mutationChance, Connection connection)
         {
             List<Node> possibleTargetNodes = GetTargetNodes(NodeIdsToNodesDict.Values).ToList();
 
-            if (possibleTargetNodes.Count > 0 && Globals.Random.NextDouble() <= mutationChance)
+            if (possibleTargetNodes.Count > 0 && Globals.Random.NextFloat() <= mutationChance)
             {
                 int randomNodeNum = Globals.Random.Next(possibleTargetNodes.Count);
                 Node randomNode = possibleTargetNodes[randomNodeNum];
@@ -124,11 +123,11 @@ namespace MaceEvolve.Core.Models
 
             return false;
         }
-        public bool MutateConnectionSource(double mutationChance, Connection connection)
+        public bool MutateConnectionSource(float mutationChance, Connection connection)
         {
             List<Node> possibleSourceNodes = GetSourceNodes(NodeIdsToNodesDict.Values).ToList();
 
-            if (possibleSourceNodes.Count > 0 && Globals.Random.NextDouble() <= mutationChance)
+            if (possibleSourceNodes.Count > 0 && Globals.Random.NextFloat() <= mutationChance)
             {
                 int randomNodeNum = Globals.Random.Next(possibleSourceNodes.Count);
                 Node randomNode = possibleSourceNodes[randomNodeNum];
@@ -191,11 +190,11 @@ namespace MaceEvolve.Core.Models
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="NotImplementedException"></exception>
-        public Dictionary<int, double> Step(bool outputNodesOnly, double defaultNodeOutputValue = 0)
+        public Dictionary<int, float> Step(bool outputNodesOnly, float defaultNodeOutputValue = 0)
         {
             if (outputNodesOnly)
             {
-                Dictionary<int, double> cachedNodeOutputs = new Dictionary<int, double>();
+                Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
                 List<int> inputNodeIds = new List<int>();
                 List<int> outputNodeIds = new List<int>();
 
@@ -227,7 +226,7 @@ namespace MaceEvolve.Core.Models
                     int currentNodeId = nodeQueue[nodeQueue.Count - 1];
                     Node currentNode = NodeIdsToNodesDict[currentNodeId];
                     nodesBeingEvaluated.Add(currentNodeId);
-                    double? currentNodeWeightedSum;
+                    float? currentNodeWeightedSum;
 
                     if (currentNode.NodeType == NodeType.Input)
                     {
@@ -253,13 +252,13 @@ namespace MaceEvolve.Core.Models
                         {
                             if (connection.TargetId == currentNodeId)
                             {
-                                double sourceNodeOutput;
+                                float sourceNodeOutput;
                                 Node connectionSourceNode = NodeIdsToNodesDict[connection.SourceId];
                                 bool isSelfReferencingConnection = connection.SourceId == connection.TargetId;
 
                                 //If the source node's output needs to be retrieved and it is currently being evaluated,
                                 //the only thing that can be done is use the cached value.
-                                if (cachedNodeOutputs.TryGetValue(connection.SourceId, out double cachedSourceNodeOutput))
+                                if (cachedNodeOutputs.TryGetValue(connection.SourceId, out float cachedSourceNodeOutput))
                                 {
                                     sourceNodeOutput = cachedSourceNodeOutput;
                                 }
@@ -281,7 +280,7 @@ namespace MaceEvolve.Core.Models
 
                     if (currentNodeWeightedSum != null)
                     {
-                        double currentNodeOutput = currentNode.NodeType == NodeType.Input ? currentNodeWeightedSum.Value : Globals.ReLU(currentNodeWeightedSum.Value + currentNode.Bias);
+                        float currentNodeOutput = currentNode.NodeType == NodeType.Input ? currentNodeWeightedSum.Value : Globals.ReLU(currentNodeWeightedSum.Value + currentNode.Bias);
 
                         nodesBeingEvaluated.Remove(currentNodeId);
 

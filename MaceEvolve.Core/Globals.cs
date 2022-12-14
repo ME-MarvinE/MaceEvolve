@@ -18,7 +18,7 @@ namespace MaceEvolve.Core
         #region Methods
         public static int Map(int num, int min1, int max1, int min2, int max2, bool withinBounds = true)
         {
-            var newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
+            int newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
 
             if (!withinBounds)
             {
@@ -33,9 +33,9 @@ namespace MaceEvolve.Core
                 return Clamp(newValue, max2, min2);
             }
         }
-        public static double Map(double num, double min1, double max1, double min2, double max2, bool withinBounds = true)
+        public static float Map(float num, float min1, float max1, float min2, float max2, bool withinBounds = true)
         {
-            var newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
+            float newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
 
             if (!withinBounds)
             {
@@ -58,15 +58,31 @@ namespace MaceEvolve.Core
         {
             return Math.Max(Math.Min(num, max), min);
         }
+        public static float Clamp(float num, float min, float max)
+        {
+            return Math.Max(Math.Min(num, max), min);
+        }
         public static double Sigmoid(double num)
         {
             return 1 / (1 + Math.Exp(-num));
+        }
+        public static float Sigmoid(float num)
+        {
+            return 1 / (1 + (float)Math.Exp(-num));
         }
         public static double ReLU(double num)
         {
             return Math.Max(0, num);
         }
+        public static float ReLU(float num)
+        {
+            return Math.Max(0, num);
+        }
         public static double SigmoidDerivative(double num)
+        {
+            return num * (1 - num);
+        }
+        public static float SigmoidDerivative(float num)
         {
             return num * (1 - num);
         }
@@ -78,15 +94,31 @@ namespace MaceEvolve.Core
         {
             return Math.Abs(x - targetX) + Math.Abs(y - targetY);
         }
+        public static float GetDistanceFrom(float x, float y, float targetX, float targetY)
+        {
+            return Math.Abs(x - targetX) + Math.Abs(y - targetY);
+        }
         public static double Hypotenuse(double a, double b)
         {
             return Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
+        }
+        public static float Hypotenuse(float a, float b)
+        {
+            return (float)Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
         }
         public static double MiddleX(double x, double width)
         {
             return x + width / 2;
         }
+        public static float MiddleX(float x, float width)
+        {
+            return x + width / 2;
+        }
         public static double MiddleY(double y, double height)
+        {
+            return y + height / 2;
+        }
+        public static float MiddleY(float y, float height)
         {
             return y + height / 2;
         }

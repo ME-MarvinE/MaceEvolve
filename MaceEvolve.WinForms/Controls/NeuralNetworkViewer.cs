@@ -190,11 +190,11 @@ namespace MaceEvolve.WinForms.Controls
 
                     //Draw the node's self referencing connections.
                     List<Connection> selfReferencingConnections = drawableConnections.Where(x => x.SourceId == nodeId && x.SourceId == x.TargetId).ToList();
-                    double selfReferencingConnectionAngle = selfReferencingConnections.Count <= 1 ? 0 : 360 / selfReferencingConnections.Count;
+                    float selfReferencingConnectionAngle = selfReferencingConnections.Count <= 1 ? 0 : 360 / selfReferencingConnections.Count;
 
                     for (int i = 0; i < selfReferencingConnections.Count; i++)
                     {
-                        double angleToDrawConnection = (i + 1) * selfReferencingConnectionAngle;
+                        float angleToDrawConnection = (i + 1) * selfReferencingConnectionAngle;
                         angleToDrawConnection += 225; //Offset because ellipse is drawn from top left. This makes the first circle be drawn above te node instead of to the right.
 
                         Connection connection = selfReferencingConnections[i];
@@ -204,8 +204,8 @@ namespace MaceEvolve.WinForms.Controls
                         Color penColor = GetConnectionPenColor(connection);
                         float penSize = GetConnectionPenSize(connection);
 
-                        e.Graphics.TranslateTransform((float)sourceIdGameObject.MX, (float)sourceIdGameObject.MY);
-                        e.Graphics.RotateTransform((float)angleToDrawConnection);
+                        e.Graphics.TranslateTransform(sourceIdGameObject.MX, sourceIdGameObject.MY);
+                        e.Graphics.RotateTransform(angleToDrawConnection);
                         e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, (int)(sourceIdGameObject.Size * 0.75), (int)(sourceIdGameObject.Size * 0.75));
                         e.Graphics.ResetTransform();
                     }
@@ -217,20 +217,20 @@ namespace MaceEvolve.WinForms.Controls
                     int nodeIdFontSize = NodeFontSize - 4;
                     int nodePreviousOutputFontSize = NodeFontSize;
 
-                    e.Graphics.FillEllipse(nodeBrush, (float)nodeGameObject.X, (float)nodeGameObject.Y, (float)nodeGameObject.Size, (float)nodeGameObject.Size);
+                    e.Graphics.FillEllipse(nodeBrush, nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
 
                     if (highestOutputNodeStepInfo != null && nodeNetworkStepInfo == highestOutputNodeStepInfo)
                     {
-                        e.Graphics.DrawEllipse(new Pen(Color.White, 3), (float)nodeGameObject.X, (float)nodeGameObject.Y, (float)nodeGameObject.Size, (float)nodeGameObject.Size);
+                        e.Graphics.DrawEllipse(new Pen(Color.White, 3), nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
                     }
 
                     if (nodeId == SelectedNodeId)
                     {
-                        e.Graphics.DrawEllipse(new Pen(Color.White, 6), (float)nodeGameObject.X, (float)nodeGameObject.Y, (float)nodeGameObject.Size, (float)nodeGameObject.Size);
+                        e.Graphics.DrawEllipse(new Pen(Color.White, 6), nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
                     }
 
-                    e.Graphics.DrawString($"{nodeId}", new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), (float)nodeGameObject.MX - nodeIdFontSize, (float)nodeGameObject.MY - nodePreviousOutputFontSize * 2);
-                    e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), (float)nodeGameObject.MX - nodePreviousOutputFontSize * 2, (float)nodeGameObject.MY);
+                    e.Graphics.DrawString($"{nodeId}", new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), nodeGameObject.MX - nodeIdFontSize, nodeGameObject.MY - nodePreviousOutputFontSize * 2);
+                    e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), nodeGameObject.MX - nodePreviousOutputFontSize * 2, nodeGameObject.MY);
                 }
 
                 lblNetworkConnectionsCount.Text = $"Connections: {NeuralNetwork.Connections.Count}";

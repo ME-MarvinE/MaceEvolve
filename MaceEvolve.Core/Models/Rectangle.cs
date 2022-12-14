@@ -4,12 +4,12 @@ namespace MaceEvolve.Core.Models
 {
     public class Rectangle : IRectangle
     {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
 
-        public Rectangle(double x, double y, double width, double height)
+        public Rectangle(float x, float y, float width, float height)
         {
             X = x;
             Y = y;

@@ -1,7 +1,7 @@
 ﻿using MaceEvolve.Core.Models;
-using System.Drawing;
+using Microsoft.Xna.Framework;
 
-namespace MaceEvolve.WinForms.Models
+namespace MaceEvolve.Mono.Desktop.Models
 {
     public class GraphicalFood : Food
     {

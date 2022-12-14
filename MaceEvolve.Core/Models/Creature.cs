@@ -10,13 +10,13 @@ namespace MaceEvolve.Core.Models
     public class Creature : GameObject, ICreature
     {
         #region Fields
-        private double _energy;
+        private float _energy;
         #endregion
 
         #region Properties
         public NeuralNetwork Brain { get; set; }
-        public double MoveCost { get; set; } = 0.5;
-        public double Energy
+        public float MoveCost { get; set; } = 0.5f;
+        public float Energy
         {
             get
             {
@@ -38,15 +38,15 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public double MaxEnergy { get; set; } = 150;
-        public double Speed { get; set; } = 1;
+        public float MaxEnergy { get; set; } = 150;
+        public float Speed { get; set; } = 1;
         public int SightRange { get; set; } = 200;
-        public double Metabolism { get; set; } = 0.1;
+        public float Metabolism { get; set; } = 0.1f;
         public int FoodEaten { get; set; }
         public bool IsDead { get; set; }
         //public int StomachSize { get; set; } = 5;
         //public List<food> StomachContents { get; set; } = 5;
-        //public double DigestionRate = 0.1;
+        //public float DigestionRate = 0.1;
         #endregion
 
         #region Methods
@@ -93,8 +93,8 @@ namespace MaceEvolve.Core.Models
 
             UpdateInputValues(currentStepInfo);
 
-            Dictionary<int, double> nodeIdToOutputDict = Brain.Step(true);
-            Dictionary<Node, double> nodeOutputsDict = nodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
+            Dictionary<int, float> nodeIdToOutputDict = Brain.Step(true);
+            Dictionary<Node, float> nodeOutputsDict = nodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
             Node highestOutputNode = nodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 
             if (highestOutputNode != null && nodeOutputsDict[highestOutputNode] > 0)
@@ -119,15 +119,19 @@ namespace MaceEvolve.Core.Models
         public void UpdateInputValues(CreatureStepInfo stepInfo)
         {
             Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy());
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToFood, VerticalProximityToFood(stepInfo));
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToFood, HorizontalProximityToFood(stepInfo));
-            Brain.UpdateInputValue(CreatureInput.VerticalProximityToCreature, VerticalProximityToCreature(stepInfo));
-            Brain.UpdateInputValue(CreatureInput.HorizontalProximityToCreature, HorizontalProximityToCreature(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToLeft, ProximityToCreatureToLeft(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToRight, ProximityToCreatureToRight(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToFront, ProximityToCreatureToFront(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToBack, ProximityToCreatureToBack(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToLeft, ProximityToFoodToLeft(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToRight, ProximityToFoodToRight(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToFront, ProximityToFoodToFront(stepInfo));
+            Brain.UpdateInputValue(CreatureInput.ProximityToFoodToBack, ProximityToFoodToBack(stepInfo));
             Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound(stepInfo));
             Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound(stepInfo));
             Brain.UpdateInputValue(CreatureInput.RandomInput, RandomInput());
         }
-        public static T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound) where T : ICreature, new()
+        public static T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float nodeBiasMaxVariancePercentage, float connectionWeightMaxVariancePercentage, float connectionWeightBound) where T : ICreature, new()
         {
             Dictionary<T, List<Connection>> availableParentConnections = parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
             Dictionary<T, Dictionary<int, int>> parentToOffspringNodesMap = new Dictionary<T, Dictionary<int, int>>();
@@ -137,7 +141,7 @@ namespace MaceEvolve.Core.Models
                 Brain = new NeuralNetwork(new List<Node>(), inputs, actions, new List<Connection>())
             };
 
-            double averageNumberOfParentConnections = parents.Average(x => x.Brain.Connections.Count);
+            float averageNumberOfParentConnections = (float)parents.Average(x => x.Brain.Connections.Count);
 
             if (averageNumberOfParentConnections > 0 && averageNumberOfParentConnections < 1)
             {
@@ -161,7 +165,7 @@ namespace MaceEvolve.Core.Models
                         int newNodeId = offspring.Brain.AddNode(newNode);
 
                         //Apply any variance to the node's bias.
-                        newNode.Bias = Globals.Random.NextDoubleVariance(randomParentConnectionSourceNode.Bias, nodeBiasMaxVariancePercentage);
+                        newNode.Bias = Globals.Random.NextFloatVariance(randomParentConnectionSourceNode.Bias, nodeBiasMaxVariancePercentage);
 
                         if (newNode.Bias < -1)
                         {
@@ -203,7 +207,7 @@ namespace MaceEvolve.Core.Models
                     };
 
                     //Apply any variance to the connection's weight.
-                    connectionToAdd.Weight = Globals.Random.NextDoubleVariance(randomParentConnection.Weight, connectionWeightMaxVariancePercentage);
+                    connectionToAdd.Weight = Globals.Random.NextFloatVariance(randomParentConnection.Weight, connectionWeightMaxVariancePercentage);
 
                     if (connectionToAdd.Weight < -connectionWeightBound)
                     {
@@ -221,82 +225,132 @@ namespace MaceEvolve.Core.Models
 
             return offspring;
         }
-        T ICreature.Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, double nodeBiasMaxVariancePercentage, double connectionWeightMaxVariancePercentage, double connectionWeightBound)
+        T ICreature.Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float nodeBiasMaxVariancePercentage, float connectionWeightMaxVariancePercentage, float connectionWeightBound)
         {
             return Reproduce(parents, inputs, actions, nodeBiasMaxVariancePercentage, connectionWeightMaxVariancePercentage, connectionWeightBound);
         }
 
         #region CreatureValues
         //x values map from 0 to 1.
-        public double PercentMaxEnergy()
+        public float PercentMaxEnergy()
         {
             return Globals.Map(Energy, 0, MaxEnergy, 0, 1);
         }
-        public double HorizontalProximityToCreature(CreatureStepInfo stepInfo)
+        public float ProximityToCreatureToLeft(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX <= MX);
+
+            if (closestCreature == null)
             {
-                return 1;
+                return 0;
             }
 
-            //Visible creatures does not contain itself. No need to filter.
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
+            float distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
 
-            double horizontalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
-
-            return Globals.Map(horizontalDistanceToCreature, 0, SightRange, 0, 1);
+            return Globals.Map(distanceFromClosestCreatureToLeft, 0, SightRange, 1, 0);
         }
-        public double VerticalProximityToCreature(CreatureStepInfo stepInfo)
+        public float ProximityToCreatureToRight(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleCreaturesOrderedByDistance.Count == 0)
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX >= MX);
+
+            if (closestCreature == null)
             {
-                return 1;
+                return 0;
             }
 
-            //Visible creatures does not contain itself. No need to filter.
-            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance[0];
+            float distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(MX, MY, closestCreature.MX, MY);
 
-            double verticalDistanceToCreature = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
-
-            return Globals.Map(verticalDistanceToCreature, 0, SightRange, 0, 1);
+            return Globals.Map(distanceFromClosestCreatureToRight, 0, SightRange, 1, 0);
         }
-        public double HorizontalProximityToFood(CreatureStepInfo stepInfo)
+        public float ProximityToCreatureToFront(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY <= MY);
+
+            if (closestCreature == null)
             {
-                return 1;
+                return 0;
             }
 
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+            float distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
 
-            double horizontalDistanceToFood = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
-
-            return Globals.Map(horizontalDistanceToFood, 0, SightRange, 0, 1);
+            return Globals.Map(distanceFromClosestCreatureToFront, 0, SightRange, 1, 0);
         }
-        public double VerticalProximityToFood(CreatureStepInfo stepInfo)
+        public float ProximityToCreatureToBack(CreatureStepInfo stepInfo)
         {
-            if (stepInfo.VisibleFoodOrderedByDistance.Count == 0)
+            ICreature closestCreature = stepInfo.VisibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY >= MY);
+
+            if (closestCreature == null)
             {
-                return 1;
+                return 0;
             }
 
-            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
+            float distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(MX, MY, MX, closestCreature.MY);
 
-            double verticalDistanceToFood = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
-
-            return Globals.Map(verticalDistanceToFood, 0, SightRange, 0, 1);
+            return Globals.Map(distanceFromClosestCreatureToBack, 0, SightRange, 1, 0);
         }
-        public double DistanceFromTopWorldBound(CreatureStepInfo stepInfo)
+        public float ProximityToFoodToLeft(CreatureStepInfo stepInfo)
+        {
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= MX);
+
+            if (closestFood == null)
+            {
+                return 0;
+            }
+
+            float distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
+
+            return Globals.Map(distanceFromClosestFoodToLeft, 0, SightRange, 1, 0);
+        }
+        public float ProximityToFoodToRight(CreatureStepInfo stepInfo)
+        {
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MX >= MX);
+
+            if (closestFood == null)
+            {
+                return 0;
+            }
+
+            float distanceFromClosestFoodToRight = Globals.GetDistanceFrom(MX, MY, closestFood.MX, MY);
+
+            return Globals.Map(distanceFromClosestFoodToRight, 0, SightRange, 1, 0);
+        }
+        public float ProximityToFoodToFront(CreatureStepInfo stepInfo)
+        {
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY <= MY);
+
+            if (closestFood == null)
+            {
+                return 0;
+            }
+
+            float distanceFromClosestFoodToFront = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
+
+            return Globals.Map(distanceFromClosestFoodToFront, 0, SightRange, 1, 0);
+        }
+        public float ProximityToFoodToBack(CreatureStepInfo stepInfo)
+        {
+            IFood closestFood = stepInfo.VisibleFoodOrderedByDistance.FirstOrDefault(x => x.MY >= MY);
+
+            if (closestFood == null)
+            {
+                return 0;
+            }
+
+            float distanceFromClosestFoodToBack = Globals.GetDistanceFrom(MX, MY, MX, closestFood.MY);
+
+            return Globals.Map(distanceFromClosestFoodToBack, 0, SightRange, 1, 0);
+        }
+        public float DistanceFromTopWorldBound(CreatureStepInfo stepInfo)
         {
             return Globals.Map(Y, stepInfo.EnvironmentInfo.WorldBounds.Y, stepInfo.EnvironmentInfo.WorldBounds.Y + stepInfo.EnvironmentInfo.WorldBounds.Height, 0, 1);
         }
-        public double DistanceFromLeftWorldBound(CreatureStepInfo stepInfo)
+        public float DistanceFromLeftWorldBound(CreatureStepInfo stepInfo)
         {
             return Globals.Map(X, stepInfo.EnvironmentInfo.WorldBounds.X, stepInfo.EnvironmentInfo.WorldBounds.X + stepInfo.EnvironmentInfo.WorldBounds.Width, 0, 1);
         }
-        public double RandomInput()
+        public float RandomInput()
         {
-            return Globals.Random.NextDouble();
+            return Globals.Random.NextFloat();
         }
         #endregion
 
@@ -339,7 +393,7 @@ namespace MaceEvolve.Core.Models
         public void MoveBackward(CreatureStepInfo stepInfo)
         {
             Y += Speed;
-            double worldBoundsBottom = stepInfo.EnvironmentInfo.WorldBounds.Y + stepInfo.EnvironmentInfo.WorldBounds.Height;
+            float worldBoundsBottom = stepInfo.EnvironmentInfo.WorldBounds.Y + stepInfo.EnvironmentInfo.WorldBounds.Height;
             if (MY > worldBoundsBottom)
             {
                 Y -= Speed;
@@ -360,7 +414,7 @@ namespace MaceEvolve.Core.Models
         public void MoveRight(CreatureStepInfo stepInfo)
         {
             X += Speed;
-            double worldBoundsRight = stepInfo.EnvironmentInfo.WorldBounds.X + stepInfo.EnvironmentInfo.WorldBounds.Width;
+            float worldBoundsRight = stepInfo.EnvironmentInfo.WorldBounds.X + stepInfo.EnvironmentInfo.WorldBounds.Width;
             if (MX > worldBoundsRight)
             {
                 X -= Speed;
@@ -374,8 +428,8 @@ namespace MaceEvolve.Core.Models
             {
                 IFood closestFood = stepInfo.VisibleFoodOrderedByDistance[0];
 
-                double xDifference = X - closestFood.X;
-                double yDifference = Y - closestFood.Y;
+                float xDifference = X - closestFood.X;
+                float yDifference = Y - closestFood.Y;
 
                 if (xDifference + yDifference <= SightRange)
                 {

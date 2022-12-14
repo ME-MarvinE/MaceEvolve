@@ -1,13 +1,11 @@
-﻿using MaceEvolve.Core.Models;
-
-namespace MaceEvolve.Core.Interfaces
+﻿namespace MaceEvolve.Core.Interfaces
 {
     public interface IGameObject
     {
-        double X { get; set; }
-        double Y { get; set; }
-        double MX { get; }
-        double MY { get; }
-        double Size { get; set; }
+        float X { get; set; }
+        float Y { get; set; }
+        float MX { get; }
+        float MY { get; }
+        float Size { get; set; }
     }
 }
