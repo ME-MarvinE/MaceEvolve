@@ -20,7 +20,6 @@ namespace MaceEvolve.Core.Models
         #region Properties
         public List<TCreature> Creatures { get; set; } = new List<TCreature>();
         public List<TFood> Food { get; set; } = new List<TFood>();
-        public Stopwatch Stopwatch { get; set; } = new Stopwatch();
         public int MaxCreatureAmount { get; set; } = 150;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
@@ -85,7 +84,6 @@ namespace MaceEvolve.Core.Models
         #region Methods
         public virtual void Reset()
         {
-            Stopwatch.Reset();
             Creatures.Clear();
             Food.Clear();
             BestCreature = null;
