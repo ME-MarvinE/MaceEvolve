@@ -246,7 +246,7 @@ namespace MaceEvolve.Core.Models
 
                         currentNodeWeightedSum = 0;
 
-                        List<Connection> connectionsToCurrentNode = Connections.Where(x => x.TargetId == currentNodeId).ToList();
+                        IEnumerable<Connection> connectionsToCurrentNode = Connections.Where(x => x.TargetId == currentNodeId);
 
                         foreach (var connection in connectionsToCurrentNode)
                         {

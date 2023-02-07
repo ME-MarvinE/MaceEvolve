@@ -99,8 +99,7 @@ namespace MaceEvolve.WinForms
 
             MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 
-            MainGameHost.Food.AddRange(GenerateFood());
-            MainGameHost.Creatures.AddRange(GenerateCreatures());
+            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(GenerateCreatures(), GenerateFood(), MainGameHost.WorldBounds);
 
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;
@@ -133,7 +132,7 @@ namespace MaceEvolve.WinForms
         }
         public List<GraphicalCreature> NewGenerationAsexual()
         {
-            List<GraphicalCreature> newGenerationCreatures = MainGameHost.NewGenerationAsexual();
+            List<GraphicalCreature> newGenerationCreatures = MainGameHost.CreateNewGenerationAsexual(MainGameHost.CurrentStep.Creatures);
 
             foreach (var creature in newGenerationCreatures)
             {
@@ -205,28 +204,34 @@ namespace MaceEvolve.WinForms
         }
         private void btnForwardGen_Click(object sender, EventArgs e)
         {
+            GameTimer.Stop();
             //Doesn't work if loop runs from 0 to x.
             for (long i = TicksUntilCurrentGenerationIsCompleted; i > 0; i--)
             {
                 UpdateSimulation();
             }
+            GameTimer.Start();
         }
         private void btnForwardGens_Click(object sender, EventArgs e)
         {
+            GameTimer.Stop();
             //Doesn't work if loop runs from 0 to x.
             long TicksIn100Generations = TicksPerGeneration * 100;
             for (long i = TicksIn100Generations; i > 0; i--)
             {
                 UpdateSimulation();
             }
+            GameTimer.Start();
         }
         private void btnForwardAllGens_Click(object sender, EventArgs e)
         {
+            GameTimer.Stop();
             //Doesn't work if loop runs from 0 to x.
             for (long i = TicksUntilSimulationIsCompleted; i > 0; i--)
             {
                 UpdateSimulation();
             }
+            GameTimer.Start();
         }
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
         {
@@ -258,7 +263,7 @@ namespace MaceEvolve.WinForms
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            foreach (var creature in MainGameHost.Creatures)
+            foreach (var creature in MainGameHost.CurrentStep.Creatures)
             {
                 Color creatureColor;
 
@@ -300,7 +305,7 @@ namespace MaceEvolve.WinForms
                 }
             }
 
-            foreach (GraphicalFood food in MainGameHost.Food)
+            foreach (GraphicalFood food in MainGameHost.CurrentStep.Food)
             {
                 using (SolidBrush brush = new SolidBrush(Color.Green))
                 {
@@ -316,7 +321,7 @@ namespace MaceEvolve.WinForms
         private void MainForm_MouseClick(object sender, MouseEventArgs e)
         {
             Point relativeMouseLocation = new Point(e.X, e.Y);
-            IEnumerable<GraphicalCreature> creaturesOrderedByDistanceToMouse = MainGameHost.Creatures.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.MX, x.MY));
+            IEnumerable<GraphicalCreature> creaturesOrderedByDistanceToMouse = MainGameHost.CurrentStep.Creatures.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.MX, x.MY));
 
             GraphicalCreature oldSelectedCreature = MainGameHost.SelectedCreature;
             GraphicalCreature newSelectedCreature = creaturesOrderedByDistanceToMouse.FirstOrDefault();
@@ -338,8 +343,7 @@ namespace MaceEvolve.WinForms
             if (newGenerationCreatures.Count > 0)
             {
                 MainGameHost.Reset();
-                MainGameHost.Food.AddRange(GenerateFood());
-                MainGameHost.Creatures = newGenerationCreatures;
+                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(newGenerationCreatures, GenerateFood(), MainGameHost.WorldBounds);
 
                 TicksInCurrentGeneration = 0;
                 GenerationCount += 1;
@@ -351,7 +355,7 @@ namespace MaceEvolve.WinForms
         }
         public void UpdateSimulation()
         {
-            MainGameHost.Update();
+            MainGameHost.NextStep();
             TicksInCurrentGeneration += 1;
 
             if (TicksInCurrentGeneration >= TicksPerGeneration)
