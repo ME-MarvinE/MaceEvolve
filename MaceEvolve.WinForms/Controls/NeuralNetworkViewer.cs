@@ -174,7 +174,7 @@ namespace MaceEvolve.WinForms.Controls
                         Color penColor = GetConnectionPenColor(connection);
                         float penSize = GetConnectionPenSize(connection);
 
-                        e.Graphics.DrawLine(new Pen(penColor, penSize), (int)sourceIdGameObject.MX, (int)sourceIdGameObject.MY, (int)targetIdGameObject.MX, (int)targetIdGameObject.MY);
+                        e.Graphics.DrawLine(new Pen(penColor, penSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
                     }
                 }
 
@@ -206,7 +206,7 @@ namespace MaceEvolve.WinForms.Controls
 
                         e.Graphics.TranslateTransform(sourceIdGameObject.MX, sourceIdGameObject.MY);
                         e.Graphics.RotateTransform(angleToDrawConnection);
-                        e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, (int)(sourceIdGameObject.Size * 0.75), (int)(sourceIdGameObject.Size * 0.75));
+                        e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
                         e.Graphics.ResetTransform();
                     }
 

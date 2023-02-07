@@ -142,7 +142,7 @@ namespace MaceEvolve.Mono.Desktop
 
             _spriteBatch.Begin();
 
-            foreach (var creature in MainGameHost.Creatures)
+            foreach (var creature in MainGameHost.CurrentStep.Creatures)
             {
                 Color creatureColor;
 
@@ -177,7 +177,7 @@ namespace MaceEvolve.Mono.Desktop
                     _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size + 2, 18, creatureRingColor.Value, creature.Size * 0.3f);
                 }
             }
-            foreach (var food in MainGameHost.Food)
+            foreach (var food in MainGameHost.CurrentStep.Food)
             {
                 _spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
             }
@@ -196,7 +196,7 @@ namespace MaceEvolve.Mono.Desktop
         }
         public void UpdateSimulation()
         {
-            MainGameHost.Update();
+            MainGameHost.NextStep();
             TicksInCurrentGeneration += 1;
 
             if (TicksInCurrentGeneration >= TicksPerGeneration)
@@ -214,7 +214,7 @@ namespace MaceEvolve.Mono.Desktop
             {
                 for (int ticksInCurrentGeneration = 0; ticksInCurrentGeneration < ticksPerGeneration; ticksInCurrentGeneration++)
                 {
-                    MainGameHost.Update();
+                    MainGameHost.NextStep();
                 }
 
                 List<GraphicalCreature> newGenerationCreatures = NewGenerationAsexual();
@@ -222,8 +222,7 @@ namespace MaceEvolve.Mono.Desktop
                 if (newGenerationCreatures.Count > 0)
                 {
                     MainGameHost.Reset();
-                    MainGameHost.Food.AddRange(GenerateFood());
-                    MainGameHost.Creatures = newGenerationCreatures;
+                    MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(newGenerationCreatures, GenerateFood(), MainGameHost.WorldBounds);
                     generationCount += 1;
                 }
                 else
@@ -262,7 +261,7 @@ namespace MaceEvolve.Mono.Desktop
         }
         public List<GraphicalCreature> NewGenerationAsexual()
         {
-            List<GraphicalCreature> newGenerationCreatures = MainGameHost.NewGenerationAsexual();
+            List<GraphicalCreature> newGenerationCreatures = MainGameHost.CreateNewGenerationAsexual(MainGameHost.CurrentStep.Creatures);
 
             foreach (var creature in newGenerationCreatures)
             {
@@ -278,8 +277,7 @@ namespace MaceEvolve.Mono.Desktop
             if (newGenerationCreatures.Count > 0)
             {
                 MainGameHost.Reset();
-                MainGameHost.Food.AddRange(GenerateFood());
-                MainGameHost.Creatures = newGenerationCreatures;
+                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(newGenerationCreatures, GenerateFood(), MainGameHost.WorldBounds);
 
                 TicksInCurrentGeneration = 0;
                 GenerationCount += 1;
@@ -301,8 +299,7 @@ namespace MaceEvolve.Mono.Desktop
 
             MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 
-            MainGameHost.Food.AddRange(GenerateFood());
-            MainGameHost.Creatures.AddRange(GenerateCreatures());
+            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(GenerateCreatures(), GenerateFood(), MainGameHost.WorldBounds);
 
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;

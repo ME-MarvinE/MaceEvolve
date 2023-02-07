@@ -4,7 +4,6 @@ using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 
 namespace MaceEvolve.Core.Models
@@ -18,8 +17,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Properties
-        public List<TCreature> Creatures { get; set; } = new List<TCreature>();
-        public List<TFood> Food { get; set; } = new List<TFood>();
+        public Step<TCreature, TFood> CurrentStep { get; set; }
         public int MaxCreatureAmount { get; set; } = 150;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
@@ -37,7 +35,16 @@ namespace MaceEvolve.Core.Models
         public float MinimumSuccessfulCreatureFitness { get; set; } = 0.9f;
         public float ReproductionNodeBiasVariance = 0.05f;
         public float ReproductionConnectionWeightVariance = 0.05f;
-        public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
+        public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = new List<CreatureInput>()
+        {
+            CreatureInput.PercentMaxEnergy,
+            CreatureInput.ProximityToFoodToLeft,
+            CreatureInput.ProximityToFoodToRight,
+            CreatureInput.ProximityToFoodToBack,
+            CreatureInput.ProximityToFoodToFront,
+            CreatureInput.DistanceFromTopWorldBound,
+            CreatureInput.DistanceFromLeftWorldBound
+        }.AsReadOnly();
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
         public TCreature SelectedCreature
@@ -84,14 +91,13 @@ namespace MaceEvolve.Core.Models
         #region Methods
         public virtual void Reset()
         {
-            Creatures.Clear();
-            Food.Clear();
+            CurrentStep = null;
             BestCreature = null;
             SelectedCreature = null;
         }
-        public virtual List<TCreature> NewGenerationSexual()
+        public virtual List<TCreature> CreateNewGenerationSexual(IEnumerable<TCreature> sourceCreatures)
         {
-            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(Creatures);
+            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(sourceCreatures);
             Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = successfulCreaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
             List<TCreature> topPercentileCreatureFitnessesOrderedDescendingList = topPercentileCreatureFitnessesOrderedDescending.Keys.ToList();
 
@@ -151,9 +157,9 @@ namespace MaceEvolve.Core.Models
 
             return newCreatures;
         }
-        public virtual List<TCreature> NewGenerationAsexual()
+        public virtual List<TCreature> CreateNewGenerationAsexual(IEnumerable<TCreature> sourceCreatures)
         {
-            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(Creatures);
+            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(sourceCreatures);
             Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = successfulCreaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
 
             if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
@@ -425,31 +431,31 @@ namespace MaceEvolve.Core.Models
             //Return any actions that aren't already used by a node in the network.
             return PossibleCreatureActions.Where(x => !network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Output && x == y.Value.CreatureAction));
         }
-        public virtual void Update()
+        public virtual void NextStep()
         {
+            Step<TCreature, TFood>.ExecuteActions(CurrentStep.RequestedActions, CurrentStep);
+
+            Step<TCreature, TFood> generatedStep = new Step<TCreature, TFood>(CurrentStep.Creatures.ToList(), CurrentStep.Food.Where(x => x.Servings > 0).ToList(), WorldBounds);
+
             TCreature newBestCreature = null;
 
             float successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
             float successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
-            Food.RemoveAll(x => x.Servings <= 0);
-
-            foreach (TCreature creature in Creatures)
+            foreach (TCreature creature in generatedStep.Creatures)
             {
-                if (!creature.IsDead)
+                //Update creature's brains with information from the generated step.
+                generatedStep.UpdateCreatureInputValues(creature);
+
+                //Get actions from creature.
+                Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature);
+
+                foreach (var creatureStepAction in creatureStepActions)
                 {
-                    EnvironmentInfo environmentInfo = new EnvironmentInfo(Creatures.AsReadOnly(), Food.AsReadOnly(), WorldBounds);
-
-                    creature.Live(environmentInfo);
-
-                    if (creature.Energy <= 0)
-                    {
-                        creature.Die();
-                    }
-
-                    Food.RemoveAll(x => x.Servings <= 0);
+                    generatedStep.QueueAction(creatureStepAction);
                 }
 
+                //Update best creature.
                 if (UseSuccessBounds)
                 {
                     float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
@@ -469,26 +475,32 @@ namespace MaceEvolve.Core.Models
                 }
             }
 
-            if (random.NextFloat() <= 0.8)
-            {
-                if (Food.Count < MaxFoodAmount)
-                {
-                    Food.Add(new TFood()
-                    {
-                        X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
-                        Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
-                        Servings = 1,
-                        EnergyPerServing = 30,
-                        ServingDigestionCost = 0.05f,
-                        Size = FoodSize
-                    });
-                }
-            }
-
             if (newBestCreature != null && BestCreature != newBestCreature)
             {
                 BestCreature = newBestCreature;
             }
+
+            if (random.NextFloat() <= 0.8)
+            {
+                if (generatedStep.Food.Count < MaxFoodAmount)
+                {
+                    generatedStep.Food.Add(CreateFoodWithRandomLocation());
+                }
+            }
+
+            CurrentStep = generatedStep;
+        }
+        public virtual TFood CreateFoodWithRandomLocation()
+        {
+            return new TFood()
+            {
+                X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
+                Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
+                Servings = 1,
+                EnergyPerServing = 30,
+                ServingDigestionCost = 0.05f,
+                Size = FoodSize
+            };
         }
         public virtual List<TFood> GenerateFood()
         {
@@ -496,15 +508,7 @@ namespace MaceEvolve.Core.Models
 
             for (int i = 0; i < MaxFoodAmount; i++)
             {
-                food.Add(new TFood()
-                {
-                    X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
-                    Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
-                    Servings = 1,
-                    EnergyPerServing = 30,
-                    ServingDigestionCost = 0.05f,
-                    Size = FoodSize
-                });
+                food.Add(CreateFoodWithRandomLocation());
             }
 
             return food;
@@ -533,6 +537,20 @@ namespace MaceEvolve.Core.Models
             }
 
             return creatures;
+        }
+        public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature)
+        {
+            Queue<StepAction<TCreature>> actions = new Queue<StepAction<TCreature>>();
+            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.Step(true);
+            Dictionary<Node, float> nodeOutputsDict = nodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => creature.Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
+            Node highestOutputNode = nodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
+
+            if (highestOutputNode != null && nodeOutputsDict[highestOutputNode] > 0)
+            {
+                actions.Enqueue(new StepAction<TCreature>() { Creature = creature, Action = highestOutputNode.CreatureAction.Value });
+            }
+
+            return actions;
         }
         protected virtual void OnBestCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
         {
