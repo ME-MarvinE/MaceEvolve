@@ -20,7 +20,7 @@ namespace MaceEvolve.Core.Models
         public ReadOnlyDictionary<CreatureInput, float> InputValues { get; }
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
-        public List<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; set; } = new List<NeuralNetworkStepNodeInfo>();
+        public IEnumerable<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; private set; } = Enumerable.Empty<NeuralNetworkStepNodeInfo>();
 
         public IReadOnlyDictionary<int, Node> NodeIdsToNodesDict { get; } = new Dictionary<int, Node>();
         public IReadOnlyDictionary<Node, int> NodesToNodeIdsDict { get; } = new Dictionary<Node, int>();
@@ -330,8 +330,7 @@ namespace MaceEvolve.Core.Models
                     currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
                 }
 
-                PreviousStepInfo.Clear();
-                PreviousStepInfo.AddRange(currentStepNodeInfo);
+                PreviousStepInfo = currentStepNodeInfo;
             }
 
             return cachedNodeOutputs;
