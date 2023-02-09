@@ -435,15 +435,18 @@ namespace MaceEvolve.Core.Models
 
             foreach (TCreature creature in generatedStep.Creatures)
             {
-                //Update creature's brains with information from the generated step.
-                generatedStep.UpdateCreatureInputValues(creature);
-
-                //Get actions from creature.
-                Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
-
-                foreach (var creatureStepAction in creatureStepActions)
+                if (!creature.IsDead || creature == BestCreature || creature == SelectedCreature)
                 {
-                    generatedStep.QueueAction(creatureStepAction);
+                    //Update creature's brains with information from the generated step.
+                    generatedStep.UpdateCreatureInputValues(creature);
+
+                    //Get actions from creature.
+                    Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
+
+                    foreach (var creatureStepAction in creatureStepActions)
+                    {
+                        generatedStep.QueueAction(creatureStepAction);
+                    }
                 }
 
                 //Update best creature.
