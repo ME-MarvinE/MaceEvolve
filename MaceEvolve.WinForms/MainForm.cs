@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MaceEvolve.WinForms
@@ -204,39 +205,54 @@ namespace MaceEvolve.WinForms
         {
             Reset();
         }
-        private void btnForwardGen_Click(object sender, EventArgs e)
+        private async void btnForwardGen_Click(object sender, EventArgs e)
         {
             GameTimer.Stop();
-            //Doesn't work if loop runs from 0 to x.
-            for (long i = TicksUntilCurrentGenerationIsCompleted; i > 0; i--)
+            await Task.Run(() =>
             {
-                UpdateSimulation();
-            }
+                //Doesn't work if loop runs from 0 to x.
+                for (long i = TicksUntilCurrentGenerationIsCompleted; i > 0 && SimulationRunning; i--)
+                {
+                    UpdateSimulation();
+                }
+            });
             GameTimer.Start();
         }
-        private void btnForwardGens_Click(object sender, EventArgs e)
+        private async void btnForwardGens_Click(object sender, EventArgs e)
         {
             GameTimer.Stop();
             //Doesn't work if loop runs from 0 to x.
-            long TicksIn100Generations = TicksPerGeneration * 100;
-            for (long i = TicksIn100Generations; i > 0; i--)
+            await Task.Run(() =>
             {
-                UpdateSimulation();
-            }
+                long TicksIn100Generations = TicksPerGeneration * 100;
+                for (long i = TicksIn100Generations; i > 0 && SimulationRunning; i--)
+                {
+
+                    UpdateSimulation();
+                }
+            });
             GameTimer.Start();
         }
-        private void btnForwardAllGens_Click(object sender, EventArgs e)
+        private async void btnForwardAllGens_Click(object sender, EventArgs e)
         {
             GameTimer.Stop();
-            //Doesn't work if loop runs from 0 to x.
-            for (long i = TicksUntilSimulationIsCompleted; i > 0; i--)
+            await Task.Run(() =>
             {
-                UpdateSimulation();
-            }
+                //Doesn't work if loop runs from 0 to x.
+                for (long i = TicksUntilSimulationIsCompleted; i > 0 && SimulationRunning; i--)
+                {
+                    UpdateSimulation();
+                }
+            });
             GameTimer.Start();
         }
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
         {
+            if (!GameTimer.Enabled)
+            {
+                return;
+            }
+
             NetworkViewerForm networkViewerForm = new NetworkViewerForm(BestCreatureNeuralNetworkViewer);
             networkViewerForm.Show();
         }
@@ -251,16 +267,10 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
-            TimeSpan timeInCurrentGeneration = TimeSpan.FromMilliseconds(TicksInCurrentGeneration * SimulationMspt);
-            TimeSpan timePerGeneration = TimeSpan.FromMilliseconds(TicksPerGeneration * SimulationMspt);
-            TimeSpan timeInSimulation = TimeSpan.FromMilliseconds(TicksElapsed * SimulationMspt);
-            TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
-            TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
-
-            lblGenEndsIn.Text = $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
-                $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
-            lblGenerationCount.Text = $"Gen {GenerationCount}";
-            lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
+            if (!GameTimer.Enabled)
+            {
+                return;
+            }
 
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
@@ -322,6 +332,11 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_MouseClick(object sender, MouseEventArgs e)
         {
+            if (!GameTimer.Enabled)
+            {
+                return;
+            }
+
             Point relativeMouseLocation = new Point(e.X, e.Y);
             IEnumerable<GraphicalCreature> creaturesOrderedByDistanceToMouse = MainGameHost.CurrentStep.Creatures.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.MX, x.MY));
 
@@ -357,7 +372,23 @@ namespace MaceEvolve.WinForms
         }
         public void UpdateSimulation()
         {
+            TimeSpan timeInCurrentGeneration = TimeSpan.FromMilliseconds(TicksInCurrentGeneration * SimulationMspt);
+            TimeSpan timePerGeneration = TimeSpan.FromMilliseconds(TicksPerGeneration * SimulationMspt);
+            TimeSpan timeInSimulation = TimeSpan.FromMilliseconds(TicksElapsed * SimulationMspt);
+            TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
+            TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
+
+            BeginInvoke(new Action(() =>
+            {
+                lblGenEndsIn.Text = $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
+                $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
+                lblGenerationCount.Text = $"Gen {GenerationCount}";
+                lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
+            }));
+
+
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
+
             TicksInCurrentGeneration += 1;
 
             if (TicksInCurrentGeneration >= TicksPerGeneration)
@@ -365,8 +396,6 @@ namespace MaceEvolve.WinForms
                 NewGeneration();
             }
         }
-        #endregion
-
         private void MainForm_Load(object sender, EventArgs e)
         {
             GenerationsToRunFor = 100000;
@@ -384,13 +413,11 @@ namespace MaceEvolve.WinForms
 
             Reset();
         }
-
         private void GatherStepInfoForAllCreaturesButton_Click(object sender, EventArgs e)
         {
             GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
             GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
         }
-
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             bool isControlMenuVisible = StartButton.Visible;
@@ -409,5 +436,6 @@ namespace MaceEvolve.WinForms
             btnForwardGens.Visible = isControlMenuVisible;
             btnForwardAllGens.Visible = isControlMenuVisible;
         }
+        #endregion
     }
 }

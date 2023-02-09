@@ -33,8 +33,8 @@ namespace MaceEvolve.Core.Models
         public float FoodSize { get; set; } = 7;
         public float CreatureSize { get; set; } = 10;
         public float MinimumSuccessfulCreatureFitness { get; set; } = 0.9f;
-        public float ReproductionNodeBiasVariance = 0.05f;
-        public float ReproductionConnectionWeightVariance = 0.05f;
+        public float ReproductionNodeBiasVariance { get; set; } = 0.05f;
+        public float ReproductionConnectionWeightVariance { get; set; } = 0.05f;
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
