@@ -390,5 +390,24 @@ namespace MaceEvolve.WinForms
             GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
             GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
         }
+
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            bool isControlMenuVisible = StartButton.Visible;
+
+            if (e.KeyCode == Keys.D0)
+            {
+                isControlMenuVisible = !isControlMenuVisible;
+            }
+
+            StartButton.Visible = isControlMenuVisible;
+            StopButton.Visible = isControlMenuVisible;
+            ResetButton.Visible = isControlMenuVisible;
+            GatherStepInfoForAllCreaturesButton.Visible = isControlMenuVisible;
+            btnTrackBestCreature.Visible = isControlMenuVisible;
+            btnForwardGen.Visible = isControlMenuVisible;
+            btnForwardGens.Visible = isControlMenuVisible;
+            btnForwardAllGens.Visible = isControlMenuVisible;
+        }
     }
 }

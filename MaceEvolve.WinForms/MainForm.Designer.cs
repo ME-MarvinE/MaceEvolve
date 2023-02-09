@@ -186,7 +186,7 @@ namespace MaceEvolve.WinForms
             // 
             // GatherStepInfoForAllCreaturesButton
             // 
-            this.GatherStepInfoForAllCreaturesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.GatherStepInfoForAllCreaturesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.GatherStepInfoForAllCreaturesButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.GatherStepInfoForAllCreaturesButton.Cursor = System.Windows.Forms.Cursors.Hand;
             this.GatherStepInfoForAllCreaturesButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -215,11 +215,13 @@ namespace MaceEvolve.WinForms
             this.Controls.Add(this.btnForwardGens);
             this.Controls.Add(this.btnForwardGen);
             this.Controls.Add(this.StartButton);
+            this.KeyPreview = true;
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Mace Evolution";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.MainForm_Paint);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainForm_KeyDown);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.MainForm_MouseClick);
             this.ResumeLayout(false);
             this.PerformLayout();
