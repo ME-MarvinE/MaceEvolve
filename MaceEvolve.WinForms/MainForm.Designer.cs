@@ -42,6 +42,7 @@ namespace MaceEvolve.WinForms
             this.btnForwardGens = new System.Windows.Forms.Button();
             this.btnForwardAllGens = new System.Windows.Forms.Button();
             this.GameTimer = new System.Windows.Forms.Timer(this.components);
+            this.GatherStepInfoForAllCreaturesButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // StartButton
@@ -183,6 +184,20 @@ namespace MaceEvolve.WinForms
             this.GameTimer.Enabled = true;
             this.GameTimer.Tick += new System.EventHandler(this.GameTimer_Tick);
             // 
+            // GatherStepInfoForAllCreaturesButton
+            // 
+            this.GatherStepInfoForAllCreaturesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.GatherStepInfoForAllCreaturesButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.GatherStepInfoForAllCreaturesButton.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.GatherStepInfoForAllCreaturesButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.GatherStepInfoForAllCreaturesButton.Location = new System.Drawing.Point(539, 617);
+            this.GatherStepInfoForAllCreaturesButton.Name = "GatherStepInfoForAllCreaturesButton";
+            this.GatherStepInfoForAllCreaturesButton.Size = new System.Drawing.Size(237, 32);
+            this.GatherStepInfoForAllCreaturesButton.TabIndex = 1;
+            this.GatherStepInfoForAllCreaturesButton.Text = "Gather Step Info For All Creatures: ";
+            this.GatherStepInfoForAllCreaturesButton.UseVisualStyleBackColor = false;
+            this.GatherStepInfoForAllCreaturesButton.Click += new System.EventHandler(this.GatherStepInfoForAllCreaturesButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -193,6 +208,7 @@ namespace MaceEvolve.WinForms
             this.Controls.Add(this.lblGenEndsIn);
             this.Controls.Add(this.lblGenerationCount);
             this.Controls.Add(this.btnTrackBestCreature);
+            this.Controls.Add(this.GatherStepInfoForAllCreaturesButton);
             this.Controls.Add(this.ResetButton);
             this.Controls.Add(this.StopButton);
             this.Controls.Add(this.btnForwardAllGens);
@@ -222,5 +238,6 @@ namespace MaceEvolve.WinForms
         private Button btnForwardGens;
         private Button btnForwardAllGens;
         private Timer GameTimer;
+        private Button GatherStepInfoForAllCreaturesButton;
     }
 }

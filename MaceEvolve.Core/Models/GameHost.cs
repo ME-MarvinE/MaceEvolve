@@ -422,7 +422,7 @@ namespace MaceEvolve.Core.Models
             //Return any actions that aren't already used by a node in the network.
             return PossibleCreatureActions.Where(x => !network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Output && x == y.Value.CreatureAction));
         }
-        public virtual void NextStep()
+        public virtual void NextStep(bool gatherInfoForAllCreatures = false)
         {
             Step<TCreature, TFood>.ExecuteActions(CurrentStep.RequestedActions, CurrentStep);
 
@@ -439,7 +439,7 @@ namespace MaceEvolve.Core.Models
                 generatedStep.UpdateCreatureInputValues(creature);
 
                 //Get actions from creature.
-                Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature);
+                Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
 
                 foreach (var creatureStepAction in creatureStepActions)
                 {
@@ -529,10 +529,10 @@ namespace MaceEvolve.Core.Models
 
             return creatures;
         }
-        public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature)
+        public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature, bool trackStepInfo)
         {
             Queue<StepAction<TCreature>> actions = new Queue<StepAction<TCreature>>();
-            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.Step(true);
+            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.Step(trackStepInfo);
             Dictionary<Node, float> nodeOutputsDict = nodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => creature.Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
             Node highestOutputNode = nodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 

@@ -190,99 +190,99 @@ namespace MaceEvolve.Core.Models
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="NotImplementedException"></exception>
-        public Dictionary<int, float> Step(bool trackStepInfo = false, float defaultNodeOutputValue = 0)
+        public Dictionary<int, float> Step(bool trackStepInfo, float defaultNodeOutputValue = 0)
         {
-                Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
-                List<int> inputNodeIds = new List<int>();
-                List<int> outputNodeIds = new List<int>();
+            Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
+            List<int> inputNodeIds = new List<int>();
+            List<int> outputNodeIds = new List<int>();
 
-                foreach (var nodeIdToNodeKeyValuePair in NodeIdsToNodesDict)
+            foreach (var nodeIdToNodeKeyValuePair in NodeIdsToNodesDict)
+            {
+                int nodeId = nodeIdToNodeKeyValuePair.Key;
+                Node node = nodeIdToNodeKeyValuePair.Value;
+
+                if (node.NodeType == NodeType.Input)
                 {
-                    int nodeId = nodeIdToNodeKeyValuePair.Key;
-                    Node node = nodeIdToNodeKeyValuePair.Value;
+                    inputNodeIds.Add(nodeId);
+                }
+                else if (node.NodeType == NodeType.Output)
+                {
+                    outputNodeIds.Add(nodeId);
+                }
+            }
 
-                    if (node.NodeType == NodeType.Input)
+            List<int> nodesBeingEvaluated = new List<int>();
+            List<int> nodeQueue = new List<int>();
+
+            nodeQueue.AddRange(outputNodeIds);
+            nodeQueue.AddRange(inputNodeIds);
+
+            while (nodeQueue.Count > 0)
+            {
+                int currentNodeId = nodeQueue[nodeQueue.Count - 1];
+                Node currentNode = NodeIdsToNodesDict[currentNodeId];
+                nodesBeingEvaluated.Add(currentNodeId);
+                float? currentNodeWeightedSum;
+
+                if (currentNode.NodeType == NodeType.Input)
+                {
+                    if (currentNode.CreatureInput == null)
                     {
-                        inputNodeIds.Add(nodeId);
+                        throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureInput)} is null.");
                     }
-                    else if (node.NodeType == NodeType.Output)
+
+                    currentNodeWeightedSum = InputValues[currentNode.CreatureInput.Value];
+                }
+                else
+                {
+                    if (currentNode.NodeType == NodeType.Output && currentNode.CreatureAction == null)
                     {
-                        outputNodeIds.Add(nodeId);
+                        throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureAction)} is null.");
+                    }
+
+                    currentNodeWeightedSum = 0;
+
+                    IEnumerable<Connection> connectionsToCurrentNode = Connections.Where(x => x.TargetId == currentNodeId);
+
+                    foreach (var connection in connectionsToCurrentNode)
+                    {
+                        if (connection.TargetId == currentNodeId)
+                        {
+                            float sourceNodeOutput;
+                            Node connectionSourceNode = NodeIdsToNodesDict[connection.SourceId];
+                            bool isSelfReferencingConnection = connection.SourceId == connection.TargetId;
+
+                            //If the source node's output needs to be retrieved and it is currently being evaluated,
+                            //the only thing that can be done is use the cached value.
+                            if (cachedNodeOutputs.TryGetValue(connection.SourceId, out float cachedSourceNodeOutput))
+                            {
+                                sourceNodeOutput = cachedSourceNodeOutput;
+                            }
+                            else if (nodesBeingEvaluated.Contains(connection.SourceId))
+                            {
+                                sourceNodeOutput = defaultNodeOutputValue;
+                            }
+                            else
+                            {
+                                nodeQueue.Add(connection.SourceId);
+                                currentNodeWeightedSum = null;
+                                break;
+                            }
+
+                            currentNodeWeightedSum += sourceNodeOutput * connection.Weight;
+                        }
                     }
                 }
 
-                List<int> nodesBeingEvaluated = new List<int>();
-                List<int> nodeQueue = new List<int>();
-
-                nodeQueue.AddRange(outputNodeIds);
-                nodeQueue.AddRange(inputNodeIds);
-
-                while (nodeQueue.Count > 0)
+                if (currentNodeWeightedSum != null)
                 {
-                    int currentNodeId = nodeQueue[nodeQueue.Count - 1];
-                    Node currentNode = NodeIdsToNodesDict[currentNodeId];
-                    nodesBeingEvaluated.Add(currentNodeId);
-                    float? currentNodeWeightedSum;
+                    float currentNodeOutput = currentNode.NodeType == NodeType.Input ? currentNodeWeightedSum.Value : Globals.ReLU(currentNodeWeightedSum.Value + currentNode.Bias);
 
-                    if (currentNode.NodeType == NodeType.Input)
-                    {
-                        if (currentNode.CreatureInput == null)
-                        {
-                            throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureInput)} is null.");
-                        }
+                    nodesBeingEvaluated.Remove(currentNodeId);
 
-                        currentNodeWeightedSum = InputValues[currentNode.CreatureInput.Value];
-                    }
-                    else
-                    {
-                        if (currentNode.NodeType == NodeType.Output && currentNode.CreatureAction == null)
-                        {
-                            throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureAction)} is null.");
-                        }
+                    cachedNodeOutputs[currentNodeId] = currentNodeOutput;
 
-                        currentNodeWeightedSum = 0;
-
-                        IEnumerable<Connection> connectionsToCurrentNode = Connections.Where(x => x.TargetId == currentNodeId);
-
-                        foreach (var connection in connectionsToCurrentNode)
-                        {
-                            if (connection.TargetId == currentNodeId)
-                            {
-                                float sourceNodeOutput;
-                                Node connectionSourceNode = NodeIdsToNodesDict[connection.SourceId];
-                                bool isSelfReferencingConnection = connection.SourceId == connection.TargetId;
-
-                                //If the source node's output needs to be retrieved and it is currently being evaluated,
-                                //the only thing that can be done is use the cached value.
-                                if (cachedNodeOutputs.TryGetValue(connection.SourceId, out float cachedSourceNodeOutput))
-                                {
-                                    sourceNodeOutput = cachedSourceNodeOutput;
-                                }
-                                else if (nodesBeingEvaluated.Contains(connection.SourceId))
-                                {
-                                    sourceNodeOutput = defaultNodeOutputValue;
-                                }
-                                else
-                                {
-                                    nodeQueue.Add(connection.SourceId);
-                                    currentNodeWeightedSum = null;
-                                    break;
-                                }
-
-                                currentNodeWeightedSum += sourceNodeOutput * connection.Weight;
-                            }
-                        }
-                    }
-
-                    if (currentNodeWeightedSum != null)
-                    {
-                        float currentNodeOutput = currentNode.NodeType == NodeType.Input ? currentNodeWeightedSum.Value : Globals.ReLU(currentNodeWeightedSum.Value + currentNode.Bias);
-
-                        nodesBeingEvaluated.Remove(currentNodeId);
-
-                        cachedNodeOutputs[currentNodeId] = currentNodeOutput;
-
-                        nodeQueue.Remove(currentNodeId);
+                    nodeQueue.Remove(currentNodeId);
                 }
             }
 
@@ -291,30 +291,21 @@ namespace MaceEvolve.Core.Models
                 List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
 
                 foreach (var keyValuePair in cachedNodeOutputs)
-                        {
+                {
                     int nodeId = keyValuePair.Key;
                     Node node = NodeIdsToNodesDict[nodeId];
                     float cachedOutput = keyValuePair.Value;
 
                     NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
-                            {
+                    {
                         NodeId = nodeId,
                         Bias = node.Bias,
                         CreatureAction = node.CreatureAction,
                         CreatureInput = node.CreatureInput,
                         NodeType = node.NodeType,
                         PreviousOutput = cachedOutput,
-                            };
+                    };
 
-                            currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
-                        }
-
-                        currentStepCurrentNodeInfo.PreviousOutput = currentNodeOutput;
-                    }
-                }
-
-                foreach (var nodeInfo in currentStepNodeInfo)
-                {
                     foreach (var connection in Connections)
                     {
                         bool sourceIdIsNodeId = connection.SourceId == nodeId;
@@ -343,8 +334,8 @@ namespace MaceEvolve.Core.Models
                 PreviousStepInfo.AddRange(currentStepNodeInfo);
             }
 
-                return cachedNodeOutputs;
-            }
+            return cachedNodeOutputs;
+        }
         public int AddNode(Node node)
         {
             bool nodeIdCreated = false;

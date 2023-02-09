@@ -26,6 +26,7 @@ namespace MaceEvolve.WinForms
         public bool SimulationRunning { get; set; }
         public int GenerationsToRunFor { get; set; }
         public int TicksInCurrentGeneration { get; set; }
+        public bool GatherStepInfoForAllCreatures { get; set; }
         public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
         {
@@ -83,6 +84,7 @@ namespace MaceEvolve.WinForms
         public MainForm()
         {
             InitializeComponent();
+            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
             DoubleBuffered = true;
         }
         #endregion
@@ -355,7 +357,7 @@ namespace MaceEvolve.WinForms
         }
         public void UpdateSimulation()
         {
-            MainGameHost.NextStep();
+            MainGameHost.NextStep(GatherStepInfoForAllCreatures);
             TicksInCurrentGeneration += 1;
 
             if (TicksInCurrentGeneration >= TicksPerGeneration)
@@ -381,6 +383,12 @@ namespace MaceEvolve.WinForms
             GameTimer.Interval = (int)SimulationMspt;
 
             Reset();
+        }
+
+        private void GatherStepInfoForAllCreaturesButton_Click(object sender, EventArgs e)
+        {
+            GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
+            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
         }
     }
 }
