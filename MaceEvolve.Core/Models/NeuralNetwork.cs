@@ -190,7 +190,7 @@ namespace MaceEvolve.Core.Models
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="NotImplementedException"></exception>
-        public Dictionary<int, float> Step(bool trackStepInfo, float defaultNodeOutputValue = 0)
+        public Dictionary<int, float> Step(bool trackStepInfo = false, float defaultNodeOutputValue = 0)
         {
                 Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
                 List<int> inputNodeIds = new List<int>();
@@ -216,8 +216,6 @@ namespace MaceEvolve.Core.Models
 
                 nodeQueue.AddRange(outputNodeIds);
                 nodeQueue.AddRange(inputNodeIds);
-
-                List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
 
                 while (nodeQueue.Count > 0)
                 {
@@ -285,18 +283,27 @@ namespace MaceEvolve.Core.Models
                         cachedNodeOutputs[currentNodeId] = currentNodeOutput;
 
                         nodeQueue.Remove(currentNodeId);
+                }
+            }
 
-                        NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = currentStepNodeInfo.FirstOrDefault(x => x.NodeId == currentNodeId);
+            if (trackStepInfo)
+            {
+                List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
 
-                        if (currentStepCurrentNodeInfo == null)
+                foreach (var keyValuePair in cachedNodeOutputs)
                         {
-                            currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
+                    int nodeId = keyValuePair.Key;
+                    Node node = NodeIdsToNodesDict[nodeId];
+                    float cachedOutput = keyValuePair.Value;
+
+                    NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
                             {
-                                NodeId = currentNodeId,
-                                Bias = currentNode.Bias,
-                                CreatureAction = currentNode.CreatureAction,
-                                CreatureInput = currentNode.CreatureInput,
-                                NodeType = currentNode.NodeType
+                        NodeId = nodeId,
+                        Bias = node.Bias,
+                        CreatureAction = node.CreatureAction,
+                        CreatureInput = node.CreatureInput,
+                        NodeType = node.NodeType,
+                        PreviousOutput = cachedOutput,
                             };
 
                             currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
@@ -310,28 +317,31 @@ namespace MaceEvolve.Core.Models
                 {
                     foreach (var connection in Connections)
                     {
-                        bool sourceIdIsNodeId = connection.SourceId == nodeInfo.NodeId;
-                        bool targetIdIsNodeId = connection.TargetId == nodeInfo.NodeId;
+                        bool sourceIdIsNodeId = connection.SourceId == nodeId;
+                        bool targetIdIsNodeId = connection.TargetId == nodeId;
 
                         if (sourceIdIsNodeId || targetIdIsNodeId)
                         {
-                            nodeInfo.Connections.Add(connection);
+                            currentStepCurrentNodeInfo.Connections.Add(connection);
                         }
 
                         if (sourceIdIsNodeId)
                         {
-                            nodeInfo.ConnectionsFrom.Add(connection);
+                            currentStepCurrentNodeInfo.ConnectionsFrom.Add(connection);
                         }
 
                         if (targetIdIsNodeId)
                         {
-                            nodeInfo.ConnectionsTo.Add(connection);
+                            currentStepCurrentNodeInfo.ConnectionsTo.Add(connection);
                         }
                     }
+
+                    currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
                 }
 
                 PreviousStepInfo.Clear();
                 PreviousStepInfo.AddRange(currentStepNodeInfo);
+            }
 
                 return cachedNodeOutputs;
             }
