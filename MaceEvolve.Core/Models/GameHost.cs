@@ -35,16 +35,7 @@ namespace MaceEvolve.Core.Models
         public float MinimumSuccessfulCreatureFitness { get; set; } = 0.9f;
         public float ReproductionNodeBiasVariance = 0.05f;
         public float ReproductionConnectionWeightVariance = 0.05f;
-        public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = new List<CreatureInput>()
-        {
-            CreatureInput.PercentMaxEnergy,
-            CreatureInput.ProximityToFoodToLeft,
-            CreatureInput.ProximityToFoodToRight,
-            CreatureInput.ProximityToFoodToBack,
-            CreatureInput.ProximityToFoodToFront,
-            CreatureInput.DistanceFromTopWorldBound,
-            CreatureInput.DistanceFromLeftWorldBound
-        }.AsReadOnly();
+        public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
         public TCreature SelectedCreature
