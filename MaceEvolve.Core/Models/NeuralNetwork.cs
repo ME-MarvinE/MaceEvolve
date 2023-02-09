@@ -190,10 +190,8 @@ namespace MaceEvolve.Core.Models
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="NotImplementedException"></exception>
-        public Dictionary<int, float> Step(bool outputNodesOnly, float defaultNodeOutputValue = 0)
+        public Dictionary<int, float> Step(bool trackStepInfo, float defaultNodeOutputValue = 0)
         {
-            if (outputNodesOnly)
-            {
                 Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
                 List<int> inputNodeIds = new List<int>();
                 List<int> outputNodeIds = new List<int>();
@@ -337,11 +335,6 @@ namespace MaceEvolve.Core.Models
 
                 return cachedNodeOutputs;
             }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
         public int AddNode(Node node)
         {
             bool nodeIdCreated = false;
