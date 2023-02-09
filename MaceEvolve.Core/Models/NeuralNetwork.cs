@@ -27,15 +27,15 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Constructors
-        public NeuralNetwork(List<CreatureInput> inputs, int maxProcessNodes, List<CreatureAction> actions)
-            : this(GenerateInputNodes(inputs).Concat(GenerateProcessNodes(maxProcessNodes)).Concat(GenerateOutputNodes(actions)).ToList(), inputs, actions, new List<Connection>())
+        public NeuralNetwork(IEnumerable<CreatureInput> inputs, int maxProcessNodes, List<CreatureAction> actions)
+            : this(inputs, maxProcessNodes, actions, new List<Connection>())
         {
         }
-        public NeuralNetwork(List<CreatureInput> inputs, int maxProcessNodes, List<CreatureAction> actions, List<Connection> connections)
+        public NeuralNetwork(IEnumerable<CreatureInput> inputs, int maxProcessNodes, List<CreatureAction> actions, List<Connection> connections)
             : this(GenerateInputNodes(inputs).Concat(GenerateProcessNodes(maxProcessNodes)).Concat(GenerateOutputNodes(actions)).ToList(), inputs, actions, connections)
         {
         }
-        public NeuralNetwork(List<Node> nodes, List<CreatureInput> inputs, List<CreatureAction> actions, List<Connection> connections)
+        public NeuralNetwork(List<Node> nodes, IEnumerable<CreatureInput> inputs, List<CreatureAction> actions, List<Connection> connections)
         {
             if (inputs == null) { throw new ArgumentNullException(nameof(inputs)); }
             if (nodes == null) { throw new ArgumentNullException(nameof(nodes)); }
