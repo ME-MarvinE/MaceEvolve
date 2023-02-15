@@ -78,7 +78,7 @@ namespace MaceEvolve.Core.Models
                 int randomConnectionSource = possibleSourceNodes.Keys.ToList()[Globals.Random.Next(0, possibleSourceNodes.Count)];
                 int randomConnectionTarget = possibleTargetNodes.Keys.ToList()[Globals.Random.Next(0, possibleTargetNodes.Count)];
 
-                Connection newConnection = new Connection() { SourceId = randomConnectionSource, TargetId = randomConnectionTarget, Weight = Globals.Random.NextFloat(-weightBound, weightBound) };
+                Connection newConnection = new Connection(randomConnectionSource, randomConnectionTarget, Globals.Random.NextFloat(-weightBound, weightBound));
                 generatedConnections.Add(newConnection);
             }
 
@@ -106,38 +106,6 @@ namespace MaceEvolve.Core.Models
         public NeuralNetwork CloneNetwork()
         {
             return JsonConvert.DeserializeObject<NeuralNetwork>(JsonConvert.SerializeObject(this));
-        }
-        public bool MutateConnectionTarget(float mutationChance, Connection connection)
-        {
-            List<Node> possibleTargetNodes = GetTargetNodes(NodeIdsToNodesDict.Values).ToList();
-
-            if (possibleTargetNodes.Count > 0 && Globals.Random.NextFloat() <= mutationChance)
-            {
-                int randomNodeNum = Globals.Random.Next(possibleTargetNodes.Count);
-                Node randomNode = possibleTargetNodes[randomNodeNum];
-
-                connection.TargetId = NodesToNodeIdsDict[randomNode];
-
-                return true;
-            }
-
-            return false;
-        }
-        public bool MutateConnectionSource(float mutationChance, Connection connection)
-        {
-            List<Node> possibleSourceNodes = GetSourceNodes(NodeIdsToNodesDict.Values).ToList();
-
-            if (possibleSourceNodes.Count > 0 && Globals.Random.NextFloat() <= mutationChance)
-            {
-                int randomNodeNum = Globals.Random.Next(possibleSourceNodes.Count);
-                Node randomNode = possibleSourceNodes[randomNodeNum];
-
-                connection.SourceId = NodesToNodeIdsDict[randomNode];
-
-                return true;
-            }
-
-            return false;
         }
         public List<List<Connection>> GetConnectionStructure()
         {

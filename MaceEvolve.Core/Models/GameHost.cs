@@ -331,31 +331,28 @@ namespace MaceEvolve.Core.Models
 
                     if (network.Connections.Count < MaxCreatureConnections && possibleSourceNodes.Count > 0 && possibleTargetNodes.Count > 0)
                     {
-                        Connection newConnection = new Connection() { Weight = random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound) };
+                        Connection newConnection;
+                        float newConnectionWeight = random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound);
 
                         switch (nodeToAdd.NodeType)
                         {
                             case NodeType.Input:
-                                newConnection.SourceId = nodeToAddId;
-                                newConnection.TargetId = network.NodesToNodeIdsDict[possibleTargetNodes[random.Next(possibleTargetNodes.Count)]];
+                                newConnection = new Connection(nodeToAddId, network.NodesToNodeIdsDict[possibleTargetNodes[random.Next(possibleTargetNodes.Count)]], newConnectionWeight);
                                 break;
 
                             case NodeType.Process:
                                 if (random.NextDouble() <= 0.5)
                                 {
-                                    newConnection.SourceId = nodeToAddId;
-                                    newConnection.TargetId = network.NodesToNodeIdsDict[possibleTargetNodes[random.Next(possibleTargetNodes.Count)]];
+                                    newConnection = new Connection(nodeToAddId, network.NodesToNodeIdsDict[possibleTargetNodes[random.Next(possibleTargetNodes.Count)]], newConnectionWeight);
                                 }
                                 else
                                 {
-                                    newConnection.SourceId = network.NodesToNodeIdsDict[possibleSourceNodes[random.Next(possibleSourceNodes.Count)]];
-                                    newConnection.TargetId = nodeToAddId;
+                                    newConnection = new Connection(network.NodesToNodeIdsDict[possibleSourceNodes[random.Next(possibleSourceNodes.Count)]], nodeToAddId, newConnectionWeight);
                                 }
                                 break;
 
                             case NodeType.Output:
-                                newConnection.SourceId = network.NodesToNodeIdsDict[possibleSourceNodes[random.Next(possibleSourceNodes.Count)]];
-                                newConnection.TargetId = nodeToAddId;
+                                newConnection = new Connection(network.NodesToNodeIdsDict[possibleSourceNodes[random.Next(possibleSourceNodes.Count)]], nodeToAddId, newConnectionWeight);
                                 break;
 
                             default:
@@ -381,32 +378,53 @@ namespace MaceEvolve.Core.Models
             {
                 mutationAttempted = true;
 
-                Connection randomConnection = network.Connections[random.Next(network.Connections.Count)];
+                int randomConnectionIndex = random.Next(network.Connections.Count);
 
-                randomConnection.Weight = random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound);
+                network.Connections[randomConnectionIndex] = new Connection(network.Connections[randomConnectionIndex].SourceId, network.Connections[randomConnectionIndex].TargetId, random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound));
             }
 
             //Change a random connection's source.
-            if (network.Connections.Count > 0 && network.MutateConnectionSource(mutateRandomConnectionSourceChance, network.Connections[random.Next(network.Connections.Count)]))
+            if (network.Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionSourceChance)
             {
                 mutationAttempted = true;
+
+                int randomConnectionIndex = random.Next(network.Connections.Count);
+                List<Node> possibleSourceNodes = NeuralNetwork.GetSourceNodes(network.NodeIdsToNodesDict.Values).ToList();
+
+                if (possibleSourceNodes.Count > 0)
+                {
+                    Node randomNode = possibleSourceNodes[Globals.Random.Next(possibleSourceNodes.Count)];
+                    Connection mutatedConnection = new Connection(network.NodesToNodeIdsDict[randomNode], network.Connections[randomConnectionIndex].TargetId, network.Connections[randomConnectionIndex].Weight);
+                    network.Connections[randomConnectionIndex] = mutatedConnection;
+                }
             }
 
             //Change a random connection's target.
-            if (network.Connections.Count > 0 && network.MutateConnectionTarget(mutateRandomConnectionTargetChance, network.Connections[random.Next(network.Connections.Count)]))
+            if (network.Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionTargetChance)
             {
                 mutationAttempted = true;
+
+                int randomConnectionIndex = random.Next(network.Connections.Count);
+                List<Node> possibleTargetNodes = NeuralNetwork.GetTargetNodes(network.NodeIdsToNodesDict.Values).ToList();
+
+                if (possibleTargetNodes.Count > 0)
+                {
+                    Node randomNode = possibleTargetNodes[Globals.Random.Next(possibleTargetNodes.Count)];
+                    Connection mutatedConnection = new Connection(network.Connections[randomConnectionIndex].SourceId, network.NodesToNodeIdsDict[randomNode], network.Connections[randomConnectionIndex].Weight);
+                    network.Connections[randomConnectionIndex] = mutatedConnection;
+                }
             }
 
             //Create a new connection.
             if (network.Connections.Count < MaxCreatureConnections && random.NextDouble() <= createRandomConnectionChance)
             {
                 mutationAttempted = true;
-                Connection newConnection = network.GenerateRandomConnections(1, 1, ConnectionWeightBound).FirstOrDefault();
+
+                Connection? newConnection = network.GenerateRandomConnections(1, 1, ConnectionWeightBound).FirstOrDefault();
 
                 if (newConnection != null)
                 {
-                    network.Connections.Add(newConnection);
+                    network.Connections.Add(newConnection.Value);
                 }
             }
 
@@ -526,7 +544,7 @@ namespace MaceEvolve.Core.Models
                     SightRange = 100
                 };
 
-                newCreature.Brain.Connections = newCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound);
+                newCreature.Brain.Connections = newCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MinCreatureConnections, ConnectionWeightBound);
                 creatures.Add(newCreature);
             }
 

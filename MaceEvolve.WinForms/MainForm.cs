@@ -106,6 +106,7 @@ namespace MaceEvolve.WinForms
 
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;
+            UpdateUIText();
         }
         public List<GraphicalFood> GenerateFood()
         {
@@ -372,20 +373,10 @@ namespace MaceEvolve.WinForms
         }
         public void UpdateSimulation()
         {
-            TimeSpan timeInCurrentGeneration = TimeSpan.FromMilliseconds(TicksInCurrentGeneration * SimulationMspt);
-            TimeSpan timePerGeneration = TimeSpan.FromMilliseconds(TicksPerGeneration * SimulationMspt);
-            TimeSpan timeInSimulation = TimeSpan.FromMilliseconds(TicksElapsed * SimulationMspt);
-            TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
-            TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
-
             BeginInvoke(new Action(() =>
             {
-                lblGenEndsIn.Text = $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
-                $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
-                lblGenerationCount.Text = $"Gen {GenerationCount}";
-                lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
+                UpdateUIText();
             }));
-
 
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
@@ -437,6 +428,22 @@ namespace MaceEvolve.WinForms
             btnForwardGen.Visible = isControlMenuVisible;
             btnForwardGens.Visible = isControlMenuVisible;
             btnForwardAllGens.Visible = isControlMenuVisible;
+        }
+        private void UpdateUIText()
+        {
+            TimeSpan timeInCurrentGeneration = TimeSpan.FromMilliseconds(TicksInCurrentGeneration * SimulationMspt);
+            TimeSpan timePerGeneration = TimeSpan.FromMilliseconds(TicksPerGeneration * SimulationMspt);
+            TimeSpan timeInSimulation = TimeSpan.FromMilliseconds(TicksElapsed * SimulationMspt);
+            TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
+            TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
+
+            BeginInvoke(new Action(() =>
+            {
+                lblGenEndsIn.Text = $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
+                $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
+                lblGenerationCount.Text = $"Gen {GenerationCount}";
+                lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
+            }));
         }
         #endregion
     }

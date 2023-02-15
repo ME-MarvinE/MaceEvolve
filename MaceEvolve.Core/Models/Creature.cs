@@ -128,25 +128,21 @@ namespace MaceEvolve.Core.Models
                         parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId] = newNodeId;
                     }
 
-                    Connection connectionToAdd = new Connection()
-                    {
-                        SourceId = parentToOffspringNodesMap[randomParent][randomParentConnection.SourceId],
-                        TargetId = parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId]
-                    };
-
                     //Apply any variance to the connection's weight.
-                    connectionToAdd.Weight = Globals.Random.NextFloatVariance(randomParentConnection.Weight, connectionWeightMaxVariancePercentage);
+                    float connectionToAddWeight = Globals.Random.NextFloatVariance(randomParentConnection.Weight, connectionWeightMaxVariancePercentage);
+                    int connectionToAddSourceId = parentToOffspringNodesMap[randomParent][randomParentConnection.SourceId];
+                    int connectionToAddTargetId = parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId];
 
-                    if (connectionToAdd.Weight < -connectionWeightBound)
+                    if (connectionToAddWeight < -connectionWeightBound)
                     {
-                        connectionToAdd.Weight = -connectionWeightBound;
+                        connectionToAddWeight = -connectionWeightBound;
                     }
-                    else if (connectionToAdd.Weight > connectionWeightBound)
+                    else if (connectionToAddWeight > connectionWeightBound)
                     {
-                        connectionToAdd.Weight = connectionWeightBound;
+                        connectionToAddWeight = connectionWeightBound;
                     }
 
-                    offspring.Brain.Connections.Add(connectionToAdd);
+                    offspring.Brain.Connections.Add(new Connection(connectionToAddSourceId, connectionToAddTargetId, connectionToAddWeight));
                     availableParentConnections[randomParent].Remove(randomParentConnection);
                 }
             }
