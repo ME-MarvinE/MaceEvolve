@@ -2,7 +2,7 @@
 
 namespace MaceEvolve.Core.Models
 {
-    public class Node
+    public class Node : INode
     {
         #region Properties
         public NodeType NodeType { get; }
