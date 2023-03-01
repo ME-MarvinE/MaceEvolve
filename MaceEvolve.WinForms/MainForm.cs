@@ -37,7 +37,6 @@ namespace MaceEvolve.WinForms
             }
         }
         public NeuralNetworkViewer BestCreatureNeuralNetworkViewer
-
         {
             get
             {
@@ -389,14 +388,12 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_Load(object sender, EventArgs e)
         {
-            GenerationsToRunFor = 100000;
+            GenerationsToRunFor = 300000;
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
 
             MainGameHost = new GameHost<GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 10;
-            MainGameHost.MinimumSuccessfulCreatureFitness = 0.5f;
-            MainGameHost.MutationChance= 0.05f;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
             MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
 

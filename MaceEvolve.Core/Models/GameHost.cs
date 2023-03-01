@@ -18,23 +18,23 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public Step<TCreature, TFood> CurrentStep { get; set; }
-        public int MaxCreatureAmount { get; set; } = 150;
+        public int MaxCreatureAmount { get; set; } = 300;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
         public IRectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public float CreatureSpeed { get; set; }
-        public int MaxCreatureProcessNodes { get; set; } = 4;
-        public float MutationChance { get; set; } = 0.05f;
-        public int MutationAttempts { get; set; } = 2;
+        public int MaxCreatureProcessNodes { get; set; } = 3;
+        public float MutationChance { get; set; } = 0.2f;
+        public int MutationAttempts { get; set; } = 1;
         public float ConnectionWeightBound { get; set; } = 4;
         public float MaxCreatureEnergy { get; set; } = 150;
         public float FoodSize { get; set; } = 7;
         public float CreatureSize { get; set; } = 10;
         public float MinimumSuccessfulCreatureFitness { get; set; } = 0.5f;
-        public float ReproductionNodeBiasVariance { get; set; } = 0.05f;
-        public float ReproductionConnectionWeightVariance { get; set; } = 0.05f;
+        public float ReproductionNodeBiasVariance { get; set; }
+        public float ReproductionConnectionWeightVariance { get; set; }
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }

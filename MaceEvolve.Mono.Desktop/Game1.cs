@@ -101,8 +101,6 @@ namespace MaceEvolve.Mono.Desktop
             TargetElapsedTime = TimeSpan.FromSeconds(1f / SimulationTPS);
 
             MainGameHost = new GameHost<GraphicalCreature, GraphicalFood>();
-            MainGameHost.MinimumSuccessfulCreatureFitness = 0.5f;
-            MainGameHost.MutationChance = 0.05f;
             MainGameHost.CreatureSize = 5;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
             MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
