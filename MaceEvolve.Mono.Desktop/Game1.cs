@@ -5,8 +5,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using MonoGame.Extended.BitmapFonts;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace MaceEvolve.Mono.Desktop
@@ -27,9 +29,12 @@ namespace MaceEvolve.Mono.Desktop
         public int GenerationsToRunFor { get; set; }
         public Color BackgroundColor { get; set; }
         public int TicksInCurrentGeneration { get; set; }
+        public bool IsInFastMode { get; set; }
         public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public SpriteFont UIFont { get; set; }
+        public SpriteFont BigUIFont { get; set; }
         public GameWindow BestCreatureNetworkViewerWindow { get; set; }
+        public bool GatherStepInfoForAllCreatures { get; set; }
         public float SimulationMspt
         {
             get
@@ -95,7 +100,7 @@ namespace MaceEvolve.Mono.Desktop
             Window.Title = "Mace Evolve";
             BackgroundColor = new Color(32, 32, 32);
 
-            GenerationsToRunFor = 100000;
+            GenerationsToRunFor = 500000;
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
             TargetElapsedTime = TimeSpan.FromSeconds(1f / SimulationTPS);
@@ -116,12 +121,13 @@ namespace MaceEvolve.Mono.Desktop
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             UIFont = Content.Load<SpriteFont>("UIFont");
+            BigUIFont = Content.Load<SpriteFont>("BigUIFont");
         }
 
         protected override void Update(GameTime gameTime)
         {
 
-            if (SimulationRunning && GenerationCount < GenerationsToRunFor)
+            if (!IsInFastMode && SimulationRunning && GenerationCount < GenerationsToRunFor)
             {
                 UpdateSimulation();
             }
@@ -139,47 +145,49 @@ namespace MaceEvolve.Mono.Desktop
             TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
             TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
 
-
             _spriteBatch.Begin();
 
-            foreach (var creature in MainGameHost.CurrentStep.Creatures)
+            if (!IsInFastMode)
             {
-                Color creatureColor;
+                foreach (var creature in MainGameHost.CurrentStep.Creatures)
+                {
+                    Color creatureColor;
 
-                if (creature.IsDead)
-                {
-                    creatureColor = new Color(165, 41, 41);
-                }
-                else
-                {
-                    creatureColor = new Color(creature.Color.R, creature.Color.G, creature.Color.B, creature.Color.A);
-                }
+                    if (creature.IsDead)
+                    {
+                        creatureColor = new Color(165, 41, 41);
+                    }
+                    else
+                    {
+                        creatureColor = new Color(creature.Color.R, creature.Color.G, creature.Color.B, creature.Color.A);
+                    }
 
-                Color? creatureRingColor;
+                    Color? creatureRingColor;
 
-                if (creature == MainGameHost.SelectedCreature)
-                {
-                    creatureRingColor = Color.White;
-                }
-                else if (creature == MainGameHost.BestCreature)
-                {
-                    creatureRingColor = Color.Gold;
-                }
-                else
-                {
-                    creatureRingColor = null;
-                }
+                    if (creature == MainGameHost.SelectedCreature)
+                    {
+                        creatureRingColor = Color.White;
+                    }
+                    else if (creature == MainGameHost.BestCreature)
+                    {
+                        creatureRingColor = Color.Gold;
+                    }
+                    else
+                    {
+                        creatureRingColor = null;
+                    }
 
-                _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size, 18, creatureColor, creature.Size);
+                    _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size, 18, creatureColor, creature.Size);
 
-                if (creatureRingColor != null)
-                {
-                    _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size + 2, 18, creatureRingColor.Value, creature.Size * 0.3f);
+                    if (creatureRingColor != null)
+                    {
+                        _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size + 2, 18, creatureRingColor.Value, creature.Size * 0.3f);
+                    }
                 }
-            }
-            foreach (var food in MainGameHost.CurrentStep.Food)
-            {
-                _spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
+                foreach (var food in MainGameHost.CurrentStep.Food)
+                {
+                    _spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
+                }
             }
 
             if (MainGameHost.UseSuccessBounds)
@@ -187,8 +195,12 @@ namespace MaceEvolve.Mono.Desktop
                 _spriteBatch.DrawRectangle(MainGameHost.SuccessBounds.X, MainGameHost.SuccessBounds.Y, MainGameHost.SuccessBounds.Width, MainGameHost.SuccessBounds.Height, new Color(Color.Green, 100));
             }
 
-            _spriteBatch.DrawString(UIFont, $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}", new Vector2(10, 10), Color.White);
-            _spriteBatch.DrawString(UIFont, $"Gen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}", new Vector2(10, 40), Color.White);
+            _spriteBatch.DrawString(BigUIFont, SimulationRunning ? "Running" : "Stopped", new Vector2(10, 15), Color.White);
+            _spriteBatch.DrawString(BigUIFont, $"Gen {GenerationCount}", new Vector2(10, 45), Color.White);
+            _spriteBatch.DrawString(UIFont, $"{timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
+                $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}", new Vector2(10, 75), Color.White);
+
+            _spriteBatch.DrawString(UIFont, $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}", new Vector2(10, 115), Color.White);
 
             _spriteBatch.End();
 
@@ -196,7 +208,7 @@ namespace MaceEvolve.Mono.Desktop
         }
         public void UpdateSimulation()
         {
-            MainGameHost.NextStep();
+            MainGameHost.NextStep(GatherStepInfoForAllCreatures);
             TicksInCurrentGeneration += 1;
 
             if (TicksInCurrentGeneration >= TicksPerGeneration)
@@ -304,7 +316,7 @@ namespace MaceEvolve.Mono.Desktop
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;
         }
-        private void Window_KeyDown(object sender, InputKeyEventArgs e)
+        private async void Window_KeyDown(object sender, InputKeyEventArgs e)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
@@ -323,20 +335,35 @@ namespace MaceEvolve.Mono.Desktop
 
             if (GamePad.GetState(PlayerIndex.One).Buttons.X == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.N))
             {
-                //Doesn't work if loop runs from 0 to x.
-                for (long i = TicksUntilCurrentGenerationIsCompleted; i > 0; i--)
+                IsInFastMode = true;
+                await Task.Run(() =>
                 {
-                    UpdateSimulation();
-                }
+                    //Doesn't work if loop runs from 0 to x.
+                    for (long i = TicksUntilCurrentGenerationIsCompleted; i > 0 && SimulationRunning; i--)
+                    {
+                        UpdateSimulation();
+                    }
+                });
+                IsInFastMode = false;
             }
 
             if (GamePad.GetState(PlayerIndex.One).Buttons.Y == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.F))
             {
-                //Doesn't work if loop runs from 0 to x.
-                for (long i = TicksUntilSimulationIsCompleted; i > 0; i--)
+                IsInFastMode = true;
+                await Task.Run(() =>
                 {
-                    UpdateSimulation();
-                }
+                    //Doesn't work if loop runs from 0 to x.
+                    for (long i = TicksUntilSimulationIsCompleted; i > 0 && SimulationRunning; i--)
+                    {
+                        UpdateSimulation();
+                    }
+                });
+                IsInFastMode = false;
+            }
+
+            if (GamePad.GetState(PlayerIndex.One).Buttons.RightStick == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.G))
+            {
+                GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
             }
         }
         #endregion

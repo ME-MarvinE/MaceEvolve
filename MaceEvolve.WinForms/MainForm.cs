@@ -28,6 +28,7 @@ namespace MaceEvolve.WinForms
         public int GenerationsToRunFor { get; set; }
         public int TicksInCurrentGeneration { get; set; }
         public bool GatherStepInfoForAllCreatures { get; set; }
+        public bool IsInFastMode { get; set; }
         public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
         {
@@ -106,6 +107,7 @@ namespace MaceEvolve.WinForms
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;
             UpdateUIText();
+            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
         }
         public List<GraphicalFood> GenerateFood()
         {
@@ -207,7 +209,7 @@ namespace MaceEvolve.WinForms
         }
         private async void btnForwardGen_Click(object sender, EventArgs e)
         {
-            GameTimer.Stop();
+            IsInFastMode = true;
             await Task.Run(() =>
             {
                 //Doesn't work if loop runs from 0 to x.
@@ -216,26 +218,25 @@ namespace MaceEvolve.WinForms
                     UpdateSimulation();
                 }
             });
-            GameTimer.Start();
+            IsInFastMode = false;
         }
         private async void btnForwardGens_Click(object sender, EventArgs e)
         {
-            GameTimer.Stop();
+            IsInFastMode = true;
             //Doesn't work if loop runs from 0 to x.
             await Task.Run(() =>
             {
-                long TicksIn100Generations = TicksPerGeneration * 100;
-                for (long i = TicksIn100Generations; i > 0 && SimulationRunning; i--)
+                long ticksIn100Generations = TicksPerGeneration * 100;
+                for (long i = ticksIn100Generations; i > 0 && SimulationRunning; i--)
                 {
-
                     UpdateSimulation();
                 }
             });
-            GameTimer.Start();
+            IsInFastMode = false;
         }
         private async void btnForwardAllGens_Click(object sender, EventArgs e)
         {
-            GameTimer.Stop();
+            IsInFastMode = true;
             await Task.Run(() =>
             {
                 //Doesn't work if loop runs from 0 to x.
@@ -244,7 +245,7 @@ namespace MaceEvolve.WinForms
                     UpdateSimulation();
                 }
             });
-            GameTimer.Start();
+            IsInFastMode = false;
         }
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
         {
@@ -258,7 +259,7 @@ namespace MaceEvolve.WinForms
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            if (SimulationRunning && GenerationCount <= GenerationsToRunFor)
+            if (!IsInFastMode && SimulationRunning && GenerationCount <= GenerationsToRunFor)
             {
                 UpdateSimulation();
             }
@@ -267,61 +268,61 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
-            if (!GameTimer.Enabled)
-            {
-                return;
-            }
+            UpdateUIText();
 
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            foreach (var creature in MainGameHost.CurrentStep.Creatures)
+            if (!IsInFastMode)
             {
-                Color creatureColor;
+                foreach (var creature in MainGameHost.CurrentStep.Creatures)
+                {
+                    Color creatureColor;
 
-                if (creature.IsDead)
-                {
-                    creatureColor = Color.FromArgb(255, 165, 41, 41);
-                }
-                else
-                {
-                    creatureColor = Color.FromArgb(creature.Color.A, creature.Color.R, creature.Color.G, creature.Color.B);
-                }
-
-                Color? creatureRingColor;
-
-                if (creature == MainGameHost.SelectedCreature)
-                {
-                    creatureRingColor = Color.White;
-                }
-                else if (creature == MainGameHost.BestCreature)
-                {
-                    creatureRingColor = Color.Gold;
-                }
-                else
-                {
-                    creatureRingColor = null;
-                }
-
-                using (SolidBrush brush = new SolidBrush(creatureColor))
-                {
-                    e.Graphics.FillEllipse(brush, creature.X, creature.Y, creature.Size, creature.Size);
-                }
-
-                if (creatureRingColor != null)
-                {
-                    using (Pen pen = new Pen(creatureRingColor.Value, 2))
+                    if (creature.IsDead)
                     {
-                        e.Graphics.DrawEllipse(pen, creature.X, creature.Y, creature.Size, creature.Size);
+                        creatureColor = Color.FromArgb(255, 165, 41, 41);
+                    }
+                    else
+                    {
+                        creatureColor = Color.FromArgb(creature.Color.A, creature.Color.R, creature.Color.G, creature.Color.B);
+                    }
+
+                    Color? creatureRingColor;
+
+                    if (creature == MainGameHost.SelectedCreature)
+                    {
+                        creatureRingColor = Color.White;
+                    }
+                    else if (creature == MainGameHost.BestCreature)
+                    {
+                        creatureRingColor = Color.Gold;
+                    }
+                    else
+                    {
+                        creatureRingColor = null;
+                    }
+
+                    using (SolidBrush brush = new SolidBrush(creatureColor))
+                    {
+                        e.Graphics.FillEllipse(brush, creature.X, creature.Y, creature.Size, creature.Size);
+                    }
+
+                    if (creatureRingColor != null)
+                    {
+                        using (Pen pen = new Pen(creatureRingColor.Value, 2))
+                        {
+                            e.Graphics.DrawEllipse(pen, creature.X, creature.Y, creature.Size, creature.Size);
+                        }
                     }
                 }
-            }
 
-            foreach (GraphicalFood food in MainGameHost.CurrentStep.Food)
-            {
-                using (SolidBrush brush = new SolidBrush(Color.Green))
+                foreach (GraphicalFood food in MainGameHost.CurrentStep.Food)
                 {
-                    e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
+                    using (SolidBrush brush = new SolidBrush(Color.Green))
+                    {
+                        e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
+                    }
                 }
             }
 
@@ -372,11 +373,6 @@ namespace MaceEvolve.WinForms
         }
         public void UpdateSimulation()
         {
-            BeginInvoke(new Action(() =>
-            {
-                UpdateUIText();
-            }));
-
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
             TicksInCurrentGeneration += 1;
@@ -388,7 +384,7 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_Load(object sender, EventArgs e)
         {
-            GenerationsToRunFor = 300000;
+            GenerationsToRunFor = 500000;
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
 
@@ -406,7 +402,6 @@ namespace MaceEvolve.WinForms
         private void GatherStepInfoForAllCreaturesButton_Click(object sender, EventArgs e)
         {
             GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
-            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
         }
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
@@ -434,13 +429,11 @@ namespace MaceEvolve.WinForms
             TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
             TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
 
-            BeginInvoke(new Action(() =>
-            {
-                lblGenEndsIn.Text = $"{(SimulationRunning ? "Running" : "Stopped")}, {timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
-                $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
-                lblGenerationCount.Text = $"Gen {GenerationCount}";
-                lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
-            }));
+            lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
+            lblGenerationCount.Text = $"Gen {GenerationCount}";
+            lblGenEndsIn.Text = $"{timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
+            $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
+            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
         }
         #endregion
     }
