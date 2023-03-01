@@ -60,7 +60,7 @@ namespace MaceEvolve.Core
         }
         public static float Clamp(float num, float min, float max)
         {
-            return Math.Max(Math.Min(num, max), min);
+            return MathF.Max(MathF.Min(num, max), min);
         }
         public static double Sigmoid(double num)
         {
@@ -68,7 +68,7 @@ namespace MaceEvolve.Core
         }
         public static float Sigmoid(float num)
         {
-            return 1 / (1 + (float)Math.Exp(-num));
+            return 1 / (1 + MathF.Exp(-num));
         }
         public static double ReLU(double num)
         {
@@ -76,7 +76,7 @@ namespace MaceEvolve.Core
         }
         public static float ReLU(float num)
         {
-            return Math.Max(0, num);
+            return MathF.Max(0, num);
         }
         public static double SigmoidDerivative(double num)
         {
@@ -88,7 +88,7 @@ namespace MaceEvolve.Core
         }
         public static int GetDistanceFrom(int x, int y, int targetX, int targetY)
         {
-            return (int)GetDistanceFrom((double)x, (double)y, (double)targetX, (double)targetY);
+            return (int)GetDistanceFrom((double)x, y, targetX, targetY);
         }
         public static double GetDistanceFrom(double x, double y, double targetX, double targetY)
         {
@@ -96,7 +96,7 @@ namespace MaceEvolve.Core
         }
         public static float GetDistanceFrom(float x, float y, float targetX, float targetY)
         {
-            return Math.Abs(x - targetX) + Math.Abs(y - targetY);
+            return MathF.Abs(x - targetX) + MathF.Abs(y - targetY);
         }
         public static double Hypotenuse(double a, double b)
         {
@@ -104,7 +104,7 @@ namespace MaceEvolve.Core
         }
         public static float Hypotenuse(float a, float b)
         {
-            return (float)Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
+            return MathF.Sqrt(MathF.Pow(a, 2) + MathF.Pow(b, 2));
         }
         public static double MiddleX(double x, double width)
         {
