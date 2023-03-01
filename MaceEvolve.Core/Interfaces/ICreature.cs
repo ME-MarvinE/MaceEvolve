@@ -21,7 +21,7 @@ namespace MaceEvolve.Core.Interfaces
         #region Methods
         void Die();
         bool IsWithinSight(IGameObject gameObject);
-        T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float nodeBiasMaxVariancePercentage, float connectionWeightMaxVariancePercentage, float connectionWeightBound) where T : ICreature, new();
+        T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float connectionWeightBound) where T : ICreature, new();
         #endregion
     }
 }

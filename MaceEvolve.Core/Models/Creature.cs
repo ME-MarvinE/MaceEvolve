@@ -1,7 +1,5 @@
 ﻿using MaceEvolve.Core.Enums;
-using MaceEvolve.Core.Extensions;
 using MaceEvolve.Core.Interfaces;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -59,7 +57,7 @@ namespace MaceEvolve.Core.Models
             IsDead = true;
             Energy = 0;
         }
-        public static T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float nodeBiasMaxVariancePercentage, float connectionWeightMaxVariancePercentage, float connectionWeightBound) where T : ICreature, new()
+        public static T Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions) where T : ICreature, new()
         {
             Dictionary<T, List<Connection>> availableParentConnections = parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
             Dictionary<T, Dictionary<int, int>> parentToOffspringNodesMap = new Dictionary<T, Dictionary<int, int>>();
@@ -92,18 +90,6 @@ namespace MaceEvolve.Core.Models
                         Node newNode = new Node(randomParentConnectionSourceNode.NodeType, randomParentConnectionSourceNode.Bias, randomParentConnectionSourceNode.CreatureInput, randomParentConnectionSourceNode.CreatureAction);
                         int newNodeId = offspring.Brain.AddNode(newNode);
 
-                        //Apply any variance to the node's bias.
-                        newNode.Bias = Globals.Random.NextFloatVariance(randomParentConnectionSourceNode.Bias, nodeBiasMaxVariancePercentage);
-
-                        if (newNode.Bias < -1)
-                        {
-                            newNode.Bias = -1;
-                        }
-                        else if (newNode.Bias > 1)
-                        {
-                            newNode.Bias = 1;
-                        }
-
                         //Map the newly added offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
                         if (!parentToOffspringNodesMap.ContainsKey(randomParent))
                         {
@@ -129,18 +115,9 @@ namespace MaceEvolve.Core.Models
                     }
 
                     //Apply any variance to the connection's weight.
-                    float connectionToAddWeight = Globals.Random.NextFloatVariance(randomParentConnection.Weight, connectionWeightMaxVariancePercentage);
+                    float connectionToAddWeight = randomParentConnection.Weight;
                     int connectionToAddSourceId = parentToOffspringNodesMap[randomParent][randomParentConnection.SourceId];
                     int connectionToAddTargetId = parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId];
-
-                    if (connectionToAddWeight < -connectionWeightBound)
-                    {
-                        connectionToAddWeight = -connectionWeightBound;
-                    }
-                    else if (connectionToAddWeight > connectionWeightBound)
-                    {
-                        connectionToAddWeight = connectionWeightBound;
-                    }
 
                     offspring.Brain.Connections.Add(new Connection(connectionToAddSourceId, connectionToAddTargetId, connectionToAddWeight));
                     availableParentConnections[randomParent].Remove(randomParentConnection);
@@ -149,9 +126,9 @@ namespace MaceEvolve.Core.Models
 
             return offspring;
         }
-        T ICreature.Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float nodeBiasMaxVariancePercentage, float connectionWeightMaxVariancePercentage, float connectionWeightBound)
+        T ICreature.Reproduce<T>(IList<T> parents, List<CreatureInput> inputs, List<CreatureAction> actions, float connectionWeightBound)
         {
-            return Reproduce(parents, inputs, actions, nodeBiasMaxVariancePercentage, connectionWeightMaxVariancePercentage, connectionWeightBound);
+            return Reproduce(parents, inputs, actions);
         }
 
         #endregion
