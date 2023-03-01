@@ -249,7 +249,7 @@ namespace MaceEvolve.WinForms
         }
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
         {
-            if (!GameTimer.Enabled)
+            if (IsInFastMode)
             {
                 return;
             }
@@ -333,7 +333,7 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_MouseClick(object sender, MouseEventArgs e)
         {
-            if (!GameTimer.Enabled)
+            if (IsInFastMode)
             {
                 return;
             }
