@@ -289,7 +289,8 @@ namespace MaceEvolve.Core.Models
 
                 List<Node> nodesList = network.NodeIdsToNodesDict.Values.ToList();
                 Node randomNode = nodesList[random.Next(nodesList.Count)];
-                randomNode.Bias = random.NextFloat(-1, 1);
+
+                nodesList[random.Next(nodesList.Count)] = new Node(randomNode.NodeType, random.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
             }
 
             //Create a new node with a default connection.
