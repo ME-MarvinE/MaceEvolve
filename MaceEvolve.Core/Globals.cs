@@ -86,17 +86,17 @@ namespace MaceEvolve.Core
         {
             return num * (1 - num);
         }
-        public static int GetDistanceFrom(int x, int y, int targetX, int targetY)
+        public static int GetDistanceFrom(int x1, int y1, int x2, int y2)
         {
-            return (int)GetDistanceFrom((double)x, y, targetX, targetY);
+            return (int)GetDistanceFrom((float)x1, y1, x2, y2);
         }
-        public static double GetDistanceFrom(double x, double y, double targetX, double targetY)
+        public static double GetDistanceFrom(double x1, double y1, double x2, double y2)
         {
-            return Math.Abs(x - targetX) + Math.Abs(y - targetY);
+            return Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2));
         }
-        public static float GetDistanceFrom(float x, float y, float targetX, float targetY)
+        public static float GetDistanceFrom(float x1, float y1, float x2, float y2)
         {
-            return MathF.Abs(x - targetX) + MathF.Abs(y - targetY);
+            return MathF.Sqrt(MathF.Pow(x1 - x2, 2) + MathF.Pow(y1 - y2, 2));
         }
         public static double Hypotenuse(double a, double b)
         {
