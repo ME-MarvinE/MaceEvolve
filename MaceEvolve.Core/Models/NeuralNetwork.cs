@@ -317,15 +317,13 @@ namespace MaceEvolve.Core.Models
                 }
             }
 
-            _nodeIdsToNodesDict[nodeId] = node;
-            _nodesToNodeIdsDict[node] = nodeId;
+            _nodeIdsToNodesDict.Add(nodeId, node);
+            _nodesToNodeIdsDict.Add(node, nodeId);
 
             return nodeId;
         }
         public bool RemoveNode(int nodeId, bool removeConnections)
         {
-            bool nodeWasRemoved;
-
             if (NodeIdsToNodesDict.TryGetValue(nodeId, out Node node))
             {
                 if (removeConnections)
@@ -336,14 +334,24 @@ namespace MaceEvolve.Core.Models
                 _nodeIdsToNodesDict.Remove(nodeId);
                 _nodesToNodeIdsDict.Remove(node);
 
-                nodeWasRemoved = true;
-            }
-            else
-            {
-                nodeWasRemoved = false;
+                return true;
             }
 
-            return nodeWasRemoved;
+            return false;
+        }
+        public bool ReplaceNode(int existingNodeId, Node newNode)
+        {
+            if (NodeIdsToNodesDict.TryGetValue(existingNodeId, out Node node))
+            {
+                _nodeIdsToNodesDict[existingNodeId] = newNode;
+
+                _nodesToNodeIdsDict.Remove(node);
+                _nodesToNodeIdsDict.Add(newNode, existingNodeId);
+
+                return true;
+            }
+
+            return false;
         }
         public void RemoveConnectionsToNode(int nodeId)
         {

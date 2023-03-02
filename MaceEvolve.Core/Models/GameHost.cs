@@ -26,7 +26,7 @@ namespace MaceEvolve.Core.Models
         public int MaxCreatureConnections { get; set; } = 128;
         public float CreatureSpeed { get; set; }
         public int MaxCreatureProcessNodes { get; set; } = 3;
-        public float MutationChance { get; set; } = 0.2f;
+        public float MutationChance { get; set; } = 1 / 3f;
         public int MutationAttempts { get; set; } = 1;
         public float ConnectionWeightBound { get; set; } = 4;
         public float MaxCreatureEnergy { get; set; } = 150;
@@ -268,7 +268,7 @@ namespace MaceEvolve.Core.Models
                 List<Node> possibleNodesToRemove = new List<Node>(processNodes);
 
                 //There must be at least one target node in a network.
-                if (outputNodes.ElementAtOrDefault(1) != null)
+                if (outputNodes.Skip(1).Any())
                 {
                     possibleNodesToRemove.AddRange(outputNodes);
                 }
@@ -287,10 +287,11 @@ namespace MaceEvolve.Core.Models
             {
                 mutationAttempted = true;
 
-                List<Node> nodesList = network.NodeIdsToNodesDict.Values.ToList();
-                Node randomNode = nodesList[random.Next(nodesList.Count)];
+                int randomNodeId = network.NodeIdsToNodesDict.Keys.ToList()[random.Next(network.NodeIdsToNodesDict.Count)];
+                Node randomNode = network.NodeIdsToNodesDict[randomNodeId];
+                Node newNode = new Node(randomNode.NodeType, random.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
 
-                nodesList[random.Next(nodesList.Count)] = new Node(randomNode.NodeType, random.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
+                network.ReplaceNode(randomNodeId, newNode);
             }
 
             //Create a new node with a default connection.
@@ -553,12 +554,36 @@ namespace MaceEvolve.Core.Models
         }
         public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature, bool trackStepInfo)
         {
-            Queue<StepAction<TCreature>> actions = new Queue<StepAction<TCreature>>();
             Dictionary<int, float> nodeIdToOutputDict = creature.Brain.Step(trackStepInfo);
-            Dictionary<Node, float> nodeOutputsDict = nodeIdToOutputDict.OrderBy(x => x.Value).ToDictionary(x => creature.Brain.NodeIdsToNodesDict[x.Key], x => x.Value);
-            Node highestOutputNode = nodeOutputsDict.Keys.LastOrDefault(x => x.NodeType == NodeType.Output);
 
-            if (highestOutputNode != null && nodeOutputsDict[highestOutputNode] > 0)
+            if (nodeIdToOutputDict.Count == 0)
+            {
+                return new Queue<StepAction<TCreature>>();
+            }
+
+            Node highestOutputNode = null;
+            float? highestOutputNodeOutputValue = null;
+
+            foreach (var keyValuePair in nodeIdToOutputDict)
+            {
+                Node node = creature.Brain.NodeIdsToNodesDict[keyValuePair.Key];
+                float outputValue = keyValuePair.Value;
+
+                if (node.NodeType == NodeType.Output && (highestOutputNodeOutputValue == null || outputValue > highestOutputNodeOutputValue))
+                {
+                    highestOutputNode = node;
+                    highestOutputNodeOutputValue = outputValue;
+                }
+            }
+
+            if (highestOutputNode == null || highestOutputNodeOutputValue == null)
+            {
+                return new Queue<StepAction<TCreature>>();
+            }
+
+            Queue<StepAction<TCreature>> actions = new Queue<StepAction<TCreature>>();
+
+            if (highestOutputNodeOutputValue.Value > 0)
             {
                 actions.Enqueue(new StepAction<TCreature>() { Creature = creature, Action = highestOutputNode.CreatureAction.Value });
             }

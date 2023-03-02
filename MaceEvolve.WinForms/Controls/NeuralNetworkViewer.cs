@@ -157,7 +157,6 @@ namespace MaceEvolve.WinForms.Controls
         {
             if (NeuralNetwork != null)
             {
-                Node selectedNode = SelectedNodeId == null ? null : NeuralNetwork.NodeIdsToNodesDict[SelectedNodeId.Value];
                 e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
                 e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
@@ -247,6 +246,9 @@ namespace MaceEvolve.WinForms.Controls
                     lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
                     lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "N/A" : selectedNodeStepInfo.PreviousOutput)}";
                     lblSelectedNodeConnectionCount.Text = $"Connections: {NeuralNetwork.Connections.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
+
+
+                    Node selectedNode = NeuralNetwork.NodeIdsToNodesDict[SelectedNodeId.Value];
 
                     switch (selectedNode.NodeType)
                     {
