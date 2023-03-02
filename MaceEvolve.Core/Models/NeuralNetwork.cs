@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace MaceEvolve.Core.Models
 {
@@ -13,7 +14,6 @@ namespace MaceEvolve.Core.Models
         #region Fields
         private Dictionary<CreatureInput, float> _inputValues = new Dictionary<CreatureInput, float>();
         private Dictionary<int, Node> _nodeIdsToNodesDict = new Dictionary<int, Node>();
-        private Dictionary<Node, int> _nodesToNodeIdsDict = new Dictionary<Node, int>();
         #endregion
 
         #region Properties
@@ -23,7 +23,6 @@ namespace MaceEvolve.Core.Models
         public IEnumerable<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; private set; } = Enumerable.Empty<NeuralNetworkStepNodeInfo>();
 
         public IReadOnlyDictionary<int, Node> NodeIdsToNodesDict { get; } = new Dictionary<int, Node>();
-        public IReadOnlyDictionary<Node, int> NodesToNodeIdsDict { get; } = new Dictionary<Node, int>();
         #endregion
 
         #region Constructors
@@ -43,7 +42,6 @@ namespace MaceEvolve.Core.Models
             if (connections == null) { throw new ArgumentNullException(nameof(nodes)); }
 
             NodeIdsToNodesDict = new ReadOnlyDictionary<int, Node>(_nodeIdsToNodesDict);
-            NodesToNodeIdsDict = new ReadOnlyDictionary<Node, int>(_nodesToNodeIdsDict);
 
             Actions = actions;
             Connections = connections;
@@ -67,16 +65,16 @@ namespace MaceEvolve.Core.Models
             List<Connection> generatedConnections = new List<Connection>();
             int targetConnectionAmount = Globals.Random.Next(minConnections, maxConnections + 1);
 
-            Dictionary<int, Node> possibleSourceNodes = GetSourceNodes(NodeIdsToNodesDict.Values).ToDictionary(x => NodesToNodeIdsDict[x], x => x);
-            Dictionary<int, Node> possibleTargetNodes = GetTargetNodes(NodeIdsToNodesDict.Values).ToDictionary(x => NodesToNodeIdsDict[x], x => x);
+            List<int> possibleSourceNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
+            List<int> possibleTargetNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
 
-            if (possibleSourceNodes.Count == 0) { throw new InvalidOperationException("No possible source nodes."); }
-            if (possibleTargetNodes.Count == 0) { throw new InvalidOperationException("No possible target nodes."); }
+            if (possibleSourceNodesIds.Count == 0) { throw new InvalidOperationException("No possible source nodes."); }
+            if (possibleTargetNodesIds.Count == 0) { throw new InvalidOperationException("No possible target nodes."); }
 
             while (generatedConnections.Count < targetConnectionAmount)
             {
-                int randomConnectionSource = possibleSourceNodes.Keys.ToList()[Globals.Random.Next(0, possibleSourceNodes.Count)];
-                int randomConnectionTarget = possibleTargetNodes.Keys.ToList()[Globals.Random.Next(0, possibleTargetNodes.Count)];
+                int randomConnectionSource = possibleSourceNodesIds[Globals.Random.Next(0, possibleSourceNodesIds.Count)];
+                int randomConnectionTarget = possibleTargetNodesIds[Globals.Random.Next(0, possibleTargetNodesIds.Count)];
 
                 Connection newConnection = new Connection(randomConnectionSource, randomConnectionTarget, Globals.Random.NextFloat(-weightBound, weightBound));
                 generatedConnections.Add(newConnection);
@@ -141,13 +139,29 @@ namespace MaceEvolve.Core.Models
 
             return connectionPaths;
         }
-        public static IEnumerable<Node> GetSourceNodes(IEnumerable<Node> nodes)
+        public List<int> GetNodeIds(Expression<Func<int, Node, bool>> predicate = null)
         {
-            return nodes.Where(x => x.NodeType == NodeType.Input || x.NodeType == NodeType.Process);
-        }
-        public static IEnumerable<Node> GetTargetNodes(IEnumerable<Node> nodes)
-        {
-            return nodes.Where(x => x.NodeType == NodeType.Process || x.NodeType == NodeType.Output);
+            if (predicate == null)
+            {
+                return NodeIdsToNodesDict.Keys.ToList();
+            }
+
+            Func<int, Node, bool> predicateFunc = predicate.Compile();
+
+            List<int> nodeIds = new List<int>();
+
+            foreach (var keyValuePair in NodeIdsToNodesDict)
+            {
+                int nodeId = keyValuePair.Key;
+                Node node = keyValuePair.Value;
+
+                if (predicateFunc.Invoke(nodeId, node))
+                {
+                    nodeIds.Add(nodeId);
+                }
+            }
+
+            return nodeIds;
         }
         /// <summary>
         /// 
@@ -318,7 +332,6 @@ namespace MaceEvolve.Core.Models
             }
 
             _nodeIdsToNodesDict.Add(nodeId, node);
-            _nodesToNodeIdsDict.Add(node, nodeId);
 
             return nodeId;
         }
@@ -332,7 +345,6 @@ namespace MaceEvolve.Core.Models
                 }
 
                 _nodeIdsToNodesDict.Remove(nodeId);
-                _nodesToNodeIdsDict.Remove(node);
 
                 return true;
             }
@@ -344,9 +356,6 @@ namespace MaceEvolve.Core.Models
             if (NodeIdsToNodesDict.TryGetValue(existingNodeId, out Node node))
             {
                 _nodeIdsToNodesDict[existingNodeId] = newNode;
-
-                _nodesToNodeIdsDict.Remove(node);
-                _nodesToNodeIdsDict.Add(newNode, existingNodeId);
 
                 return true;
             }

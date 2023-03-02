@@ -251,7 +251,7 @@ namespace MaceEvolve.Core.Models
         }
         public virtual bool MutateNetwork(NeuralNetwork network, float createRandomNodeChance, float removeRandomNodeChance, float mutateRandomNodeBiasChance, float createRandomConnectionChance, float removeRandomConnectionChance, float mutateRandomConnectionSourceChance, float mutateRandomConnectionTargetChance, float mutateRandomConnectionWeightChance)
         {
-            int processNodeCount = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Process).Count();
+            int processNodeCount = network.GetNodeIds((_, node) => node.NodeType == NodeType.Process).Count;
             bool mutationAttempted = false;
 
             //Things should be removed before being added so that there isn't a chance that the newly added thing is deleted straight after.
@@ -262,21 +262,20 @@ namespace MaceEvolve.Core.Models
             {
                 mutationAttempted = true;
 
-                IEnumerable<Node> processNodes = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Process);
-                IEnumerable<Node> outputNodes = network.NodeIdsToNodesDict.Values.Where(x => x.NodeType == NodeType.Output);
+                List<int> processNodeIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Process);
+                List<int> outputNodeIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Output);
 
-                List<Node> possibleNodesToRemove = new List<Node>(processNodes);
+                List<int> possibleNodeIdsToRemove = new List<int>(processNodeIds);
 
                 //There must be at least one target node in a network.
-                if (outputNodes.Skip(1).Any())
+                if (outputNodeIds.Count > 1)
                 {
-                    possibleNodesToRemove.AddRange(outputNodes);
+                    possibleNodeIdsToRemove.AddRange(outputNodeIds);
                 }
 
-                if (possibleNodesToRemove.Count > 0)
+                if (possibleNodeIdsToRemove.Count > 0)
                 {
-                    Node nodeToRemove = possibleNodesToRemove[random.Next(possibleNodesToRemove.Count)];
-                    int nodeIdToRemove = network.NodesToNodeIdsDict[nodeToRemove];
+                    int nodeIdToRemove = possibleNodeIdsToRemove[random.Next(possibleNodeIdsToRemove.Count)];
 
                     network.RemoveNode(nodeIdToRemove, true);
                 }
@@ -287,7 +286,7 @@ namespace MaceEvolve.Core.Models
             {
                 mutationAttempted = true;
 
-                int randomNodeId = network.NodeIdsToNodesDict.Keys.ToList()[random.Next(network.NodeIdsToNodesDict.Count)];
+                int randomNodeId = network.GetNodeIds()[random.Next(network.NodeIdsToNodesDict.Count)];
                 Node randomNode = network.NodeIdsToNodesDict[randomNodeId];
                 Node newNode = new Node(randomNode.NodeType, random.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
 
@@ -325,13 +324,12 @@ namespace MaceEvolve.Core.Models
 
                 if (nodeToAdd != null)
                 {
-                    List<Node> possibleSourceNodes = NeuralNetwork.GetSourceNodes(network.NodeIdsToNodesDict.Values).ToList();
-                    List<Node> possibleTargetNodes = NeuralNetwork.GetTargetNodes(network.NodeIdsToNodesDict.Values).ToList();
+                    List<int> possibleSourceNodesIds = network.GetNodeIds((_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
+                    List<int> possibleTargetNodesIds = network.GetNodeIds((_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
 
-                    network.AddNode(nodeToAdd);
-                    int nodeToAddId = network.NodesToNodeIdsDict[nodeToAdd];
+                    int nodeToAddId = network.AddNode(nodeToAdd);
 
-                    if (network.Connections.Count < MaxCreatureConnections && possibleSourceNodes.Count > 0 && possibleTargetNodes.Count > 0)
+                    if (network.Connections.Count < MaxCreatureConnections && possibleSourceNodesIds.Count > 0 && possibleTargetNodesIds.Count > 0)
                     {
                         Connection newConnection;
                         float newConnectionWeight = random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound);
@@ -339,22 +337,22 @@ namespace MaceEvolve.Core.Models
                         switch (nodeToAdd.NodeType)
                         {
                             case NodeType.Input:
-                                newConnection = new Connection(nodeToAddId, network.NodesToNodeIdsDict[possibleTargetNodes[random.Next(possibleTargetNodes.Count)]], newConnectionWeight);
+                                newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
                                 break;
 
                             case NodeType.Process:
                                 if (random.NextDouble() <= 0.5)
                                 {
-                                    newConnection = new Connection(nodeToAddId, network.NodesToNodeIdsDict[possibleTargetNodes[random.Next(possibleTargetNodes.Count)]], newConnectionWeight);
+                                    newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
                                 }
                                 else
                                 {
-                                    newConnection = new Connection(network.NodesToNodeIdsDict[possibleSourceNodes[random.Next(possibleSourceNodes.Count)]], nodeToAddId, newConnectionWeight);
+                                    newConnection = new Connection(possibleSourceNodesIds[random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
                                 }
                                 break;
 
                             case NodeType.Output:
-                                newConnection = new Connection(network.NodesToNodeIdsDict[possibleSourceNodes[random.Next(possibleSourceNodes.Count)]], nodeToAddId, newConnectionWeight);
+                                newConnection = new Connection(possibleSourceNodesIds[random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
                                 break;
 
                             default:
@@ -391,12 +389,13 @@ namespace MaceEvolve.Core.Models
                 mutationAttempted = true;
 
                 int randomConnectionIndex = random.Next(network.Connections.Count);
-                List<Node> possibleSourceNodes = NeuralNetwork.GetSourceNodes(network.NodeIdsToNodesDict.Values).ToList();
+                List<int> possibleSourceNodesIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
 
-                if (possibleSourceNodes.Count > 0)
+                if (possibleSourceNodesIds.Count > 0)
                 {
-                    Node randomNode = possibleSourceNodes[Globals.Random.Next(possibleSourceNodes.Count)];
-                    Connection mutatedConnection = new Connection(network.NodesToNodeIdsDict[randomNode], network.Connections[randomConnectionIndex].TargetId, network.Connections[randomConnectionIndex].Weight);
+                    int randomSourceNodeId = possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)];
+
+                    Connection mutatedConnection = new Connection(randomSourceNodeId, network.Connections[randomConnectionIndex].TargetId, network.Connections[randomConnectionIndex].Weight);
                     network.Connections[randomConnectionIndex] = mutatedConnection;
                 }
             }
@@ -407,12 +406,13 @@ namespace MaceEvolve.Core.Models
                 mutationAttempted = true;
 
                 int randomConnectionIndex = random.Next(network.Connections.Count);
-                List<Node> possibleTargetNodes = NeuralNetwork.GetTargetNodes(network.NodeIdsToNodesDict.Values).ToList();
+                List<int> possibleTargetNodesIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
 
-                if (possibleTargetNodes.Count > 0)
+                if (possibleTargetNodesIds.Count > 0)
                 {
-                    Node randomNode = possibleTargetNodes[Globals.Random.Next(possibleTargetNodes.Count)];
-                    Connection mutatedConnection = new Connection(network.Connections[randomConnectionIndex].SourceId, network.NodesToNodeIdsDict[randomNode], network.Connections[randomConnectionIndex].Weight);
+                    int randomTargetNodeId = possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)];
+
+                    Connection mutatedConnection = new Connection(network.Connections[randomConnectionIndex].SourceId, randomTargetNodeId, network.Connections[randomConnectionIndex].Weight);
                     network.Connections[randomConnectionIndex] = mutatedConnection;
                 }
             }

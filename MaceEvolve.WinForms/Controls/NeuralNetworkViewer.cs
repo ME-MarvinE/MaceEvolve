@@ -79,9 +79,7 @@ namespace MaceEvolve.WinForms.Controls
 
             if (NeuralNetwork != null)
             {
-                Dictionary<int, Node> nodeIdsToNodesDict = NeuralNetwork.NodeIdsToNodesDict.ToDictionary(x => x.Key, x => x.Value);
-
-                foreach (var keyValuePair in nodeIdsToNodesDict)
+                foreach (var keyValuePair in NeuralNetwork.NodeIdsToNodesDict)
                 {
                     int nodeId = keyValuePair.Key;
                     Node node = keyValuePair.Value;
