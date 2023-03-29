@@ -562,7 +562,7 @@ namespace MaceEvolve.Core.Models
         }
         public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature, Dictionary<CreatureInput, float> inputsToInputValuesDict, bool trackStepInfo)
         {
-            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.Step(inputsToInputValuesDict, trackStepInfo);
+            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.GenerateNodeOutputs(inputsToInputValuesDict, trackStepInfo);
 
             if (nodeIdToOutputDict.Count == 0)
             {

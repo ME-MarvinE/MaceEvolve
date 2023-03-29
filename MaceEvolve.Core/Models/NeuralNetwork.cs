@@ -153,7 +153,7 @@ namespace MaceEvolve.Core.Models
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="NotImplementedException"></exception>
-        public Dictionary<int, float> Step(Dictionary<CreatureInput, float> inputsToInputValuesDict, bool trackStepInfo, float defaultNodeOutputValue = 0)
+        public Dictionary<int, float> GenerateNodeOutputs(Dictionary<CreatureInput, float> inputsToInputValuesDict, bool trackStepInfo, float defaultNodeOutputValue = 0)
         {
             Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
             List<int> inputNodeIds = new List<int>();
