@@ -539,7 +539,9 @@ namespace MaceEvolve.Core.Models
             {
                 TCreature newCreature = new TCreature()
                 {
-                    Brain = new NeuralNetwork(PossibleCreatureInputs.ToList(), MaxCreatureProcessNodes, PossibleCreatureActions.ToList()),
+                    Brain = new NeuralNetwork(NeuralNetwork.GenerateInputNodes(PossibleCreatureInputs)
+                        .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes))
+                        .Concat(NeuralNetwork.GenerateOutputNodes(PossibleCreatureActions))),
                     X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
                     Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                     Size = CreatureSize,

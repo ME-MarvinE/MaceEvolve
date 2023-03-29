@@ -64,7 +64,7 @@ namespace MaceEvolve.Core.Models
 
             T offspring = new T()
             {
-                Brain = new NeuralNetwork(new List<Node>(), new List<Connection>())
+                Brain = new NeuralNetwork()
             };
 
             float averageNumberOfParentConnections = (float)parents.Average(x => x.Brain.Connections.Count);
