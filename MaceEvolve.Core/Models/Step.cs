@@ -360,7 +360,7 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public float CreateCreatureInputValue(CreatureInput creatureInput, TCreature creature)
+        public float GenerateCreatureInputValue(CreatureInput creatureInput, TCreature creature)
         {
             switch (creatureInput)
             {

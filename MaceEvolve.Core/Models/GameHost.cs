@@ -462,7 +462,7 @@ namespace MaceEvolve.Core.Models
 
                     foreach (var input in inputsRequiredForStep)
                     {
-                        inputsToInputValuesDict.Add(input, generatedStep.CreateCreatureInputValue(input, creature));
+                        inputsToInputValuesDict.Add(input, generatedStep.GenerateCreatureInputValue(input, creature));
                     }
 
                     Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature, inputsToInputValuesDict, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
@@ -539,9 +539,6 @@ namespace MaceEvolve.Core.Models
             {
                 TCreature newCreature = new TCreature()
                 {
-                    Brain = new NeuralNetwork(NeuralNetwork.GenerateInputNodes(PossibleCreatureInputs)
-                        .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes))
-                        .Concat(NeuralNetwork.GenerateOutputNodes(PossibleCreatureActions))),
                     X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
                     Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                     Size = CreatureSize,
@@ -552,7 +549,12 @@ namespace MaceEvolve.Core.Models
                     SightRange = 100
                 };
 
+                newCreature.Brain = new NeuralNetwork(NeuralNetwork.GenerateInputNodes(PossibleCreatureInputs)
+                    .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes))
+                    .Concat(NeuralNetwork.GenerateOutputNodes(PossibleCreatureActions)));
+
                 newCreature.Brain.Connections = newCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MinCreatureConnections, ConnectionWeightBound);
+
                 creatures.Add(newCreature);
             }
 
