@@ -465,7 +465,31 @@ namespace MaceEvolve.Core.Models
                         inputsToInputValuesDict.Add(input, generatedStep.GenerateCreatureInputValue(input, creature));
                     }
 
-                    Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature, inputsToInputValuesDict, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
+                    Queue<StepAction<TCreature>> creatureStepActions = new Queue<StepAction<TCreature>>();
+
+                    Dictionary<int, float> nodeIdToOutputDict = creature.Brain.GenerateNodeOutputs(inputsToInputValuesDict, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
+
+                    int? highestOutputNodeId = null;
+
+                    foreach (var keyValuePair in nodeIdToOutputDict)
+                    {
+                        Node node = creature.Brain.NodeIdsToNodesDict[keyValuePair.Key];
+                        float outputValue = keyValuePair.Value;
+
+                        if (node.NodeType == NodeType.Output && (highestOutputNodeId == null || outputValue > nodeIdToOutputDict[highestOutputNodeId.Value]))
+                        {
+                            highestOutputNodeId = keyValuePair.Key;
+                        }
+                    }
+
+                    if (highestOutputNodeId != null && nodeIdToOutputDict[highestOutputNodeId.Value] > 0)
+                    {
+                        creatureStepActions.Enqueue(new StepAction<TCreature>() 
+                        {
+                            Creature = creature,
+                            Action = creature.Brain.NodeIdsToNodesDict[highestOutputNodeId.Value].CreatureAction.Value 
+                        });
+                    }
 
                     foreach (var creatureStepAction in creatureStepActions)
                     {
@@ -559,44 +583,6 @@ namespace MaceEvolve.Core.Models
             }
 
             return creatures;
-        }
-        public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature, Dictionary<CreatureInput, float> inputsToInputValuesDict, bool trackStepInfo)
-        {
-            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.GenerateNodeOutputs(inputsToInputValuesDict, trackStepInfo);
-
-            if (nodeIdToOutputDict.Count == 0)
-            {
-                return new Queue<StepAction<TCreature>>();
-            }
-
-            Node highestOutputNode = null;
-            float? highestOutputNodeOutputValue = null;
-
-            foreach (var keyValuePair in nodeIdToOutputDict)
-            {
-                Node node = creature.Brain.NodeIdsToNodesDict[keyValuePair.Key];
-                float outputValue = keyValuePair.Value;
-
-                if (node.NodeType == NodeType.Output && (highestOutputNodeOutputValue == null || outputValue > highestOutputNodeOutputValue))
-                {
-                    highestOutputNode = node;
-                    highestOutputNodeOutputValue = outputValue;
-                }
-            }
-
-            if (highestOutputNode == null || highestOutputNodeOutputValue == null)
-            {
-                return new Queue<StepAction<TCreature>>();
-            }
-
-            Queue<StepAction<TCreature>> actions = new Queue<StepAction<TCreature>>();
-
-            if (highestOutputNodeOutputValue.Value > 0)
-            {
-                actions.Enqueue(new StepAction<TCreature>() { Creature = creature, Action = highestOutputNode.CreatureAction.Value });
-            }
-
-            return actions;
         }
         protected virtual void OnBestCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
         {

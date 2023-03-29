@@ -12,7 +12,8 @@ namespace MaceEvolve.Core.Models
     public class Step<TCreature, TFood> where TCreature : ICreature where TFood : IFood
     {
         #region Properties
-        public Queue<StepAction<TCreature>> RequestedActions = new Queue<StepAction<TCreature>>();
+        public Queue<StepAction<TCreature>> RequestedActions { get; set; } = new Queue<StepAction<TCreature>>();
+        public Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput = new Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
         public List<TCreature> Creatures { get; }
         public List<TFood> Food { get; }
         public IRectangle WorldBounds { get; }
