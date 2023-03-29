@@ -57,14 +57,14 @@ namespace MaceEvolve.Core.Models
             IsDead = true;
             Energy = 0;
         }
-        public static T Reproduce<T>(IList<T> parents, List<CreatureAction> actions) where T : ICreature, new()
+        public static T Reproduce<T>(IList<T> parents) where T : ICreature, new()
         {
             Dictionary<T, List<Connection>> availableParentConnections = parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
             Dictionary<T, Dictionary<int, int>> parentToOffspringNodesMap = new Dictionary<T, Dictionary<int, int>>();
 
             T offspring = new T()
             {
-                Brain = new NeuralNetwork(new List<Node>(), actions, new List<Connection>())
+                Brain = new NeuralNetwork(new List<Node>(), new List<Connection>())
             };
 
             float averageNumberOfParentConnections = (float)parents.Average(x => x.Brain.Connections.Count);
@@ -126,9 +126,9 @@ namespace MaceEvolve.Core.Models
 
             return offspring;
         }
-        T ICreature.Reproduce<T>(IList<T> parents, List<CreatureAction> actions, float connectionWeightBound)
+        T ICreature.Reproduce<T>(IList<T> parents, float connectionWeightBound)
         {
-            return Reproduce(parents, actions);
+            return Reproduce(parents);
         }
 
         #endregion

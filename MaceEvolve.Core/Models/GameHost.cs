@@ -117,7 +117,7 @@ namespace MaceEvolve.Core.Models
                                 break;
                             }
 
-                            TCreature newCreature = Creature.Reproduce(topPercentileCreatureFitnessesOrderedDescendingList, PossibleCreatureActions.ToList());
+                            TCreature newCreature = Creature.Reproduce(topPercentileCreatureFitnessesOrderedDescendingList);
                             newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
                             newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                             newCreature.Size = CreatureSize;
@@ -178,7 +178,7 @@ namespace MaceEvolve.Core.Models
                                 break;
                             }
 
-                            TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature }, PossibleCreatureActions.ToList());
+                            TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature });
                             newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
                             newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                             newCreature.Size = CreatureSize;

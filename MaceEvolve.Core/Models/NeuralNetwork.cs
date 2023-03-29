@@ -16,7 +16,6 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Properties
-        public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
         public IEnumerable<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; private set; } = Enumerable.Empty<NeuralNetworkStepNodeInfo>();
 
@@ -29,18 +28,15 @@ namespace MaceEvolve.Core.Models
         {
         }
         public NeuralNetwork(IEnumerable<CreatureInput> inputs, int maxProcessNodes, List<CreatureAction> actions, List<Connection> connections)
-            : this(GenerateInputNodes(inputs).Concat(GenerateProcessNodes(maxProcessNodes)).Concat(GenerateOutputNodes(actions)).ToList(), actions, connections)
+            : this(GenerateInputNodes(inputs).Concat(GenerateProcessNodes(maxProcessNodes)).Concat(GenerateOutputNodes(actions)).ToList(), connections)
         {
         }
-        public NeuralNetwork(List<Node> nodes, List<CreatureAction> actions, List<Connection> connections)
+        public NeuralNetwork(List<Node> nodes, List<Connection> connections)
         {
             if (nodes == null) { throw new ArgumentNullException(nameof(nodes)); }
-            if (actions == null) { throw new ArgumentNullException(nameof(nodes)); }
             if (connections == null) { throw new ArgumentNullException(nameof(nodes)); }
 
             NodeIdsToNodesDict = new ReadOnlyDictionary<int, Node>(_nodeIdsToNodesDict);
-
-            Actions = actions;
             Connections = connections;
 
             foreach (var node in nodes)
