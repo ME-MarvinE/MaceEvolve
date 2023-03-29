@@ -12,12 +12,10 @@ namespace MaceEvolve.Core.Models
     public class NeuralNetwork
     {
         #region Fields
-        private Dictionary<CreatureInput, float> _inputValues = new Dictionary<CreatureInput, float>();
         private Dictionary<int, Node> _nodeIdsToNodesDict = new Dictionary<int, Node>();
         #endregion
 
         #region Properties
-        public ReadOnlyDictionary<CreatureInput, float> InputValues { get; }
         public List<CreatureAction> Actions { get; } = new List<CreatureAction>();
         public List<Connection> Connections { get; set; } = new List<Connection>();
         public IEnumerable<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; private set; } = Enumerable.Empty<NeuralNetworkStepNodeInfo>();
@@ -31,12 +29,11 @@ namespace MaceEvolve.Core.Models
         {
         }
         public NeuralNetwork(IEnumerable<CreatureInput> inputs, int maxProcessNodes, List<CreatureAction> actions, List<Connection> connections)
-            : this(GenerateInputNodes(inputs).Concat(GenerateProcessNodes(maxProcessNodes)).Concat(GenerateOutputNodes(actions)).ToList(), inputs, actions, connections)
+            : this(GenerateInputNodes(inputs).Concat(GenerateProcessNodes(maxProcessNodes)).Concat(GenerateOutputNodes(actions)).ToList(), actions, connections)
         {
         }
-        public NeuralNetwork(List<Node> nodes, IEnumerable<CreatureInput> inputs, List<CreatureAction> actions, List<Connection> connections)
+        public NeuralNetwork(List<Node> nodes, List<CreatureAction> actions, List<Connection> connections)
         {
-            if (inputs == null) { throw new ArgumentNullException(nameof(inputs)); }
             if (nodes == null) { throw new ArgumentNullException(nameof(nodes)); }
             if (actions == null) { throw new ArgumentNullException(nameof(nodes)); }
             if (connections == null) { throw new ArgumentNullException(nameof(nodes)); }
@@ -45,8 +42,6 @@ namespace MaceEvolve.Core.Models
 
             Actions = actions;
             Connections = connections;
-            _inputValues = inputs.ToDictionary(x => x, x => 0f);
-            InputValues = new ReadOnlyDictionary<CreatureInput, float>(_inputValues);
 
             foreach (var node in nodes)
             {
@@ -56,10 +51,6 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public void UpdateInputValue(CreatureInput creatureInput, float value)
-        {
-            _inputValues[creatureInput] = value;
-        }
         public List<Connection> GenerateRandomConnections(int minConnections, int maxConnections, float weightBound)
         {
             List<Connection> generatedConnections = new List<Connection>();
@@ -172,7 +163,7 @@ namespace MaceEvolve.Core.Models
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="NotImplementedException"></exception>
-        public Dictionary<int, float> Step(bool trackStepInfo, float defaultNodeOutputValue = 0)
+        public Dictionary<int, float> Step(Dictionary<CreatureInput, float> inputsToInputValuesDict, bool trackStepInfo, float defaultNodeOutputValue = 0)
         {
             Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
             List<int> inputNodeIds = new List<int>();
@@ -213,7 +204,7 @@ namespace MaceEvolve.Core.Models
                         throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureInput)} is null.");
                     }
 
-                    currentNodeWeightedSum = InputValues[currentNode.CreatureInput.Value];
+                    currentNodeWeightedSum = inputsToInputValuesDict[currentNode.CreatureInput.Value];
                 }
                 else
                 {
@@ -387,6 +378,29 @@ namespace MaceEvolve.Core.Models
                     Connections.Remove(connection);
                 }
             }
+        }
+        public IEnumerable<CreatureInput> GetInputsRequiredForStep()
+        {
+            List<CreatureInput> requiredInputs = new List<CreatureInput>();
+
+            foreach (var keyValuePair in NodeIdsToNodesDict)
+            {
+                Node node = keyValuePair.Value;
+
+                if (node.NodeType == NodeType.Input)
+                {
+                    if (node.CreatureInput == null)
+                    {
+                        int nodeId = keyValuePair.Key;
+
+                        throw new InvalidOperationException($"Node with Id '{nodeId}' is an input but it's {nameof(node.CreatureInput)} is null.");
+                    }
+
+                    requiredInputs.Add(node.CreatureInput.Value);
+                }
+            }
+
+            return requiredInputs;
         }
         #endregion
     }

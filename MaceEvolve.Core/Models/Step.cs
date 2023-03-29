@@ -4,6 +4,7 @@ using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace MaceEvolve.Core.Models
@@ -317,21 +318,6 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public void UpdateCreatureInputValues(TCreature creature)
-        {
-            creature.Brain.UpdateInputValue(CreatureInput.PercentMaxEnergy, PercentMaxEnergy(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToLeft, ProximityToCreatureToLeft(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToRight, ProximityToCreatureToRight(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToFront, ProximityToCreatureToFront(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToCreatureToBack, ProximityToCreatureToBack(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToFoodToLeft, ProximityToFoodToLeft(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToFoodToRight, ProximityToFoodToRight(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToFoodToFront, ProximityToFoodToFront(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.ProximityToFoodToBack, ProximityToFoodToBack(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.DistanceFromTopWorldBound, DistanceFromTopWorldBound(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.DistanceFromLeftWorldBound, DistanceFromLeftWorldBound(creature));
-            creature.Brain.UpdateInputValue(CreatureInput.RandomInput, RandomInput());
-        }
         public static void ExecuteActions<T1, T2>(IEnumerable<StepAction<T1>> stepActions, Step<T1, T2> step) where T1 : ICreature where T2 : IFood
         {
             foreach (var stepAction in stepActions)
@@ -372,6 +358,50 @@ namespace MaceEvolve.Core.Models
                         stepAction.Creature.Die();
                     }
                 }
+            }
+        }
+        public float CreateCreatureInputValue(CreatureInput creatureInput, TCreature creature)
+        {
+            switch (creatureInput)
+            {
+                case CreatureInput.PercentMaxEnergy: 
+                    return PercentMaxEnergy(creature);
+
+                case CreatureInput.ProximityToCreatureToLeft: 
+                    return ProximityToCreatureToLeft(creature);
+
+                case CreatureInput.ProximityToCreatureToRight: 
+                    return ProximityToCreatureToRight(creature);
+
+                case CreatureInput.ProximityToCreatureToFront: 
+                    return ProximityToCreatureToFront(creature);
+
+                case CreatureInput.ProximityToCreatureToBack: 
+                    return ProximityToCreatureToBack(creature);
+
+                case CreatureInput.ProximityToFoodToLeft:
+                    return ProximityToFoodToLeft(creature);
+
+                case CreatureInput.ProximityToFoodToRight: 
+                    return ProximityToFoodToRight(creature);
+
+                case CreatureInput.ProximityToFoodToFront: 
+                    return ProximityToFoodToFront(creature);
+
+                case CreatureInput.ProximityToFoodToBack: 
+                    return ProximityToFoodToBack(creature);
+
+                case CreatureInput.DistanceFromTopWorldBound: 
+                    return DistanceFromTopWorldBound(creature);
+
+                case CreatureInput.DistanceFromLeftWorldBound: 
+                    return DistanceFromLeftWorldBound(creature);
+
+                case CreatureInput.RandomInput:
+                    return RandomInput();
+
+                default:
+                    throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
             }
         }
         #endregion

@@ -117,7 +117,7 @@ namespace MaceEvolve.Core.Models
                                 break;
                             }
 
-                            TCreature newCreature = Creature.Reproduce(topPercentileCreatureFitnessesOrderedDescendingList, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+                            TCreature newCreature = Creature.Reproduce(topPercentileCreatureFitnessesOrderedDescendingList, PossibleCreatureActions.ToList());
                             newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
                             newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                             newCreature.Size = CreatureSize;
@@ -178,7 +178,7 @@ namespace MaceEvolve.Core.Models
                                 break;
                             }
 
-                            TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature }, PossibleCreatureInputs.ToList(), PossibleCreatureActions.ToList());
+                            TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature }, PossibleCreatureActions.ToList());
                             newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
                             newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                             newCreature.Size = CreatureSize;
@@ -457,11 +457,15 @@ namespace MaceEvolve.Core.Models
             {
                 if (!creature.IsDead || creature == BestCreature || creature == SelectedCreature)
                 {
-                    //Update creature's brains with information from the generated step.
-                    generatedStep.UpdateCreatureInputValues(creature);
+                    IEnumerable<CreatureInput> inputsRequiredForStep = creature.Brain.GetInputsRequiredForStep();
+                    Dictionary<CreatureInput, float> inputsToInputValuesDict = new Dictionary<CreatureInput, float>();
 
-                    //Get actions from creature.
-                    Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
+                    foreach (var input in inputsRequiredForStep)
+                    {
+                        inputsToInputValuesDict.Add(input, generatedStep.CreateCreatureInputValue(input, creature));
+                    }
+
+                    Queue<StepAction<TCreature>> creatureStepActions = GenerateCreatureActions(creature, inputsToInputValuesDict, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
 
                     foreach (var creatureStepAction in creatureStepActions)
                     {
@@ -552,9 +556,9 @@ namespace MaceEvolve.Core.Models
 
             return creatures;
         }
-        public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature, bool trackStepInfo)
+        public static Queue<StepAction<TCreature>> GenerateCreatureActions(TCreature creature, Dictionary<CreatureInput, float> inputsToInputValuesDict, bool trackStepInfo)
         {
-            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.Step(trackStepInfo);
+            Dictionary<int, float> nodeIdToOutputDict = creature.Brain.Step(inputsToInputValuesDict, trackStepInfo);
 
             if (nodeIdToOutputDict.Count == 0)
             {
