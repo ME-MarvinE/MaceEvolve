@@ -477,7 +477,7 @@ namespace MaceEvolve.Core.Models
                         Node node = creature.Brain.NodeIdsToNodesDict[keyValuePair.Key];
                         float outputValue = keyValuePair.Value;
 
-                        if (node.NodeType == NodeType.Output && (highestOutputNodeId == null || outputValue > nodeIdToOutputDict[highestOutputNodeId.Value]))
+                        if (node.NodeType == NodeType.Output && outputValue > 0 && (highestOutputNodeId == null || outputValue > nodeIdToOutputDict[highestOutputNodeId.Value]))
                         {
                             highestOutputNodeId = keyValuePair.Key;
                         }
