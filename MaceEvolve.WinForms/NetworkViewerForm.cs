@@ -6,7 +6,7 @@ namespace MaceEvolve.WinForms
     public partial class NetworkViewerForm : Form
     {
         #region Fields
-        private NeuralNetworkViewer _NetworkViewer;
+        private NeuralNetworkViewer _networkViewer;
         #endregion
 
         #region Properties
@@ -14,35 +14,38 @@ namespace MaceEvolve.WinForms
         {
             get
             {
-                return _NetworkViewer;
+                return _networkViewer;
             }
             set
             {
-                if (_NetworkViewer != value && value != null)
+                if (_networkViewer != value)
                 {
-                    if (_NetworkViewer != null)
+                    if (_networkViewer != null)
                     {
                         Controls.Clear();
                     }
 
-                    _NetworkViewer = value;
-                    Controls.Add(_NetworkViewer);
+                    _networkViewer = value;
+                    Controls.Add(_networkViewer);
                 }
 
             }
         }
         #endregion
 
-        #region Constructors
+        #region Constructor
         public NetworkViewerForm()
-            : this(null)
-        {
-        }
-        public NetworkViewerForm(NeuralNetworkViewer networkViewer)
         {
             InitializeComponent();
+            FormClosing += NetworkViewerForm_FormClosing;
+        }
+        #endregion
 
-            NetworkViewer = networkViewer;
+        #region Methods
+        private void NetworkViewerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Hide();
+            e.Cancel = true;
         }
         #endregion
     }

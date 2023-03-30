@@ -459,6 +459,7 @@ namespace MaceEvolve.Core.Models
                 {
                     IEnumerable<CreatureInput> inputsRequiredForStep = creature.Brain.GetInputsRequiredForStep();
                     Dictionary<CreatureInput, float> inputsToInputValuesDict = new Dictionary<CreatureInput, float>();
+                    bool trackBrainOutput = gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature;
 
                     foreach (var input in inputsRequiredForStep)
                     {
@@ -467,7 +468,7 @@ namespace MaceEvolve.Core.Models
 
                     Queue<StepAction<TCreature>> creatureStepActions = new Queue<StepAction<TCreature>>();
 
-                    Dictionary<int, float> nodeIdToOutputDict = creature.Brain.GenerateNodeOutputs(inputsToInputValuesDict, gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature);
+                    Dictionary<int, float> nodeIdToOutputDict = creature.Brain.GenerateNodeOutputs(inputsToInputValuesDict);
 
                     int? highestOutputNodeId = null;
 
@@ -494,6 +495,53 @@ namespace MaceEvolve.Core.Models
                     foreach (var creatureStepAction in creatureStepActions)
                     {
                         generatedStep.QueueAction(creatureStepAction);
+                    }
+
+                    if (trackBrainOutput)
+                    {
+                        List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
+
+                        foreach (var keyValuePair in nodeIdToOutputDict)
+                        {
+                            int nodeId = keyValuePair.Key;
+                            Node node = creature.Brain.NodeIdsToNodesDict[nodeId];
+                            float output = keyValuePair.Value;
+
+                            NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
+                            {
+                                NodeId = nodeId,
+                                Bias = node.Bias,
+                                CreatureAction = node.CreatureAction,
+                                CreatureInput = node.CreatureInput,
+                                NodeType = node.NodeType,
+                                PreviousOutput = output,
+                            };
+
+                            foreach (var connection in creature.Brain.Connections)
+                            {
+                                bool sourceIdIsNodeId = connection.SourceId == nodeId;
+                                bool targetIdIsNodeId = connection.TargetId == nodeId;
+
+                                if (sourceIdIsNodeId || targetIdIsNodeId)
+                                {
+                                    currentStepCurrentNodeInfo.Connections.Add(connection);
+                                }
+
+                                if (sourceIdIsNodeId)
+                                {
+                                    currentStepCurrentNodeInfo.ConnectionsFrom.Add(connection);
+                                }
+
+                                if (targetIdIsNodeId)
+                                {
+                                    currentStepCurrentNodeInfo.ConnectionsTo.Add(connection);
+                                }
+                            }
+
+                            currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
+                        }
+
+                        generatedStep.CreaturesBrainOutput[creature] = currentStepNodeInfo;
                     }
                 }
 

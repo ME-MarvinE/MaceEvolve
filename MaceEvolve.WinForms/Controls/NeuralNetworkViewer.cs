@@ -1,6 +1,8 @@
 ﻿using MaceEvolve.Core;
 using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
+using MaceEvolve.WinForms.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,6 +19,7 @@ namespace MaceEvolve.WinForms.Controls
         #endregion
 
         #region Properties
+        public Step<GraphicalCreature, GraphicalFood> Step { get; set; }
         public NeuralNetwork NeuralNetwork
         {
             get
@@ -52,13 +55,7 @@ namespace MaceEvolve.WinForms.Controls
 
         #region Constructors
         public NeuralNetworkViewer()
-            : this(null)
         {
-        }
-        public NeuralNetworkViewer(NeuralNetwork neuralNetwork)
-        {
-            NeuralNetwork = neuralNetwork;
-
             NodeTypeToBrushDict = new Dictionary<NodeType, Brush>()
             {
                 { NodeType.Input, new SolidBrush(NodeTypeToColorDict[NodeType.Input]) },
@@ -153,14 +150,21 @@ namespace MaceEvolve.WinForms.Controls
         }
         private void NeuralNetworkViewer_Paint(object sender, PaintEventArgs e)
         {
-            if (NeuralNetwork != null)
+            if (NeuralNetwork != null && Step != null)
             {
+                GraphicalCreature networkCreatureInStep = Step?.CreaturesBrainOutput.FirstOrDefault(x => x.Key.Brain == NeuralNetwork).Key;
+
+                if (networkCreatureInStep == null)
+                {
+                    return;
+                }
+
                 e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
                 e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
                 //Draw connections between nodes.
                 //Currently, duplicate connections will draw over each other.
-                List<Connection> drawableConnections = NeuralNetwork.Connections.Where(x => DrawnNodeIdsToGameObject.Keys.Contains(x.SourceId) && DrawnNodeIdsToGameObject.Keys.Contains(x.TargetId)).ToList();
+                List<Connection> drawableConnections = networkCreatureInStep.Brain.Connections.Where(x => DrawnNodeIdsToGameObject.Keys.Contains(x.SourceId) && DrawnNodeIdsToGameObject.Keys.Contains(x.TargetId)).ToList();
 
                 foreach (var connection in drawableConnections)
                 {
@@ -175,13 +179,13 @@ namespace MaceEvolve.WinForms.Controls
                     }
                 }
 
-                NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = NeuralNetwork.PreviousStepInfo.Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
+                NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
 
                 //Draw nodes and self referencing connections.
                 foreach (var keyValuePair in DrawnNodeIdsToGameObject)
                 {
                     int nodeId = keyValuePair.Key;
-                    Node node = NeuralNetwork.NodeIdsToNodesDict[nodeId];
+                    Node node = networkCreatureInStep.Brain.NodeIdsToNodesDict[nodeId];
                     GameObject nodeGameObject = keyValuePair.Value;
                     Brush nodeBrush = NodeTypeToBrushDict[node.NodeType];
 
@@ -208,7 +212,7 @@ namespace MaceEvolve.WinForms.Controls
                     }
 
                     //Draw the node.
-                    NeuralNetworkStepNodeInfo nodeNetworkStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == nodeId);
+                    NeuralNetworkStepNodeInfo nodeNetworkStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == nodeId);
 
                     string previousOutputString = nodeNetworkStepInfo == null ? "N/A" : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
                     int nodeIdFontSize = NodeFontSize - 4;
@@ -230,8 +234,8 @@ namespace MaceEvolve.WinForms.Controls
                     e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), nodeGameObject.MX - nodePreviousOutputFontSize * 2, nodeGameObject.MY);
                 }
 
-                lblNetworkConnectionsCount.Text = $"Connections: {NeuralNetwork.Connections.Count}";
-                lblNetworkNodesCount.Text = $"Nodes: {NeuralNetwork.NodeIdsToNodesDict.Count}";
+                lblNetworkConnectionsCount.Text = $"Connections: {networkCreatureInStep.Brain.Connections.Count}";
+                lblNetworkNodesCount.Text = $"Nodes: {networkCreatureInStep.Brain.NodeIdsToNodesDict.Count}";
 
                 lblSelectedNodeId.Visible = SelectedNodeId != null;
                 lblSelectedNodePreviousOutput.Visible = SelectedNodeId != null;
@@ -239,14 +243,14 @@ namespace MaceEvolve.WinForms.Controls
                 lblNodeInputOrAction.Visible = SelectedNodeId != null;
                 if (SelectedNodeId != null)
                 {
-                    NeuralNetworkStepNodeInfo selectedNodeStepInfo = NeuralNetwork.PreviousStepInfo.FirstOrDefault(x => x.NodeId == SelectedNodeId);
+                    NeuralNetworkStepNodeInfo selectedNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == SelectedNodeId);
 
                     lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
                     lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "N/A" : selectedNodeStepInfo.PreviousOutput)}";
-                    lblSelectedNodeConnectionCount.Text = $"Connections: {NeuralNetwork.Connections.Where(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId).Count()}";
+                    lblSelectedNodeConnectionCount.Text = $"Connections: {networkCreatureInStep.Brain.Connections.Count(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId)}";
 
 
-                    Node selectedNode = NeuralNetwork.NodeIdsToNodesDict[SelectedNodeId.Value];
+                    Node selectedNode = networkCreatureInStep.Brain.NodeIdsToNodesDict[SelectedNodeId.Value];
 
                     switch (selectedNode.NodeType)
                     {
@@ -270,32 +274,38 @@ namespace MaceEvolve.WinForms.Controls
         }
         private void NeuralNetworkViewer_MouseDown(object sender, MouseEventArgs e)
         {
-            Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
-
-            Dictionary<int, GameObject> nodeIdsOrderedByDistanceToMouse = DrawnNodeIdsToGameObject.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.Value.MX, x.Value.MY)).ToDictionary(x => x.Key, x => x.Value);
-
-            int? closestNodeId = nodeIdsOrderedByDistanceToMouse.Count == 0 ? null : nodeIdsOrderedByDistanceToMouse.FirstOrDefault().Key;
-
-            if (closestNodeId == null || Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].MX, nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].MY) > nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].Size / 2)
+            if (NeuralNetwork != null && Step != null)
             {
-                SelectedNodeId = null;
-            }
-            else
-            {
-                SelectedNodeId = closestNodeId.Value;
-            }
+                Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
 
-            MovingNodeId = SelectedNodeId;
+                Dictionary<int, GameObject> nodeIdsOrderedByDistanceToMouse = DrawnNodeIdsToGameObject.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.Value.MX, x.Value.MY)).ToDictionary(x => x.Key, x => x.Value);
+
+                int? closestNodeId = nodeIdsOrderedByDistanceToMouse.Count == 0 ? null : nodeIdsOrderedByDistanceToMouse.FirstOrDefault().Key;
+
+                if (closestNodeId == null || Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].MX, nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].MY) > nodeIdsOrderedByDistanceToMouse[closestNodeId.Value].Size / 2)
+                {
+                    SelectedNodeId = null;
+                }
+                else
+                {
+                    SelectedNodeId = closestNodeId.Value;
+                }
+
+                MovingNodeId = SelectedNodeId;
+            }
         }
         private void NeuralNetworkViewer_MouseUp(object sender, MouseEventArgs e)
         {
-            MovingNodeId = null;
+            if (NeuralNetwork != null && Step != null)
+            {
+                MovingNodeId = null;
+            }
         }
         private void NeuralNetworkViewer_MouseMove(object sender, MouseEventArgs e)
         {
             Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
 
-            if (MovingNodeId != null)
+            if (MovingNodeId != null && NeuralNetwork != null && Step != null)
             {
                 GameObject movingNodeGameObject = DrawnNodeIdsToGameObject[MovingNodeId.Value];
 
@@ -305,7 +315,10 @@ namespace MaceEvolve.WinForms.Controls
         }
         private void DrawTimer_Tick(object sender, EventArgs e)
         {
-            Invalidate();
+            if (Visible)
+            {
+                Invalidate();
+            }
         }
         #endregion
     }

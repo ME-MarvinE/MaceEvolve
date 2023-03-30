@@ -28,17 +28,16 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            SuspendLayout();
             // 
             // NetworkViewerForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 501);
-            this.Name = "NetworkViewerForm";
-            this.Text = "NetworkViewerForm";
-            this.ResumeLayout(false);
-
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            ClientSize = new System.Drawing.Size(784, 501);
+            Name = "NetworkViewerForm";
+            Text = "NetworkViewerForm";
+            ResumeLayout(false);
         }
 
         #endregion

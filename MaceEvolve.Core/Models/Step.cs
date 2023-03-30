@@ -13,7 +13,7 @@ namespace MaceEvolve.Core.Models
     {
         #region Properties
         public Queue<StepAction<TCreature>> RequestedActions { get; set; } = new Queue<StepAction<TCreature>>();
-        public Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput = new Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
+        public Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; } = new Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
         public List<TCreature> Creatures { get; }
         public List<TFood> Food { get; }
         public IRectangle WorldBounds { get; }

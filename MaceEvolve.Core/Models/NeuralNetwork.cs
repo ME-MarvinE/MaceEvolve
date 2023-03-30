@@ -17,7 +17,6 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public List<Connection> Connections { get; set; } = new List<Connection>();
-        public IEnumerable<NeuralNetworkStepNodeInfo> PreviousStepInfo { get; private set; } = Enumerable.Empty<NeuralNetworkStepNodeInfo>();
 
         public IReadOnlyDictionary<int, Node> NodeIdsToNodesDict { get; } = new Dictionary<int, Node>();
         #endregion
@@ -153,7 +152,7 @@ namespace MaceEvolve.Core.Models
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="NotImplementedException"></exception>
-        public Dictionary<int, float> GenerateNodeOutputs(Dictionary<CreatureInput, float> inputsToInputValuesDict, bool trackStepInfo, float defaultNodeOutputValue = 0)
+        public Dictionary<int, float> GenerateNodeOutputs(Dictionary<CreatureInput, float> inputsToInputValuesDict, float defaultNodeOutputValue = 0)
         {
             Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
             List<int> inputNodeIds = new List<int>();
@@ -247,53 +246,6 @@ namespace MaceEvolve.Core.Models
 
                     nodeQueue.Remove(currentNodeId);
                 }
-            }
-
-            if (trackStepInfo)
-            {
-                List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
-
-                foreach (var keyValuePair in cachedNodeOutputs)
-                {
-                    int nodeId = keyValuePair.Key;
-                    Node node = NodeIdsToNodesDict[nodeId];
-                    float cachedOutput = keyValuePair.Value;
-
-                    NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
-                    {
-                        NodeId = nodeId,
-                        Bias = node.Bias,
-                        CreatureAction = node.CreatureAction,
-                        CreatureInput = node.CreatureInput,
-                        NodeType = node.NodeType,
-                        PreviousOutput = cachedOutput,
-                    };
-
-                    foreach (var connection in Connections)
-                    {
-                        bool sourceIdIsNodeId = connection.SourceId == nodeId;
-                        bool targetIdIsNodeId = connection.TargetId == nodeId;
-
-                        if (sourceIdIsNodeId || targetIdIsNodeId)
-                        {
-                            currentStepCurrentNodeInfo.Connections.Add(connection);
-                        }
-
-                        if (sourceIdIsNodeId)
-                        {
-                            currentStepCurrentNodeInfo.ConnectionsFrom.Add(connection);
-                        }
-
-                        if (targetIdIsNodeId)
-                        {
-                            currentStepCurrentNodeInfo.ConnectionsTo.Add(connection);
-                        }
-                    }
-
-                    currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
-                }
-
-                PreviousStepInfo = currentStepNodeInfo;
             }
 
             return cachedNodeOutputs;

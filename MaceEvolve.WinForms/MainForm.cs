@@ -1,4 +1,5 @@
 using MaceEvolve.Core;
+using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.Models;
@@ -16,8 +17,6 @@ namespace MaceEvolve.WinForms
     {
         #region Fields
         private Random _random = new Random();
-        private NeuralNetworkViewer _bestCreatureNeuralNetworkViewer;
-        private NeuralNetworkViewer _selectedCreatureNeuralNetworkViewer;
         #endregion
 
         #region Properties
@@ -30,20 +29,8 @@ namespace MaceEvolve.WinForms
         public bool GatherStepInfoForAllCreatures { get; set; }
         public bool IsInFastMode { get; set; }
         public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
-        public NeuralNetworkViewer SelectedCreatureNeuralNetworkViewer
-        {
-            get
-            {
-                return UpdateOrCreateNetworkViewer(MainGameHost.SelectedCreature?.Brain, _selectedCreatureNeuralNetworkViewer);
-            }
-        }
-        public NeuralNetworkViewer BestCreatureNeuralNetworkViewer
-        {
-            get
-            {
-                return UpdateOrCreateNetworkViewer(MainGameHost.BestCreature?.Brain, _bestCreatureNeuralNetworkViewer);
-            }
-        }
+        public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
+        public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; }
         public float SimulationMspt
         {
             get
@@ -85,7 +72,7 @@ namespace MaceEvolve.WinForms
         public MainForm()
         {
             InitializeComponent();
-            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
+
             DoubleBuffered = true;
         }
         #endregion
@@ -93,6 +80,12 @@ namespace MaceEvolve.WinForms
         #region Methods
         public void Reset()
         {
+            BestCreatureNetworkViewerForm.NetworkViewer.Step = null;
+            BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
+
+            SelectedCreatureNetworkViewerForm.NetworkViewer.Step = null;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
+
             MainGameHost.Reset();
 
             MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
@@ -158,42 +151,13 @@ namespace MaceEvolve.WinForms
         {
             return new Point((int)(x + width / 2), (int)(y + height / 2));
         }
-        public static void ChangeNetworkViewerNetwork(NeuralNetworkViewer networkViewer, NeuralNetwork newNeuralNetwork)
-        {
-            networkViewer.NeuralNetwork = newNeuralNetwork;
-            networkViewer.ResetDrawnNodes();
-        }
-        public NeuralNetworkViewer UpdateOrCreateNetworkViewer(NeuralNetwork neuralNetwork, NeuralNetworkViewer networkViewer = null)
-        {
-            NeuralNetworkViewer returnedNetworkViewer = networkViewer;
-
-            bool createNewNetworkViewer = returnedNetworkViewer == null || returnedNetworkViewer.IsDisposed;
-
-            if (createNewNetworkViewer)
-            {
-                returnedNetworkViewer = new NeuralNetworkViewer();
-                returnedNetworkViewer.Dock = DockStyle.Fill;
-                returnedNetworkViewer.BackColor = BackColor;
-                returnedNetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
-                returnedNetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
-                returnedNetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
-                returnedNetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
-                returnedNetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
-                returnedNetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
-                returnedNetworkViewer.DrawTimer.Interval = GameTimer.Interval;
-            }
-
-            returnedNetworkViewer.NeuralNetwork = neuralNetwork;
-
-            return returnedNetworkViewer;
-        }
         private void MainGameHost_SelectedCreatureChanged(object sender, ValueChangedEventArgs<GraphicalCreature> e)
         {
-            _selectedCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(MainGameHost.SelectedCreature?.Brain, _selectedCreatureNeuralNetworkViewer);
+            SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = MainGameHost.SelectedCreature?.Brain;
         }
         private void MainGameHost_BestCreatureChanged(object sender, ValueChangedEventArgs<GraphicalCreature> e)
         {
-            _bestCreatureNeuralNetworkViewer = UpdateOrCreateNetworkViewer(MainGameHost.BestCreature?.Brain, _bestCreatureNeuralNetworkViewer);
+            BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = MainGameHost.BestCreature?.Brain;
         }
         private void StartButton_Click(object sender, EventArgs e)
         {
@@ -254,8 +218,7 @@ namespace MaceEvolve.WinForms
                 return;
             }
 
-            NetworkViewerForm networkViewerForm = new NetworkViewerForm(BestCreatureNeuralNetworkViewer);
-            networkViewerForm.Show();
+            BestCreatureNetworkViewerForm.Show();
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
@@ -348,8 +311,7 @@ namespace MaceEvolve.WinForms
 
             if (newSelectedCreature != null && oldSelectedCreature != newSelectedCreature)
             {
-                NetworkViewerForm networkViewerForm = new NetworkViewerForm(SelectedCreatureNeuralNetworkViewer);
-                networkViewerForm.Show();
+                SelectedCreatureNetworkViewerForm.Show();
             }
 
             Invalidate();
@@ -375,6 +337,9 @@ namespace MaceEvolve.WinForms
         {
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
+            SelectedCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
+            BestCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
+
             TicksInCurrentGeneration += 1;
 
             if (TicksInCurrentGeneration >= TicksPerGeneration)
@@ -396,6 +361,34 @@ namespace MaceEvolve.WinForms
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
             GameTimer.Interval = (int)SimulationMspt;
+
+            BestCreatureNetworkViewerForm = new NetworkViewerForm();
+            BestCreatureNetworkViewerForm.NetworkViewer = new NeuralNetworkViewer();
+            BestCreatureNetworkViewerForm.NetworkViewer.Dock = DockStyle.Fill;
+            BestCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
+            BestCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = GameTimer.Interval;
+            BestCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
+
+            SelectedCreatureNetworkViewerForm = new NetworkViewerForm();
+            SelectedCreatureNetworkViewerForm.NetworkViewer = new NeuralNetworkViewer();
+            SelectedCreatureNetworkViewerForm.NetworkViewer.Dock = DockStyle.Fill;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.BackColor = BackColor;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkConnectionsCount.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNetworkNodesCount.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeId.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodePreviousOutput.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = GameTimer.Interval;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
+
+            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
 
             Reset();
         }
