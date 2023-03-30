@@ -622,7 +622,7 @@ namespace MaceEvolve.Core.Models
                 };
 
                 newCreature.Brain = new NeuralNetwork(NeuralNetwork.GenerateInputNodes(PossibleCreatureInputs)
-                    .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes))
+                    .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes, 0.75f))
                     .Concat(NeuralNetwork.GenerateOutputNodes(PossibleCreatureActions)));
 
                 newCreature.Brain.Connections = newCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MinCreatureConnections, ConnectionWeightBound);

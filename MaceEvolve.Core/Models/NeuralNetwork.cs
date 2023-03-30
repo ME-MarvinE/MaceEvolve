@@ -70,13 +70,16 @@ namespace MaceEvolve.Core.Models
         {
             return possibleOutputs.Select(x => new Node(NodeType.Output, Globals.Random.NextFloat(-1, 1), creatureAction: x)).ToList();
         }
-        public static List<Node> GenerateProcessNodes(int maxProcessNodes)
+        public static List<Node> GenerateProcessNodes(int maxProcessNodes, float processNodeCreationChance)
         {
             List<Node> processNodes = new List<Node>();
 
             for (int i = 0; i < maxProcessNodes; i++)
             {
-                processNodes.Add(new Node(NodeType.Process, Globals.Random.NextFloat(-1, 1)));
+                if (Globals.Random.NextFloat() < processNodeCreationChance)
+                {
+                    processNodes.Add(new Node(NodeType.Process, Globals.Random.NextFloat(-1, 1)));
+                }
             }
 
             return processNodes;
