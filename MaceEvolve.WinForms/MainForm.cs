@@ -320,9 +320,10 @@ namespace MaceEvolve.WinForms
 
                 if (numberOfDeadCreatures == MainGameHost.CurrentStep.Creatures.Count)
                 {
-                    TicksInCurrentGeneration = 0;
-                    GenerationCount += 1;
+                    int oldGenerationCount = GenerationCount;
                     Reset(false);
+
+                    GenerationCount = oldGenerationCount + 1;
                 }
             }
         }
