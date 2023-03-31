@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Extensions;
+using MaceEvolve.Core.Interfaces;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -346,6 +347,72 @@ namespace MaceEvolve.Core.Models
             }
 
             return requiredInputs;
+        }
+        public static NeuralNetwork CombineNetworks(IList<NeuralNetwork> networksToCombine)
+        {
+            Dictionary<NeuralNetwork, List<Connection>> availableParentConnections = networksToCombine.ToDictionary(x => x, x => x.Connections.ToList());
+            Dictionary<NeuralNetwork, Dictionary<int, int>> parentToNewNetworkNodesMap = new Dictionary<NeuralNetwork, Dictionary<int, int>>();
+
+            NeuralNetwork newNetwork = new NeuralNetwork();
+
+            float averageNumberOfParentConnections = (float)networksToCombine.Average(x => x.Connections.Count);
+
+            if (averageNumberOfParentConnections > 0 && averageNumberOfParentConnections < 1)
+            {
+                averageNumberOfParentConnections = 1;
+            }
+
+            while (newNetwork.Connections.Count < averageNumberOfParentConnections)
+            {
+                NeuralNetwork randomParent = networksToCombine[Globals.Random.Next(networksToCombine.Count)];
+                List<Connection> randomParentAvailableConnections = availableParentConnections[randomParent];
+
+                if (randomParentAvailableConnections.Count > 0)
+                {
+                    Connection randomParentConnection = randomParentAvailableConnections[Globals.Random.Next(randomParentAvailableConnections.Count)];
+
+                    //If a parent's node has not been added and mapped to a newNetwork's node, create a new node and map it to the parent's node.
+                    if (!(parentToNewNetworkNodesMap.ContainsKey(randomParent) && parentToNewNetworkNodesMap[randomParent].ContainsKey(randomParentConnection.SourceId)))
+                    {
+                        Node randomParentConnectionSourceNode = randomParent.NodeIdsToNodesDict[randomParentConnection.SourceId];
+                        Node newNode = new Node(randomParentConnectionSourceNode.NodeType, randomParentConnectionSourceNode.Bias, randomParentConnectionSourceNode.CreatureInput, randomParentConnectionSourceNode.CreatureAction);
+                        int newNodeId = newNetwork.AddNode(newNode);
+
+                        //Map the newly added newNetwork node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
+                        if (!parentToNewNetworkNodesMap.ContainsKey(randomParent))
+                        {
+                            parentToNewNetworkNodesMap.Add(randomParent, new Dictionary<int, int>());
+                        }
+
+                        parentToNewNetworkNodesMap[randomParent][randomParentConnection.SourceId] = newNodeId;
+                    }
+
+                    if (!(parentToNewNetworkNodesMap.ContainsKey(randomParent) && parentToNewNetworkNodesMap[randomParent].ContainsKey(randomParentConnection.TargetId)))
+                    {
+                        Node randomParentConnectionTargetNode = randomParent.NodeIdsToNodesDict[randomParentConnection.TargetId];
+                        Node newNode = new Node(randomParentConnectionTargetNode.NodeType, randomParentConnectionTargetNode.Bias, randomParentConnectionTargetNode.CreatureInput, randomParentConnectionTargetNode.CreatureAction);
+                        int newNodeId = newNetwork.AddNode(newNode);
+
+                        //Map the newly added newNetwork node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
+                        if (!parentToNewNetworkNodesMap.ContainsKey(randomParent))
+                        {
+                            parentToNewNetworkNodesMap.Add(randomParent, new Dictionary<int, int>());
+                        }
+
+                        parentToNewNetworkNodesMap[randomParent][randomParentConnection.TargetId] = newNodeId;
+                    }
+
+                    //Apply any variance to the connection's weight.
+                    float connectionToAddWeight = randomParentConnection.Weight;
+                    int connectionToAddSourceId = parentToNewNetworkNodesMap[randomParent][randomParentConnection.SourceId];
+                    int connectionToAddTargetId = parentToNewNetworkNodesMap[randomParent][randomParentConnection.TargetId];
+
+                    newNetwork.Connections.Add(new Connection(connectionToAddSourceId, connectionToAddTargetId, connectionToAddWeight));
+                    availableParentConnections[randomParent].Remove(randomParentConnection);
+                }
+            }
+
+            return newNetwork;
         }
         #endregion
     }

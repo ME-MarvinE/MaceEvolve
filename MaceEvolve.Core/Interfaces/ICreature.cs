@@ -21,7 +21,6 @@ namespace MaceEvolve.Core.Interfaces
         #region Methods
         void Die();
         bool IsWithinSight(IGameObject gameObject);
-        T Reproduce<T>(IList<T> parents, float connectionWeightBound) where T : ICreature, new();
         #endregion
     }
 }

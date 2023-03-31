@@ -90,7 +90,6 @@ namespace MaceEvolve.Core.Models
         {
             Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(sourceCreatures);
             Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = successfulCreaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-            List<TCreature> topPercentileCreatureFitnessesOrderedDescendingList = topPercentileCreatureFitnessesOrderedDescending.Keys.ToList();
 
             if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
             {
@@ -98,6 +97,7 @@ namespace MaceEvolve.Core.Models
             }
 
             List<TCreature> newCreatures = new List<TCreature>();
+            List<NeuralNetwork> topPercentileCreatureFitnessesOrderedDescendingNeuralNetworksList = topPercentileCreatureFitnessesOrderedDescending.Select(x => x.Key.Brain).ToList();
 
             while (newCreatures.Count < MaxCreatureAmount)
             {
@@ -117,7 +117,8 @@ namespace MaceEvolve.Core.Models
                                 break;
                             }
 
-                            TCreature newCreature = Creature.Reproduce(topPercentileCreatureFitnessesOrderedDescendingList);
+                            TCreature newCreature = new TCreature();
+                            newCreature.Brain = NeuralNetwork.CombineNetworks(topPercentileCreatureFitnessesOrderedDescendingNeuralNetworksList);
                             newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
                             newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                             newCreature.Size = CreatureSize;
@@ -178,7 +179,8 @@ namespace MaceEvolve.Core.Models
                                 break;
                             }
 
-                            TCreature newCreature = Creature.Reproduce(new List<TCreature>() { successfulCreature });
+                            TCreature newCreature = new TCreature();
+                            newCreature.Brain = NeuralNetwork.CombineNetworks(new List<NeuralNetwork>() { successfulCreature.Brain });
                             newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
                             newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                             newCreature.Size = CreatureSize;
