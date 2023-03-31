@@ -217,41 +217,6 @@ namespace MaceEvolve.Mono.Desktop
                 NewGeneration();
             }
         }
-        public bool RunSimulation(int generationsToRunFor, int ticksPerGeneration = 1800)
-        {
-            if (ticksPerGeneration < 1) { throw new ArgumentOutOfRangeException($"{nameof(ticksPerGeneration)} must be greater than 0"); }
-
-            int generationCount = 0;
-
-            while (generationCount < generationsToRunFor)
-            {
-                for (int ticksInCurrentGeneration = 0; ticksInCurrentGeneration < ticksPerGeneration; ticksInCurrentGeneration++)
-                {
-                    MainGameHost.NextStep();
-                }
-
-                List<GraphicalCreature> newGenerationCreatures = NewGenerationAsexual();
-
-                if (newGenerationCreatures.Count > 0)
-                {
-                    MainGameHost.Reset();
-                    MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
-                    {
-                        Creatures = newGenerationCreatures,
-                        Food = GenerateFood(),
-                        WorldBounds = MainGameHost.WorldBounds
-                    };
-
-                    generationCount += 1;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
         public List<GraphicalFood> GenerateFood()
         {
             List<GraphicalFood> foodList = new List<GraphicalFood>();
@@ -278,30 +243,13 @@ namespace MaceEvolve.Mono.Desktop
 
             return creatures;
         }
-        public List<GraphicalCreature> NewGenerationAsexual()
-        {
-            List<GraphicalCreature> newGenerationCreatures = MainGameHost.CreateNewGenerationAsexual(MainGameHost.CurrentStep.Creatures);
-
-            foreach (var creature in newGenerationCreatures)
-            {
-                creature.Color = new Color(64, 64, _random.Next(256));
-            }
-
-            return newGenerationCreatures;
-        }
         public void NewGeneration()
         {
             List<GraphicalCreature> newGenerationCreatures = NewGenerationAsexual();
 
             if (newGenerationCreatures.Count > 0)
             {
-                MainGameHost.Reset();
-                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
-                {
-                    Creatures = newGenerationCreatures,
-                    Food = GenerateFood(),
-                    WorldBounds = MainGameHost.WorldBounds
-                };
+                MainGameHost.ResetStep(newGenerationCreatures, GenerateFood());
 
                 TicksInCurrentGeneration = 0;
                 GenerationCount += 1;

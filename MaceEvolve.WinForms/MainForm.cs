@@ -28,7 +28,7 @@ namespace MaceEvolve.WinForms
         public int TicksInCurrentGeneration { get; set; }
         public bool GatherStepInfoForAllCreatures { get; set; }
         public bool IsInFastMode { get; set; }
-        public GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
+        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
         public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; }
         public float SimulationMspt
@@ -78,7 +78,7 @@ namespace MaceEvolve.WinForms
         #endregion
 
         #region Methods
-        public void Reset()
+        public void Reset(bool updateWorldBounds = true)
         {
             BestCreatureNetworkViewerForm.NetworkViewer.Step = null;
             BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
@@ -86,25 +86,20 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.Step = null;
             SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
-            MainGameHost.Reset();
-
-            MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
-
-            float MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
-            float MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
-
-            MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
-
-            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
+            if (updateWorldBounds)
             {
-                Creatures = GenerateCreatures(),
-                Food = GenerateFood(),
-                WorldBounds = MainGameHost.WorldBounds
-            };
+                MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
+
+                float MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
+                float MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
+
+                MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
+            }
+
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;
-            UpdateUIText();
             GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
         }
         public List<GraphicalFood> GenerateFood()
@@ -132,17 +127,6 @@ namespace MaceEvolve.WinForms
             }
 
             return creatures;
-        }
-        public List<GraphicalCreature> NewGenerationAsexual()
-        {
-            List<GraphicalCreature> newGenerationCreatures = MainGameHost.CreateNewGenerationAsexual(MainGameHost.CurrentStep.Creatures);
-
-            foreach (var creature in newGenerationCreatures)
-            {
-                creature.Color = Color.FromArgb(255, 64, 64, _random.Next(256));
-            }
-
-            return newGenerationCreatures;
         }
         public static Point Middle(int x, int y, int width, int height)
         {
@@ -321,28 +305,6 @@ namespace MaceEvolve.WinForms
 
             Invalidate();
         }
-        public void NewGeneration()
-        {
-            List<GraphicalCreature> newGenerationCreatures = NewGenerationAsexual();
-
-            if (newGenerationCreatures.Count > 0)
-            {
-                MainGameHost.Reset();
-                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
-                {
-                    Creatures = newGenerationCreatures,
-                    Food = GenerateFood(),
-                    WorldBounds = MainGameHost.WorldBounds
-                };
-
-                TicksInCurrentGeneration = 0;
-                GenerationCount += 1;
-            }
-            else
-            {
-                Reset();
-            }
-        }
         public void UpdateSimulation()
         {
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
@@ -354,7 +316,14 @@ namespace MaceEvolve.WinForms
 
             if (TicksInCurrentGeneration >= TicksPerGeneration)
             {
-                NewGeneration();
+                int numberOfDeadCreatures = MainGameHost.CurrentStep.Creatures.Count(x => x.IsDead);
+
+                if (numberOfDeadCreatures == MainGameHost.CurrentStep.Creatures.Count)
+                {
+                    TicksInCurrentGeneration = 0;
+                    GenerationCount += 1;
+                    Reset(false);
+                }
             }
         }
         private void MainForm_Load(object sender, EventArgs e)
@@ -363,7 +332,8 @@ namespace MaceEvolve.WinForms
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
 
-            MainGameHost = new GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
+            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
+            MainGameHost.CreatureOffspringColor = Color.Yellow;
             MainGameHost.CreatureSize = 10;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
             MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;

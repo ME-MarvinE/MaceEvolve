@@ -13,6 +13,8 @@
         ProximityToFoodToBack,
         DistanceFromTopWorldBound,
         DistanceFromLeftWorldBound,
-        RandomInput
+        RandomInput,
+        PercentNutrientsRequiredToReproduce,
+        PercentEnergyRequiredToReproduce
     }
 }

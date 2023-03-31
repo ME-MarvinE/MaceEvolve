@@ -416,6 +416,199 @@ namespace MaceEvolve.Core.Models
 
             return newNetwork;
         }
+        public bool MutateNetwork(float createRandomNodeChance, float removeRandomNodeChance, float mutateRandomNodeBiasChance, float createRandomConnectionChance, float removeRandomConnectionChance, float mutateRandomConnectionSourceChance, float mutateRandomConnectionTargetChance, float mutateRandomConnectionWeightChance, IEnumerable<CreatureInput> possibleInputs, IEnumerable<CreatureAction> possibleOutputs, int minCreatureConnections, int maxCreatureConnections, int maxCreatureProcessNodes, float connectionWeightBound)
+        {
+            int processNodeCount = GetNodeIds((_, node) => node.NodeType == NodeType.Process).Count;
+            bool mutationAttempted = false;
+
+            //Things should be removed before being added so that there isn't a chance that the newly added thing is deleted straight after.
+            //Connections should be added after nodes are added so that there is a chance the newly created node gets a connection.
+
+            //Remove an existing node. Input nodes should not be removed. 
+            if (Globals.Random.NextFloat() <= removeRandomNodeChance)
+            {
+                mutationAttempted = true;
+
+                List<int> processNodeIds = GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Process);
+                List<int> outputNodeIds = GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Output);
+
+                List<int> possibleNodeIdsToRemove = new List<int>(processNodeIds);
+
+                //There must be at least one target node in a network.
+                if (outputNodeIds.Count > 1)
+                {
+                    possibleNodeIdsToRemove.AddRange(outputNodeIds);
+                }
+
+                if (possibleNodeIdsToRemove.Count > 0)
+                {
+                    int nodeIdToRemove = possibleNodeIdsToRemove[Globals.Random.Next(possibleNodeIdsToRemove.Count)];
+
+                    RemoveNode(nodeIdToRemove, true);
+                }
+            }
+
+            //Change a random node's bias.
+            if (Globals.Random.NextFloat() <= mutateRandomNodeBiasChance)
+            {
+                mutationAttempted = true;
+
+                int randomNodeId = GetNodeIds()[Globals.Random.Next(NodeIdsToNodesDict.Count)];
+                Node randomNode = NodeIdsToNodesDict[randomNodeId];
+                Node newNode = new Node(randomNode.NodeType, Globals.Random.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
+
+                ReplaceNode(randomNodeId, newNode);
+            }
+
+            //Create a new node with a default connection.
+            if (Globals.Random.NextFloat() <= createRandomNodeChance)
+            {
+                List<CreatureInput> possibleCreatureInputsToAdd = GetPossibleInputsToAdd(possibleInputs).ToList();
+                List<CreatureAction> possibleCreatureActionsToAdd = GetPossibleActionsToAdd(possibleOutputs).ToList();
+
+                mutationAttempted = true;
+
+                Node nodeToAdd;
+                float nodeTypeRandomNum = Globals.Random.NextFloat();
+                float chanceForSingleNodeType = 1f / Globals.AllNodeTypes.Count;
+
+                if (nodeTypeRandomNum <= chanceForSingleNodeType && possibleCreatureInputsToAdd.Count > 0)
+                {
+                    nodeToAdd = new Node(NodeType.Input, Globals.Random.NextFloat(-1, 1), possibleCreatureInputsToAdd[Globals.Random.Next(possibleCreatureInputsToAdd.Count)]);
+                }
+                else if (nodeTypeRandomNum <= chanceForSingleNodeType * 2 && possibleCreatureActionsToAdd.Count > 0)
+                {
+                    nodeToAdd = new Node(NodeType.Output, Globals.Random.NextFloat(-1, 1), creatureAction: possibleCreatureActionsToAdd[Globals.Random.Next(possibleCreatureActionsToAdd.Count)]);
+                }
+                else if (processNodeCount < maxCreatureProcessNodes)
+                {
+                    nodeToAdd = new Node(NodeType.Process, Globals.Random.NextFloat(-1, 1));
+                }
+                else
+                {
+                    nodeToAdd = null;
+                }
+
+                if (nodeToAdd != null)
+                {
+                    List<int> possibleSourceNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
+                    List<int> possibleTargetNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
+
+                    int nodeToAddId = AddNode(nodeToAdd);
+
+                    if (Connections.Count < maxCreatureConnections && possibleSourceNodesIds.Count > 0 && possibleTargetNodesIds.Count > 0)
+                    {
+                        Connection newConnection;
+                        float newConnectionWeight = Globals.Random.NextFloat(-connectionWeightBound, connectionWeightBound);
+
+                        switch (nodeToAdd.NodeType)
+                        {
+                            case NodeType.Input:
+                                newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
+                                break;
+
+                            case NodeType.Process:
+                                if (Globals.Random.NextDouble() <= 0.5)
+                                {
+                                    newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
+                                }
+                                else
+                                {
+                                    newConnection = new Connection(possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
+                                }
+                                break;
+
+                            case NodeType.Output:
+                                newConnection = new Connection(possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
+                                break;
+
+                            default:
+                                throw new NotImplementedException();
+                        }
+
+                        Connections.Add(newConnection);
+                    }
+                }
+            }
+
+            //Remove a random connection.
+            if (Connections.Count > minCreatureConnections && Globals.Random.NextFloat() <= removeRandomConnectionChance)
+            {
+                mutationAttempted = true;
+
+                Connection randomConnection = Connections[Globals.Random.Next(Connections.Count)];
+                Connections.Remove(randomConnection);
+            }
+
+            //Change a random connection's weight.
+            if (Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionWeightChance)
+            {
+                mutationAttempted = true;
+
+                int randomConnectionIndex = Globals.Random.Next(Connections.Count);
+
+                Connections[randomConnectionIndex] = new Connection(Connections[randomConnectionIndex].SourceId, Connections[randomConnectionIndex].TargetId, Globals.Random.NextFloat(-connectionWeightBound, connectionWeightBound));
+            }
+
+            //Change a random connection's source.
+            if (Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionSourceChance)
+            {
+                mutationAttempted = true;
+
+                int randomConnectionIndex = Globals.Random.Next(Connections.Count);
+                List<int> possibleSourceNodesIds = GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
+
+                if (possibleSourceNodesIds.Count > 0)
+                {
+                    int randomSourceNodeId = possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)];
+
+                    Connection mutatedConnection = new Connection(randomSourceNodeId, Connections[randomConnectionIndex].TargetId, Connections[randomConnectionIndex].Weight);
+                    Connections[randomConnectionIndex] = mutatedConnection;
+                }
+            }
+
+            //Change a random connection's target.
+            if (Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionTargetChance)
+            {
+                mutationAttempted = true;
+
+                int randomConnectionIndex = Globals.Random.Next(Connections.Count);
+                List<int> possibleTargetNodesIds = GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
+
+                if (possibleTargetNodesIds.Count > 0)
+                {
+                    int randomTargetNodeId = possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)];
+
+                    Connection mutatedConnection = new Connection(Connections[randomConnectionIndex].SourceId, randomTargetNodeId, Connections[randomConnectionIndex].Weight);
+                    Connections[randomConnectionIndex] = mutatedConnection;
+                }
+            }
+
+            //Create a new connection.
+            if (Connections.Count < maxCreatureConnections && Globals.Random.NextDouble() <= createRandomConnectionChance)
+            {
+                mutationAttempted = true;
+
+                Connection? newConnection = GenerateRandomConnections(1, 1, connectionWeightBound).FirstOrDefault();
+
+                if (newConnection != null)
+                {
+                    Connections.Add(newConnection.Value);
+                }
+            }
+
+            return mutationAttempted;
+        }
+        protected virtual IEnumerable<CreatureInput> GetPossibleInputsToAdd(IEnumerable<CreatureInput> allowedInputs)
+        {
+            //Return any inputs that aren't already used by a node in the network.
+            return allowedInputs.Where(x => !NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Input && x == y.Value.CreatureInput));
+        }
+        protected virtual IEnumerable<CreatureAction> GetPossibleActionsToAdd(IEnumerable<CreatureAction> allowedOutputs)
+        {
+            //Return any actions that aren't already used by a node in the network.
+            return allowedOutputs.Where(x => !NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Output && x == y.Value.CreatureAction));
+        }
         #endregion
     }
 }
