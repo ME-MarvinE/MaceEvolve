@@ -7,6 +7,7 @@
         MoveLeft,
         MoveRight,
         TryEat,
-        TryReproduce
+        TryReproduce,
+        DoNothing
     }
 }

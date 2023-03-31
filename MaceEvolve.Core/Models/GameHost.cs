@@ -201,14 +201,21 @@ namespace MaceEvolve.Core.Models
                         }
                     }
 
-                    if (highestOutputNodeId != null && nodeIdToOutputDict[highestOutputNodeId.Value] > 0)
+                    StepAction<TCreature> stepAction = new StepAction<TCreature>()
                     {
-                        creatureStepActions.Enqueue(new StepAction<TCreature>()
-                        {
-                            Creature = creature,
-                            Action = creature.Brain.NodeIdsToNodesDict[highestOutputNodeId.Value].CreatureAction.Value
-                        });
+                        Creature = creature
+                    };
+
+                    if (highestOutputNodeId == null || nodeIdToOutputDict[highestOutputNodeId.Value] <= 0)
+                    {
+                        stepAction.Action = CreatureAction.DoNothing;
                     }
+                    else
+                    {
+                        stepAction.Action = creature.Brain.NodeIdsToNodesDict[highestOutputNodeId.Value].CreatureAction.Value;
+                    }
+
+                    creatureStepActions.Enqueue(stepAction);
 
                     foreach (var creatureStepAction in creatureStepActions)
                     {

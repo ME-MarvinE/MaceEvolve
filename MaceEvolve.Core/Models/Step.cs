@@ -481,6 +481,10 @@ namespace MaceEvolve.Core.Models
             }
             creature.Energy -= creature.MoveCost;
         }
+        public void CreatureDoNothing()
+        {
+
+        }
         public void CreatureMoveTowardsClosestFood(TCreature creature)
         {
             IEnumerable<TFood> visibleFoodOrderedByDistance = GetVisibleFoodOrderedByDistance(creature);
@@ -561,7 +565,10 @@ namespace MaceEvolve.Core.Models
                             {
                                 Creatures.AddRange(offSpring);
                             }
+                            break;
 
+                        case CreatureAction.DoNothing:
+                            CreatureDoNothing();
                             break;
 
                         default:
