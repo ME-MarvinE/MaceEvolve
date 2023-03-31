@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Core;
+using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.Mono.Desktop.Models;
 using Microsoft.Xna.Framework;
@@ -30,7 +31,7 @@ namespace MaceEvolve.Mono.Desktop
         public Color BackgroundColor { get; set; }
         public int TicksInCurrentGeneration { get; set; }
         public bool IsInFastMode { get; set; }
-        public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
+        public GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public SpriteFont UIFont { get; set; }
         public SpriteFont BigUIFont { get; set; }
         public GameWindow BestCreatureNetworkViewerWindow { get; set; }
@@ -105,7 +106,7 @@ namespace MaceEvolve.Mono.Desktop
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
             TargetElapsedTime = TimeSpan.FromSeconds(1f / SimulationTPS);
 
-            MainGameHost = new GameHost<GraphicalCreature, GraphicalFood>();
+            MainGameHost = new GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 5;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
             MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
@@ -234,7 +235,13 @@ namespace MaceEvolve.Mono.Desktop
                 if (newGenerationCreatures.Count > 0)
                 {
                     MainGameHost.Reset();
-                    MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(newGenerationCreatures, GenerateFood(), MainGameHost.WorldBounds);
+                    MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
+                    {
+                        Creatures = newGenerationCreatures,
+                        Food = GenerateFood(),
+                        WorldBounds = MainGameHost.WorldBounds
+                    };
+
                     generationCount += 1;
                 }
                 else
@@ -289,7 +296,12 @@ namespace MaceEvolve.Mono.Desktop
             if (newGenerationCreatures.Count > 0)
             {
                 MainGameHost.Reset();
-                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(newGenerationCreatures, GenerateFood(), MainGameHost.WorldBounds);
+                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
+                {
+                    Creatures = newGenerationCreatures,
+                    Food = GenerateFood(),
+                    WorldBounds = MainGameHost.WorldBounds
+                };
 
                 TicksInCurrentGeneration = 0;
                 GenerationCount += 1;
@@ -311,7 +323,12 @@ namespace MaceEvolve.Mono.Desktop
 
             MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 
-            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(GenerateCreatures(), GenerateFood(), MainGameHost.WorldBounds);
+            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
+            {
+                Creatures = GenerateCreatures(),
+                Food = GenerateFood(),
+                WorldBounds = MainGameHost.WorldBounds
+            };
 
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;

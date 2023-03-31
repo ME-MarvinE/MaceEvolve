@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace MaceEvolve.Core.Models
 {
-    public class GameHost<TCreature, TFood> where TCreature : class, ICreature, new() where TFood : class, IFood, new()
+    public class GameHost<TStep, TCreature, TFood> where TCreature : class, ICreature, new() where TFood : class, IFood, new() where TStep : class, IStep<TCreature, TFood>, new()
     {
         #region Fields
         protected static Random random = new Random();
@@ -17,7 +17,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Properties
-        public Step<TCreature, TFood> CurrentStep { get; set; }
+        public TStep CurrentStep { get; set; }
         public int MaxCreatureAmount { get; set; } = 300;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
@@ -446,9 +446,14 @@ namespace MaceEvolve.Core.Models
         }
         public virtual void NextStep(bool gatherInfoForAllCreatures = false)
         {
-            Step<TCreature, TFood>.ExecuteActions(CurrentStep.RequestedActions, CurrentStep);
+            CurrentStep.ExecuteActions(CurrentStep.RequestedActions);
 
-            Step<TCreature, TFood> generatedStep = new Step<TCreature, TFood>(CurrentStep.Creatures.ToList(), CurrentStep.Food.Where(x => x.Servings > 0).ToList(), WorldBounds);
+            TStep generatedStep =  new TStep()
+            {
+                Creatures = CurrentStep.Creatures.ToList(),
+                Food = CurrentStep.Food.Where(x => x.Servings > 0).ToList(),
+                WorldBounds = WorldBounds
+            };
 
             TCreature newBestCreature = null;
 

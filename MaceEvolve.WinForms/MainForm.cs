@@ -28,7 +28,7 @@ namespace MaceEvolve.WinForms
         public int TicksInCurrentGeneration { get; set; }
         public bool GatherStepInfoForAllCreatures { get; set; }
         public bool IsInFastMode { get; set; }
-        public GameHost<GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
+        public GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
         public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; }
         public float SimulationMspt
@@ -95,7 +95,12 @@ namespace MaceEvolve.WinForms
 
             MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 
-            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(GenerateCreatures(), GenerateFood(), MainGameHost.WorldBounds);
+            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
+            {
+                Creatures = GenerateCreatures(),
+                Food = GenerateFood(),
+                WorldBounds = MainGameHost.WorldBounds
+            };
 
             TicksInCurrentGeneration = 0;
             GenerationCount = 1;
@@ -323,7 +328,12 @@ namespace MaceEvolve.WinForms
             if (newGenerationCreatures.Count > 0)
             {
                 MainGameHost.Reset();
-                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>(newGenerationCreatures, GenerateFood(), MainGameHost.WorldBounds);
+                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
+                {
+                    Creatures = newGenerationCreatures,
+                    Food = GenerateFood(),
+                    WorldBounds = MainGameHost.WorldBounds
+                };
 
                 TicksInCurrentGeneration = 0;
                 GenerationCount += 1;
@@ -353,7 +363,7 @@ namespace MaceEvolve.WinForms
             SimulationTPS = 60;
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
 
-            MainGameHost = new GameHost<GraphicalCreature, GraphicalFood>();
+            MainGameHost = new GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 10;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
             MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;

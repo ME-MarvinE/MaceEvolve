@@ -19,7 +19,7 @@ namespace MaceEvolve.WinForms.Controls
         #endregion
 
         #region Properties
-        public Step<GraphicalCreature, GraphicalFood> Step { get; set; }
+        public IStep<GraphicalCreature, GraphicalFood> Step { get; set; }
         public NeuralNetwork NeuralNetwork
         {
             get

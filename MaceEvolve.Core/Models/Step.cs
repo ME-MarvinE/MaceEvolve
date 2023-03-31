@@ -9,29 +9,15 @@ using System.Linq;
 
 namespace MaceEvolve.Core.Models
 {
-    public class Step<TCreature, TFood> where TCreature : ICreature where TFood : IFood
+    public class Step<TCreature, TFood> : IStep<TCreature, TFood> where TCreature : ICreature where TFood : IFood
     {
         #region Properties
         public Queue<StepAction<TCreature>> RequestedActions { get; set; } = new Queue<StepAction<TCreature>>();
         public Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; } = new Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
-        public List<TCreature> Creatures { get; }
-        public List<TFood> Food { get; }
-        public IRectangle WorldBounds { get; }
+        public List<TCreature> Creatures { get; set; }
+        public List<TFood> Food { get; set; }
+        public IRectangle WorldBounds { get; set; }
         private Dictionary<TCreature, CreatureStepInfo<TCreature, TFood>> CreatureStepInfos { get; } = new Dictionary<TCreature, CreatureStepInfo<TCreature, TFood>>();
-        #endregion
-
-        #region Constructors
-        public Step(List<TCreature> creatures, List<TFood> food, IRectangle worldBounds)
-        {
-            Creatures = creatures;
-            Food = food;
-            WorldBounds = worldBounds;
-
-            foreach (var creature in Creatures)
-            {
-                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
-            }
-        }
         #endregion
 
         #region Methods
@@ -51,45 +37,45 @@ namespace MaceEvolve.Core.Models
         {
             if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
             {
-                throw new ArgumentException($"The {nameof(Creature)} is not present in the step.", nameof(creature));
+                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
             }
 
-            stepInfo.VisibleCreatures ??= Creatures.Where(x => creature.IsWithinSight(x) && (ICreature)x != (ICreature)creature).ToList();
+            CreatureStepInfos[creature].VisibleCreatures ??= Creatures.Where(x => creature.IsWithinSight(x) && (ICreature)x != (ICreature)creature).ToList();
 
-            return stepInfo.VisibleCreatures;
+            return CreatureStepInfos[creature].VisibleCreatures;
         }
         public IEnumerable<TFood> GetVisibleFood(TCreature creature)
         {
             if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
             {
-                throw new ArgumentException($"The {nameof(Creature)} is not present in the step.", nameof(creature));
+                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
             }
 
-            stepInfo.VisibleFood ??= Food.Where(x => creature.IsWithinSight(x)).ToList();
+            CreatureStepInfos[creature].VisibleFood ??= Food.Where(x => creature.IsWithinSight(x)).ToList();
 
-            return stepInfo.VisibleFood;
+            return CreatureStepInfos[creature].VisibleFood;
         }
         public IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature)
         {
             if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
             {
-                throw new ArgumentException($"The {nameof(Creature)} is not present in the step.", nameof(creature));
+                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
             }
 
-            stepInfo.VisibleCreaturesOrderedByDistance ??= GetVisibleCreatures(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y)).ToList();
+            CreatureStepInfos[creature].VisibleCreaturesOrderedByDistance ??= GetVisibleCreatures(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y)).ToList();
 
-            return stepInfo.VisibleCreaturesOrderedByDistance;
+            return CreatureStepInfos[creature].VisibleCreaturesOrderedByDistance;
         }
         public IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature)
         {
             if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
             {
-                throw new ArgumentException($"The {nameof(Creature)} is not present in the step.", nameof(creature));
+                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
             }
 
-            stepInfo.VisibleFoodOrderedByDistance ??= GetVisibleFood(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y)).ToList();
+            CreatureStepInfos[creature].VisibleFoodOrderedByDistance ??= GetVisibleFood(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y)).ToList();
 
-            return stepInfo.VisibleFoodOrderedByDistance;
+            return CreatureStepInfos[creature].VisibleFoodOrderedByDistance;
         }
         public float PercentMaxEnergy(TCreature creature)
         {
@@ -319,7 +305,7 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public static void ExecuteActions<T1, T2>(IEnumerable<StepAction<T1>> stepActions, Step<T1, T2> step) where T1 : ICreature where T2 : IFood
+        public void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions)
         {
             foreach (var stepAction in stepActions)
             {
@@ -328,24 +314,24 @@ namespace MaceEvolve.Core.Models
                     switch (stepAction.Action)
                     {
                         case CreatureAction.MoveForward:
-                            step.CreatureMoveForwards(stepAction.Creature);
+                            CreatureMoveForwards(stepAction.Creature);
                             break;
 
                         case CreatureAction.MoveBackward:
-                            step.CreatureMoveBackwards(stepAction.Creature);
+                            CreatureMoveBackwards(stepAction.Creature);
 
                             break;
 
                         case CreatureAction.MoveLeft:
-                            step.CreatureMoveLeft(stepAction.Creature);
+                            CreatureMoveLeft(stepAction.Creature);
                             break;
 
                         case CreatureAction.MoveRight:
-                            step.CreatureMoveRight(stepAction.Creature);
+                            CreatureMoveRight(stepAction.Creature);
                             break;
 
                         case CreatureAction.TryEat:
-                            step.CreatureTryEat(stepAction.Creature);
+                            CreatureTryEat(stepAction.Creature);
                             break;
 
                         default:
@@ -365,37 +351,37 @@ namespace MaceEvolve.Core.Models
         {
             switch (creatureInput)
             {
-                case CreatureInput.PercentMaxEnergy: 
+                case CreatureInput.PercentMaxEnergy:
                     return PercentMaxEnergy(creature);
 
-                case CreatureInput.ProximityToCreatureToLeft: 
+                case CreatureInput.ProximityToCreatureToLeft:
                     return ProximityToCreatureToLeft(creature);
 
-                case CreatureInput.ProximityToCreatureToRight: 
+                case CreatureInput.ProximityToCreatureToRight:
                     return ProximityToCreatureToRight(creature);
 
-                case CreatureInput.ProximityToCreatureToFront: 
+                case CreatureInput.ProximityToCreatureToFront:
                     return ProximityToCreatureToFront(creature);
 
-                case CreatureInput.ProximityToCreatureToBack: 
+                case CreatureInput.ProximityToCreatureToBack:
                     return ProximityToCreatureToBack(creature);
 
                 case CreatureInput.ProximityToFoodToLeft:
                     return ProximityToFoodToLeft(creature);
 
-                case CreatureInput.ProximityToFoodToRight: 
+                case CreatureInput.ProximityToFoodToRight:
                     return ProximityToFoodToRight(creature);
 
-                case CreatureInput.ProximityToFoodToFront: 
+                case CreatureInput.ProximityToFoodToFront:
                     return ProximityToFoodToFront(creature);
 
-                case CreatureInput.ProximityToFoodToBack: 
+                case CreatureInput.ProximityToFoodToBack:
                     return ProximityToFoodToBack(creature);
 
-                case CreatureInput.DistanceFromTopWorldBound: 
+                case CreatureInput.DistanceFromTopWorldBound:
                     return DistanceFromTopWorldBound(creature);
 
-                case CreatureInput.DistanceFromLeftWorldBound: 
+                case CreatureInput.DistanceFromLeftWorldBound:
                     return DistanceFromLeftWorldBound(creature);
 
                 case CreatureInput.RandomInput:
