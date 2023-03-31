@@ -88,8 +88,8 @@ namespace MaceEvolve.Core.Models
         }
         public virtual List<TCreature> CreateNewGenerationSexual(IEnumerable<TCreature> sourceCreatures)
         {
-            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(sourceCreatures);
-            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = successfulCreaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            Dictionary<TCreature, float> creaturesFitnesses = GetFitnesses(sourceCreatures);
+            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = creaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
 
             if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
             {
@@ -97,7 +97,7 @@ namespace MaceEvolve.Core.Models
             }
 
             List<TCreature> newCreatures = new List<TCreature>();
-            List<NeuralNetwork> topPercentileCreatureFitnessesOrderedDescendingNeuralNetworksList = topPercentileCreatureFitnessesOrderedDescending.Select(x => x.Key.Brain).ToList();
+            IEnumerable<NeuralNetwork> topPercentileCreatureFitnessesOrderedDescendingNeuralNetworks = topPercentileCreatureFitnessesOrderedDescending.Select(x => x.Key.Brain);
 
             while (newCreatures.Count < MaxCreatureAmount)
             {
@@ -118,7 +118,7 @@ namespace MaceEvolve.Core.Models
                             }
 
                             TCreature newCreature = new TCreature();
-                            newCreature.Brain = NeuralNetwork.CombineNetworks(topPercentileCreatureFitnessesOrderedDescendingNeuralNetworksList);
+                            newCreature.Brain = NeuralNetwork.CombineNetworks(topPercentileCreatureFitnessesOrderedDescendingNeuralNetworks);
                             newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
                             newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
                             newCreature.Size = CreatureSize;
@@ -151,8 +151,8 @@ namespace MaceEvolve.Core.Models
         }
         public virtual List<TCreature> CreateNewGenerationAsexual(IEnumerable<TCreature> sourceCreatures)
         {
-            Dictionary<TCreature, float> successfulCreaturesFitnesses = GetFitnesses(sourceCreatures);
-            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = successfulCreaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+            Dictionary<TCreature, float> creaturesFitnesses = GetFitnesses(sourceCreatures);
+            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = creaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
 
             if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
             {

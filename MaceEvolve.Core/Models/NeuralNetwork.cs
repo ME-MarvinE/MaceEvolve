@@ -348,14 +348,16 @@ namespace MaceEvolve.Core.Models
 
             return requiredInputs;
         }
-        public static NeuralNetwork CombineNetworks(IList<NeuralNetwork> networksToCombine)
+        public static NeuralNetwork CombineNetworks(IEnumerable<NeuralNetwork> networksToCombine)
         {
             Dictionary<NeuralNetwork, List<Connection>> availableParentConnections = networksToCombine.ToDictionary(x => x, x => x.Connections.ToList());
             Dictionary<NeuralNetwork, Dictionary<int, int>> parentToNewNetworkNodesMap = new Dictionary<NeuralNetwork, Dictionary<int, int>>();
 
+            int networksToCombineCount = networksToCombine.Count();
+
             NeuralNetwork newNetwork = new NeuralNetwork();
 
-            float averageNumberOfParentConnections = (float)networksToCombine.Average(x => x.Connections.Count);
+            float averageNumberOfParentConnections = networksToCombine.Average(x => (float)x.Connections.Count);
 
             if (averageNumberOfParentConnections > 0 && averageNumberOfParentConnections < 1)
             {
@@ -364,7 +366,7 @@ namespace MaceEvolve.Core.Models
 
             while (newNetwork.Connections.Count < averageNumberOfParentConnections)
             {
-                NeuralNetwork randomParent = networksToCombine[Globals.Random.Next(networksToCombine.Count)];
+                NeuralNetwork randomParent = networksToCombine.ElementAt(Globals.Random.Next(networksToCombineCount));
                 List<Connection> randomParentAvailableConnections = availableParentConnections[randomParent];
 
                 if (randomParentAvailableConnections.Count > 0)
