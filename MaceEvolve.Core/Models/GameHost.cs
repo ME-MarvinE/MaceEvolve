@@ -4,7 +4,6 @@ using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
 using System.Linq;
 
 namespace MaceEvolve.Core.Models
@@ -176,26 +175,19 @@ namespace MaceEvolve.Core.Models
                 if (!creature.IsDead || creature == BestCreature || creature == SelectedCreature)
                 {
                     IEnumerable<CreatureInput> inputsRequiredForStep = creature.Brain.GetInputsRequiredForStep();
-                    Dictionary<CreatureInput, float> inputsToInputValuesDict = new Dictionary<CreatureInput, float>();
-                    bool trackBrainOutput = gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature;
-
-                    foreach (var input in inputsRequiredForStep)
-                    {
-                        inputsToInputValuesDict.Add(input, generatedStep.GenerateCreatureInputValue(input, creature));
-                    }
+                    Dictionary<CreatureInput, float> inputToInputValueDict = generatedStep.GenerateCreatureInputValues(inputsRequiredForStep, creature);
+                    Dictionary<int, float> nodeIdToOutputValueDict = creature.Brain.GenerateNodeOutputs(inputToInputValueDict);
 
                     Queue<StepAction<TCreature>> creatureStepActions = new Queue<StepAction<TCreature>>();
 
-                    Dictionary<int, float> nodeIdToOutputDict = creature.Brain.GenerateNodeOutputs(inputsToInputValuesDict);
-
                     int? highestOutputNodeId = null;
 
-                    foreach (var keyValuePair in nodeIdToOutputDict)
+                    foreach (var keyValuePair in nodeIdToOutputValueDict)
                     {
                         Node node = creature.Brain.NodeIdsToNodesDict[keyValuePair.Key];
                         float outputValue = keyValuePair.Value;
 
-                        if (node.NodeType == NodeType.Output && outputValue > 0 && (highestOutputNodeId == null || outputValue > nodeIdToOutputDict[highestOutputNodeId.Value]))
+                        if (node.NodeType == NodeType.Output && outputValue > 0 && (highestOutputNodeId == null || outputValue > nodeIdToOutputValueDict[highestOutputNodeId.Value]))
                         {
                             highestOutputNodeId = keyValuePair.Key;
                         }
@@ -206,7 +198,7 @@ namespace MaceEvolve.Core.Models
                         Creature = creature
                     };
 
-                    if (highestOutputNodeId == null || nodeIdToOutputDict[highestOutputNodeId.Value] <= 0)
+                    if (highestOutputNodeId == null || nodeIdToOutputValueDict[highestOutputNodeId.Value] <= 0)
                     {
                         stepAction.Action = CreatureAction.DoNothing;
                     }
@@ -222,11 +214,13 @@ namespace MaceEvolve.Core.Models
                         generatedStep.QueueAction(creatureStepAction);
                     }
 
+                    bool trackBrainOutput = gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature;
+
                     if (trackBrainOutput)
                     {
                         List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
 
-                        foreach (var keyValuePair in nodeIdToOutputDict)
+                        foreach (var keyValuePair in nodeIdToOutputValueDict)
                         {
                             int nodeId = keyValuePair.Key;
                             Node node = creature.Brain.NodeIdsToNodesDict[nodeId];

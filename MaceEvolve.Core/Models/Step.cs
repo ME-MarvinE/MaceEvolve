@@ -16,7 +16,6 @@ namespace MaceEvolve.Core.Models
         public List<TCreature> Creatures { get; set; }
         public List<TFood> Food { get; set; }
         public IRectangle WorldBounds { get; set; }
-        private Dictionary<TCreature, CreatureStepInfo<TCreature, TFood>> CreatureStepInfos { get; } = new Dictionary<TCreature, CreatureStepInfo<TCreature, TFood>>();
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public int MaxCreatureProcessNodes { get; set; } = 3;
@@ -39,177 +38,34 @@ namespace MaceEvolve.Core.Models
         }
         public IEnumerable<TCreature> GetVisibleCreatures(TCreature creature)
         {
-            if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
-            {
-                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
-            }
-
-            CreatureStepInfos[creature].VisibleCreatures ??= Creatures.Where(x => creature.IsWithinSight(x) && (ICreature)x != (ICreature)creature).ToList();
-
-            return CreatureStepInfos[creature].VisibleCreatures;
+            return Creatures.Where(x => creature.IsWithinSight(x) && (ICreature)x != (ICreature)creature);
         }
         public IEnumerable<TFood> GetVisibleFood(TCreature creature)
         {
-            if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
+            return Food.Where(x => creature.IsWithinSight(x));
+        }
+        public IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature, IEnumerable<TCreature> visibleCreatures = null)
+        {
+            if (visibleCreatures == null)
             {
-                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
+                return GetVisibleCreatures(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             }
-
-            CreatureStepInfos[creature].VisibleFood ??= Food.Where(x => creature.IsWithinSight(x)).ToList();
-
-            return CreatureStepInfos[creature].VisibleFood;
-        }
-        public IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature)
-        {
-            if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
+            else
             {
-                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
+                return visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             }
-
-            CreatureStepInfos[creature].VisibleCreaturesOrderedByDistance ??= GetVisibleCreatures(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y)).ToList();
-
-            return CreatureStepInfos[creature].VisibleCreaturesOrderedByDistance;
         }
-        public IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature)
+        public IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature, IEnumerable<TFood> visibleFood = null)
         {
-            if (!CreatureStepInfos.TryGetValue(creature, out CreatureStepInfo<TCreature, TFood> stepInfo))
+            if (visibleFood == null)
             {
-                CreatureStepInfos.Add(creature, new CreatureStepInfo<TCreature, TFood>());
+                return GetVisibleFood(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             }
-
-            CreatureStepInfos[creature].VisibleFoodOrderedByDistance ??= GetVisibleFood(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y)).ToList();
-
-            return CreatureStepInfos[creature].VisibleFoodOrderedByDistance;
-        }
-        public float PercentMaxEnergy(TCreature creature)
-        {
-            return Globals.Map(creature.Energy, 0, creature.MaxEnergy, 0, 1);
-        }
-        public float ProximityToCreatureToLeft(TCreature creature)
-        {
-            ICreature closestCreature = GetVisibleCreaturesOrderedByDistance(creature).FirstOrDefault(x => x.MX <= creature.MX);
-
-            if (closestCreature == null)
+            else
             {
-                return 0;
+                return visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             }
-
-            float distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, creature.MY);
-
-            return Globals.Map(distanceFromClosestCreatureToLeft, 0, creature.SightRange, 1, 0);
         }
-        public float ProximityToCreatureToRight(TCreature creature)
-        {
-            ICreature closestCreature = GetVisibleCreaturesOrderedByDistance(creature).FirstOrDefault(x => x.MX >= creature.MX);
-
-            if (closestCreature == null)
-            {
-                return 0;
-            }
-
-            float distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, creature.MY);
-
-            return Globals.Map(distanceFromClosestCreatureToRight, 0, creature.SightRange, 1, 0);
-        }
-        public float ProximityToCreatureToFront(TCreature creature)
-        {
-            ICreature closestCreature = GetVisibleCreaturesOrderedByDistance(creature).FirstOrDefault(x => x.MY <= creature.MY);
-
-            if (closestCreature == null)
-            {
-                return 0;
-            }
-
-            float distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestCreature.MY);
-
-            return Globals.Map(distanceFromClosestCreatureToFront, 0, creature.SightRange, 1, 0);
-        }
-        public float ProximityToCreatureToBack(TCreature creature)
-        {
-            ICreature closestCreature = GetVisibleCreaturesOrderedByDistance(creature).FirstOrDefault(x => x.MY >= creature.MY);
-
-            if (closestCreature == null)
-            {
-                return 0;
-            }
-
-            float distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestCreature.MY);
-
-            return Globals.Map(distanceFromClosestCreatureToBack, 0, creature.SightRange, 1, 0);
-        }
-        public float ProximityToFoodToLeft(TCreature creature)
-        {
-            IFood closestFood = GetVisibleFoodOrderedByDistance(creature).FirstOrDefault(x => x.MX <= creature.MX);
-
-            if (closestFood == null)
-            {
-                return 0;
-            }
-
-            float distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, creature.MY);
-
-            return Globals.Map(distanceFromClosestFoodToLeft, 0, creature.SightRange, 1, 0);
-        }
-        public float ProximityToFoodToRight(TCreature creature)
-        {
-            IFood closestFood = GetVisibleFoodOrderedByDistance(creature).FirstOrDefault(x => x.MX >= creature.MX);
-
-            if (closestFood == null)
-            {
-                return 0;
-            }
-
-            float distanceFromClosestFoodToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, creature.MY);
-
-            return Globals.Map(distanceFromClosestFoodToRight, 0, creature.SightRange, 1, 0);
-        }
-        public float ProximityToFoodToFront(TCreature creature)
-        {
-            IFood closestFood = GetVisibleFoodOrderedByDistance(creature).FirstOrDefault(x => x.MY <= creature.MY);
-
-            if (closestFood == null)
-            {
-                return 0;
-            }
-
-            float distanceFromClosestFoodToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestFood.MY);
-
-            return Globals.Map(distanceFromClosestFoodToFront, 0, creature.SightRange, 1, 0);
-        }
-        public float ProximityToFoodToBack(TCreature creature)
-        {
-            IFood closestFood = GetVisibleFoodOrderedByDistance(creature).FirstOrDefault(x => x.MY >= creature.MY);
-
-            if (closestFood == null)
-            {
-                return 0;
-            }
-
-            float distanceFromClosestFoodToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestFood.MY);
-
-            return Globals.Map(distanceFromClosestFoodToBack, 0, creature.SightRange, 1, 0);
-        }
-        public float DistanceFromTopWorldBound(TCreature creature)
-        {
-            return Globals.Map(creature.Y, WorldBounds.Y, WorldBounds.Y + WorldBounds.Height, 0, 1);
-        }
-        public float DistanceFromLeftWorldBound(TCreature creature)
-        {
-            return Globals.Map(creature.X, WorldBounds.X, WorldBounds.X + WorldBounds.Width, 0, 1);
-        }
-        public float RandomInput()
-        {
-            return Globals.Random.NextFloat();
-        }
-        public float PercentEnergyRequiredToReproduce(TCreature creature)
-        {
-            return Globals.Map(creature.Energy, 0, creature.EnergyRequiredToReproduce, 0, 1);
-        }
-        public float PercentNutrientsRequiredToReproduce(TCreature creature)
-        {
-            return Globals.Map(creature.Nutrients, 0, creature.NutrientsRequiredToReproduce, 0, 1);
-        }
-
         public bool CreatureTryEat(TCreature creature)
         {
             IEnumerable<TFood> VisibleFoodOrderedByDistance = GetVisibleFoodOrderedByDistance(creature);
@@ -585,55 +441,201 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public float GenerateCreatureInputValue(CreatureInput creatureInput, TCreature creature)
+        public Dictionary<CreatureInput, float> GenerateCreatureInputValues(IEnumerable<CreatureInput> creatureInputs, TCreature creature)
         {
-            switch (creatureInput)
+            Dictionary<CreatureInput, float> creatureInputValues = new Dictionary<CreatureInput, float>();
+
+            List<TCreature> visibleCreatures = null;
+            List<TFood> visibleFood = null;
+            List<TCreature> visibleCreaturesOrderedByDistance = null;
+            List<TFood> visibleFoodOrderedByDistance = null;
+
+            foreach (var creatureInput in creatureInputs)
             {
-                case CreatureInput.PercentMaxEnergy:
-                    return PercentMaxEnergy(creature);
+                float creatureInputValue;
 
-                case CreatureInput.ProximityToCreatureToLeft:
-                    return ProximityToCreatureToLeft(creature);
+                if (!creatureInputValues.TryGetValue(creatureInput, out creatureInputValue))
+                {
+                    switch (creatureInput)
+                    {
+                        case CreatureInput.PercentMaxEnergy:
+                            creatureInputValue = Globals.Map(creature.Energy, 0, creature.MaxEnergy, 0, 1);
+                            break;
 
-                case CreatureInput.ProximityToCreatureToRight:
-                    return ProximityToCreatureToRight(creature);
+                        case CreatureInput.ProximityToCreatureToLeft:
+                            visibleCreatures ??= new List<TCreature>(GetVisibleCreatures(creature));
+                            visibleCreaturesOrderedByDistance ??= new List<TCreature>(GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures));
 
-                case CreatureInput.ProximityToCreatureToFront:
-                    return ProximityToCreatureToFront(creature);
+                            ICreature closestCreatureToLeft = visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
-                case CreatureInput.ProximityToCreatureToBack:
-                    return ProximityToCreatureToBack(creature);
+                            if (closestCreatureToLeft == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToLeft.MX, creature.MY);
 
-                case CreatureInput.ProximityToFoodToLeft:
-                    return ProximityToFoodToLeft(creature);
+                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToLeft, 0, creature.SightRange, 1, 0);
+                            }
+                            break;
 
-                case CreatureInput.ProximityToFoodToRight:
-                    return ProximityToFoodToRight(creature);
+                        case CreatureInput.ProximityToCreatureToRight:
+                            visibleCreatures ??= new List<TCreature>(GetVisibleCreatures(creature));
+                            visibleCreaturesOrderedByDistance ??= new List<TCreature>(GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures));
 
-                case CreatureInput.ProximityToFoodToFront:
-                    return ProximityToFoodToFront(creature);
+                            ICreature closestCreatureToRight = visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX >= creature.MX);
 
-                case CreatureInput.ProximityToFoodToBack:
-                    return ProximityToFoodToBack(creature);
+                            if (closestCreatureToRight == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToRight.MX, creature.MY);
 
-                case CreatureInput.DistanceFromTopWorldBound:
-                    return DistanceFromTopWorldBound(creature);
+                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToRight, 0, creature.SightRange, 1, 0);
+                            }
+                            break;
 
-                case CreatureInput.DistanceFromLeftWorldBound:
-                    return DistanceFromLeftWorldBound(creature);
+                        case CreatureInput.ProximityToCreatureToFront:
+                            visibleCreatures ??= new List<TCreature>(GetVisibleCreatures(creature));
+                            visibleCreaturesOrderedByDistance ??= new List<TCreature>(GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures));
 
-                case CreatureInput.RandomInput:
-                    return RandomInput();
+                            ICreature closestCreatureToFront = visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY <= creature.MY);
 
-                case CreatureInput.PercentNutrientsRequiredToReproduce:
-                    return PercentNutrientsRequiredToReproduce(creature);
+                            if (closestCreatureToFront == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestCreatureToFront.MY);
 
-                case CreatureInput.PercentEnergyRequiredToReproduce:
-                    return PercentEnergyRequiredToReproduce(creature);
+                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToFront, 0, creature.SightRange, 1, 0);
+                            }
+                            break;
 
-                default:
-                    throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
+                        case CreatureInput.ProximityToCreatureToBack:
+                            visibleCreatures ??= new List<TCreature>(GetVisibleCreatures(creature));
+                            visibleCreaturesOrderedByDistance ??= new List<TCreature>(GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures));
+
+                            ICreature closestCreatureToBack = visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY >= creature.MY);
+
+                            if (closestCreatureToBack == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestCreatureToBack.MY);
+
+                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToBack, 0, creature.SightRange, 1, 0);
+                            }
+                            break;
+
+                        case CreatureInput.ProximityToFoodToLeft:
+                            visibleFood ??= new List<TFood>(GetVisibleFood(creature));
+                            visibleFoodOrderedByDistance ??= new List<TFood>(GetVisibleFoodOrderedByDistance(creature, visibleFood));
+
+                            IFood closestFoodToLeft = visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
+
+                            if (closestFoodToLeft == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToLeft.MX, creature.MY);
+
+                                creatureInputValue = Globals.Map(distanceFromClosestFoodToLeft, 0, creature.SightRange, 1, 0);
+                            }
+                            break;
+
+                        case CreatureInput.ProximityToFoodToRight:
+                            visibleFood ??= new List<TFood>(GetVisibleFood(creature));
+                            visibleFoodOrderedByDistance ??= new List<TFood>(GetVisibleFoodOrderedByDistance(creature, visibleFood));
+
+                            IFood closestFoodToRight = visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX >= creature.MX);
+
+                            if (closestFoodToRight == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestFoodToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToRight.MX, creature.MY);
+
+                                creatureInputValue = Globals.Map(distanceFromClosestFoodToRight, 0, creature.SightRange, 1, 0);
+                            }
+                            break;
+
+                        case CreatureInput.ProximityToFoodToFront:
+                            visibleFood ??= GetVisibleFood(creature).ToList();
+                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
+
+                            IFood closestFoodToFront = visibleFoodOrderedByDistance.FirstOrDefault(x => x.MY <= creature.MY);
+
+                            if (closestFoodToFront == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestFoodToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestFoodToFront.MY);
+
+                                creatureInputValue = Globals.Map(distanceFromClosestFoodToFront, 0, creature.SightRange, 1, 0);
+                            }
+                            break;
+
+                        case CreatureInput.ProximityToFoodToBack:
+                            visibleFood ??= new List<TFood>(GetVisibleFood(creature));
+                            visibleFoodOrderedByDistance ??= new List<TFood>(GetVisibleFoodOrderedByDistance(creature, visibleFood));
+
+                            IFood closestFoodToBack = visibleFoodOrderedByDistance.FirstOrDefault(x => x.MY >= creature.MY);
+
+                            if (closestFoodToBack == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestFoodToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestFoodToBack.MY);
+
+                                creatureInputValue = Globals.Map(distanceFromClosestFoodToBack, 0, creature.SightRange, 1, 0);
+                            }
+
+                            break;
+
+                        case CreatureInput.DistanceFromTopWorldBound:
+                            creatureInputValue = Globals.Map(creature.Y, WorldBounds.Y, WorldBounds.Y + WorldBounds.Height, 0, 1);
+                            break;
+
+                        case CreatureInput.DistanceFromLeftWorldBound:
+                            creatureInputValue = Globals.Map(creature.X, WorldBounds.X, WorldBounds.X + WorldBounds.Width, 0, 1);
+                            break;
+
+                        case CreatureInput.RandomInput:
+                            creatureInputValue = Globals.Random.NextFloat();
+                            break;
+
+                        case CreatureInput.PercentNutrientsRequiredToReproduce:
+                            creatureInputValue = Globals.Map(creature.Nutrients, 0, creature.NutrientsRequiredToReproduce, 0, 1);
+                            break;
+
+                        case CreatureInput.PercentEnergyRequiredToReproduce:
+                            creatureInputValue = Globals.Map(creature.Energy, 0, creature.EnergyRequiredToReproduce, 0, 1);
+                            break;
+
+                        default:
+                            throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
+                    }
+                }
+
+                creatureInputValues[creatureInput] = creatureInputValue;
             }
+
+            return creatureInputValues;
         }
         #endregion
     }

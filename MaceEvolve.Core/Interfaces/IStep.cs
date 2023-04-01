@@ -27,28 +27,14 @@ namespace MaceEvolve.Core.Interfaces
         void CreatureMoveTowardsClosestFood(TCreature creature);
         bool CreatureTryEat(TCreature creature);
         IList<TCreature> CreatureTryReproduce(TCreature creature);
-        float DistanceFromLeftWorldBound(TCreature creature);
-        float DistanceFromTopWorldBound(TCreature creature);
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
-        float GenerateCreatureInputValue(CreatureInput creatureInput, TCreature creature);
+        Dictionary<CreatureInput, float> GenerateCreatureInputValues(IEnumerable<CreatureInput> creatureInput, TCreature creature);
         IEnumerable<TCreature> GetVisibleCreatures(TCreature creature);
-        IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature);
+        IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature, IEnumerable<TCreature> visibleCreatures);
         IEnumerable<TFood> GetVisibleFood(TCreature creature);
-        IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature);
-        float PercentEnergyRequiredToReproduce(TCreature creature);
-        float PercentMaxEnergy(TCreature creature);
-        float PercentNutrientsRequiredToReproduce(TCreature creature);
-        float ProximityToCreatureToBack(TCreature creature);
-        float ProximityToCreatureToFront(TCreature creature);
-        float ProximityToCreatureToLeft(TCreature creature);
-        float ProximityToCreatureToRight(TCreature creature);
-        float ProximityToFoodToBack(TCreature creature);
-        float ProximityToFoodToFront(TCreature creature);
-        float ProximityToFoodToLeft(TCreature creature);
-        float ProximityToFoodToRight(TCreature creature);
+        IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature, IEnumerable<TFood> visibleFood);
         void QueueAction(StepAction<TCreature> stepAction);
         void QueueAction(TCreature creature, CreatureAction creatureAction);
-        float RandomInput();
         #endregion
     }
 }
