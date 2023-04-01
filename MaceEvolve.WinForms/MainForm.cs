@@ -15,20 +15,14 @@ namespace MaceEvolve.WinForms
 {
     public partial class MainForm : Form
     {
-        #region Fields
-        private Random _random = new Random();
-        #endregion
-
         #region Properties
         public int SimulationTPS { get; set; }
-        public long TicksPerGeneration { get; set; }
-        public int GenerationCount { get; set; }
         public bool SimulationRunning { get; set; }
-        public int GenerationsToRunFor { get; set; }
-        public int TicksInCurrentGeneration { get; set; }
+        public int CurrentRunTicksElapsed { get; set; }
+        public long AllRunsElapsed { get; set; }
         public bool GatherStepInfoForAllCreatures { get; set; }
         public bool IsInFastMode { get; set; }
-        public GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
+        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
         public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; }
         public float SimulationMspt
@@ -38,34 +32,7 @@ namespace MaceEvolve.WinForms
                 return (1f / SimulationTPS) * 1000;
             }
         }
-        public long TicksWhenSimulationEnds
-        {
-            get
-            {
-                return TicksPerGeneration * GenerationsToRunFor;
-            }
-        }
-        public long TicksUntilSimulationIsCompleted
-        {
-            get
-            {
-                return TicksWhenSimulationEnds - TicksElapsed;
-            }
-        }
-        public long TicksElapsed
-        {
-            get
-            {
-                return TicksPerGeneration * (GenerationCount - 1) + TicksInCurrentGeneration;
-            }
-        }
-        public long TicksUntilCurrentGenerationIsCompleted
-        {
-            get
-            {
-                return TicksPerGeneration - TicksInCurrentGeneration;
-            }
-        }
+        public List<TimeSpan> FailedRunsUptimes { get; set; } = new List<TimeSpan>();
         #endregion
 
         #region Constructors
@@ -80,14 +47,6 @@ namespace MaceEvolve.WinForms
         #region Methods
         public void Reset()
         {
-            BestCreatureNetworkViewerForm.NetworkViewer.Step = null;
-            BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
-
-            SelectedCreatureNetworkViewerForm.NetworkViewer.Step = null;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
-
-            MainGameHost.Reset();
-
             MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
 
             float MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
@@ -95,17 +54,29 @@ namespace MaceEvolve.WinForms
 
             MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 
-            MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
-            {
-                Creatures = GenerateCreatures(),
-                Food = GenerateFood(),
-                WorldBounds = MainGameHost.WorldBounds
-            };
+            BestCreatureNetworkViewerForm.NetworkViewer.Step = null;
+            BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
-            TicksInCurrentGeneration = 0;
-            GenerationCount = 1;
-            UpdateUIText();
-            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
+            SelectedCreatureNetworkViewerForm.NetworkViewer.Step = null;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
+
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
+
+            FailedRunsUptimes.Clear();
+            CurrentRunTicksElapsed = 0;
+        }
+        public void FailRun()
+        {
+            BestCreatureNetworkViewerForm.NetworkViewer.Step = null;
+            BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
+
+            SelectedCreatureNetworkViewerForm.NetworkViewer.Step = null;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
+
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
+
+            FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
+            CurrentRunTicksElapsed = 0;
         }
         public List<GraphicalFood> GenerateFood()
         {
@@ -128,21 +99,10 @@ namespace MaceEvolve.WinForms
 
             foreach (var creature in creatures)
             {
-                creature.Color = Color.FromArgb(255, 64, 64, _random.Next(256));
+                creature.Color = Color.FromArgb(255, 64, 64, Globals.Random.Next(256));
             }
 
             return creatures;
-        }
-        public List<GraphicalCreature> NewGenerationAsexual()
-        {
-            List<GraphicalCreature> newGenerationCreatures = MainGameHost.CreateNewGenerationAsexual(MainGameHost.CurrentStep.Creatures);
-
-            foreach (var creature in newGenerationCreatures)
-            {
-                creature.Color = Color.FromArgb(255, 64, 64, _random.Next(256));
-            }
-
-            return newGenerationCreatures;
         }
         public static Point Middle(int x, int y, int width, int height)
         {
@@ -176,40 +136,12 @@ namespace MaceEvolve.WinForms
         {
             Reset();
         }
-        private async void btnForwardGen_Click(object sender, EventArgs e)
+        private async void btnFastForward_Click(object sender, EventArgs e)
         {
             IsInFastMode = true;
             await Task.Run(() =>
             {
-                //Doesn't work if loop runs from 0 to x.
-                for (long i = TicksUntilCurrentGenerationIsCompleted; i > 0 && SimulationRunning; i--)
-                {
-                    UpdateSimulation();
-                }
-            });
-            IsInFastMode = false;
-        }
-        private async void btnForwardGens_Click(object sender, EventArgs e)
-        {
-            IsInFastMode = true;
-            //Doesn't work if loop runs from 0 to x.
-            await Task.Run(() =>
-            {
-                long ticksIn100Generations = TicksPerGeneration * 100;
-                for (long i = ticksIn100Generations; i > 0 && SimulationRunning; i--)
-                {
-                    UpdateSimulation();
-                }
-            });
-            IsInFastMode = false;
-        }
-        private async void btnForwardAllGens_Click(object sender, EventArgs e)
-        {
-            IsInFastMode = true;
-            await Task.Run(() =>
-            {
-                //Doesn't work if loop runs from 0 to x.
-                for (long i = TicksUntilSimulationIsCompleted; i > 0 && SimulationRunning; i--)
+                while (SimulationRunning)
                 {
                     UpdateSimulation();
                 }
@@ -227,7 +159,7 @@ namespace MaceEvolve.WinForms
         }
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            if (!IsInFastMode && SimulationRunning && GenerationCount <= GenerationsToRunFor)
+            if (!IsInFastMode && SimulationRunning)
             {
                 UpdateSimulation();
             }
@@ -314,56 +246,39 @@ namespace MaceEvolve.WinForms
 
             MainGameHost.SelectedCreature = newSelectedCreature;
 
-            if (newSelectedCreature != null && oldSelectedCreature != newSelectedCreature)
+            if (newSelectedCreature != null && (oldSelectedCreature != newSelectedCreature || SelectedCreatureNetworkViewerForm.Visible == false))
             {
                 SelectedCreatureNetworkViewerForm.Show();
             }
 
             Invalidate();
         }
-        public void NewGeneration()
-        {
-            List<GraphicalCreature> newGenerationCreatures = NewGenerationAsexual();
-
-            if (newGenerationCreatures.Count > 0)
-            {
-                MainGameHost.Reset();
-                MainGameHost.CurrentStep = new Step<GraphicalCreature, GraphicalFood>()
-                {
-                    Creatures = newGenerationCreatures,
-                    Food = GenerateFood(),
-                    WorldBounds = MainGameHost.WorldBounds
-                };
-
-                TicksInCurrentGeneration = 0;
-                GenerationCount += 1;
-            }
-            else
-            {
-                Reset();
-            }
-        }
         public void UpdateSimulation()
         {
+            MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, Globals.Random.Next(256));
+            GraphicalStep<GraphicalCreature, GraphicalFood> previousStep = MainGameHost.CurrentStep;
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
             SelectedCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
             BestCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
 
-            TicksInCurrentGeneration += 1;
+            CurrentRunTicksElapsed += 1;
 
-            if (TicksInCurrentGeneration >= TicksPerGeneration)
+            if (CurrentRunTicksElapsed % 500 == 0)
             {
-                NewGeneration();
+                int numberOfDeadCreatures = previousStep.Creatures.Count(x => x.IsDead);
+
+                if (numberOfDeadCreatures == previousStep.Creatures.Count)
+                {
+                    FailRun();
+                }
             }
         }
         private void MainForm_Load(object sender, EventArgs e)
         {
-            GenerationsToRunFor = 500000;
             SimulationTPS = 60;
-            TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
 
-            MainGameHost = new GameHost<Step<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
+            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 10;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
             MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
@@ -398,8 +313,6 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = GameTimer.Interval;
             SelectedCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
 
-            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}";
-
             Reset();
         }
         private void GatherStepInfoForAllCreaturesButton_Click(object sender, EventArgs e)
@@ -420,22 +333,36 @@ namespace MaceEvolve.WinForms
             ResetButton.Visible = isControlMenuVisible;
             GatherStepInfoForAllCreaturesButton.Visible = isControlMenuVisible;
             btnTrackBestCreature.Visible = isControlMenuVisible;
-            btnForwardGen.Visible = isControlMenuVisible;
-            btnForwardGens.Visible = isControlMenuVisible;
-            btnForwardAllGens.Visible = isControlMenuVisible;
+            btnFastFoward.Visible = isControlMenuVisible;
         }
         private void UpdateUIText()
         {
-            TimeSpan timeInCurrentGeneration = TimeSpan.FromMilliseconds(TicksInCurrentGeneration * SimulationMspt);
-            TimeSpan timePerGeneration = TimeSpan.FromMilliseconds(TicksPerGeneration * SimulationMspt);
-            TimeSpan timeInSimulation = TimeSpan.FromMilliseconds(TicksElapsed * SimulationMspt);
-            TimeSpan timePerSimulation = TimeSpan.FromMilliseconds(TicksWhenSimulationEnds * SimulationMspt);
-            TimeSpan timeUntilSimulationEnds = TimeSpan.FromMilliseconds(TicksUntilSimulationIsCompleted * SimulationMspt);
+            double MillisecondsInFailedRuns = 0;
 
-            lblSimulationRunning.Text = SimulationRunning ? "Running" : "Stopped";
-            lblGenerationCount.Text = $"Gen {GenerationCount}";
-            lblGenEndsIn.Text = $"{timeInSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timePerSimulation:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}/{timeUntilSimulationEnds:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
-            $"\nGen {GenerationCount}/{GenerationsToRunFor}, {timeInCurrentGeneration:s\\.ff\\s}/{timePerGeneration:s\\.ff\\s}";
+            foreach (var failedRunTimeSpan in FailedRunsUptimes)
+            {
+                MillisecondsInFailedRuns += failedRunTimeSpan.TotalMilliseconds;
+
+            }
+
+            TimeSpan timeInCurrentRun = TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt);
+            TimeSpan timeInFailedRuns = TimeSpan.FromMilliseconds(MillisecondsInFailedRuns);
+            TimeSpan timeInAllRuns = timeInFailedRuns.Add(timeInCurrentRun);
+            TimeSpan averageTimePerRun = TimeSpan.FromMilliseconds(FailedRunsUptimes.Count == 0 ? 0 : FailedRunsUptimes.Average(x => x.TotalMilliseconds));
+
+            if (SimulationRunning)
+            {
+                lblSimulationRunning.Text = IsInFastMode ? "Running (Fast)" : "Running";
+            }
+            else
+            {
+                lblSimulationRunning.Text = IsInFastMode ? "Stopped (Fast)" : "Stopped";
+            }
+
+            lblGenerationCount.Text = $"Run {FailedRunsUptimes.Count + 1}";
+            lblGenEndsIn.Text = $"Uptime: {timeInAllRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Failed: {timeInFailedRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
+                $"\nRun {FailedRunsUptimes.Count + 1}, {timeInCurrentRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Average: {averageTimePerRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}";
+
             GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
         }
         #endregion

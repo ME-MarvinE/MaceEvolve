@@ -1,6 +1,4 @@
-﻿using MaceEvolve.Core.Enums;
-using MaceEvolve.Core.Models;
-using System.Collections.Generic;
+﻿using MaceEvolve.Core.Models;
 
 namespace MaceEvolve.Core.Interfaces
 {
@@ -12,10 +10,17 @@ namespace MaceEvolve.Core.Interfaces
         float Energy { get; set; }
         float MaxEnergy { get; set; }
         float Speed { get; set; }
-        int SightRange { get; set; }
+        float SightRange { get; set; }
         float Metabolism { get; set; }
         int FoodEaten { get; set; }
         bool IsDead { get; set; }
+        public float Nutrients { get; set; }
+        public float EnergyRequiredToReproduce { get; set; }
+        public float NutrientsRequiredToReproduce { get; set; }
+        public int TimesReproduced { get; set; }
+        public int MaxOffspringPerReproduction { get; set; }
+        public int OffspringBrainMutationAttempts { get; set; }
+        public float OffspringBrainMutationChance { get; set; }
         #endregion
 
         #region Methods

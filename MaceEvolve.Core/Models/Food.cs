@@ -6,8 +6,9 @@ namespace MaceEvolve.Core.Models
     {
         #region Properties
         public int Servings { get; set; } = 1;
-        public int EnergyPerServing { get; set; } = 10;
+        public float EnergyPerServing { get; set; } = 10;
         public float ServingDigestionCost { get; set; } = 0.05f;
+        public float NutrientsPerServing { get; set; } = 50;
         #endregion
     }
 }

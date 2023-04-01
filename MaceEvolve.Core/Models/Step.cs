@@ -2,14 +2,13 @@
 using MaceEvolve.Core.Extensions;
 using MaceEvolve.Core.Interfaces;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
 namespace MaceEvolve.Core.Models
 {
-    public class Step<TCreature, TFood> : IStep<TCreature, TFood> where TCreature : ICreature where TFood : IFood
+    public class Step<TCreature, TFood> : IStep<TCreature, TFood> where TCreature : ICreature, new() where TFood : IFood
     {
         #region Properties
         public Queue<StepAction<TCreature>> RequestedActions { get; set; } = new Queue<StepAction<TCreature>>();
@@ -18,6 +17,11 @@ namespace MaceEvolve.Core.Models
         public List<TFood> Food { get; set; }
         public IRectangle WorldBounds { get; set; }
         private Dictionary<TCreature, CreatureStepInfo<TCreature, TFood>> CreatureStepInfos { get; } = new Dictionary<TCreature, CreatureStepInfo<TCreature, TFood>>();
+        public int MinCreatureConnections { get; set; } = 4;
+        public int MaxCreatureConnections { get; set; } = 128;
+        public int MaxCreatureProcessNodes { get; set; } = 3;
+        public float ConnectionWeightBound { get; set; } = 4;
+        public bool LoopWorldBounds { get; set; }
         #endregion
 
         #region Methods
@@ -197,6 +201,14 @@ namespace MaceEvolve.Core.Models
         {
             return Globals.Random.NextFloat();
         }
+        public float PercentEnergyRequiredToReproduce(TCreature creature)
+        {
+            return Globals.Map(creature.Energy, 0, creature.EnergyRequiredToReproduce, 0, 1);
+        }
+        public float PercentNutrientsRequiredToReproduce(TCreature creature)
+        {
+            return Globals.Map(creature.Nutrients, 0, creature.NutrientsRequiredToReproduce, 0, 1);
+        }
 
         public bool CreatureTryEat(TCreature creature)
         {
@@ -206,10 +218,11 @@ namespace MaceEvolve.Core.Models
 
             if (closestFood != null && closestFood.Servings > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) < creature.Size / 2)
             {
-                creature.Energy -= closestFood.ServingDigestionCost;
                 closestFood.Servings -= 1;
-                creature.FoodEaten += 1;
+                creature.Energy -= closestFood.ServingDigestionCost;
                 creature.Energy += closestFood.EnergyPerServing;
+                creature.Nutrients += closestFood.NutrientsPerServing;
+                creature.FoodEaten += 1;
 
                 return true;
             }
@@ -218,12 +231,198 @@ namespace MaceEvolve.Core.Models
                 return false;
             }
         }
+        public virtual IList<TCreature> CreatureTryReproduce(TCreature creature)
+        {
+            int numberOfChildrenThatCanBeCreated = (int)MathF.Floor(MathF.Min(creature.Energy / creature.EnergyRequiredToReproduce, creature.Nutrients / creature.NutrientsRequiredToReproduce));
+
+            if (numberOfChildrenThatCanBeCreated == 0)
+            {
+                return new List<TCreature>();
+            }
+
+            List<TCreature> offSpring = new List<TCreature>();
+
+            int childrenToCreate = Math.Min(Globals.Random.Next(numberOfChildrenThatCanBeCreated + 1), creature.MaxOffspringPerReproduction);
+            float maxXDistanceOfOffspring = creature.Size * 2;
+            float maxYDistanceOfOffspring = creature.Size * 2;
+
+            for (int i = 0; i < childrenToCreate; i++)
+            {
+                TCreature newCreature = new TCreature();
+                newCreature.Brain = NeuralNetwork.CombineNetworks(new List<NeuralNetwork>() { creature.Brain });
+                newCreature.Size = creature.Size;
+                newCreature.Speed = creature.Speed;
+                newCreature.Metabolism = creature.Metabolism;
+                newCreature.MoveCost = creature.MoveCost;
+                newCreature.SightRange = creature.SightRange;
+                newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
+                newCreature.Energy = creature.EnergyRequiredToReproduce / 2;
+                newCreature.MaxEnergy = creature.MaxEnergy;
+                newCreature.Nutrients = creature.NutrientsRequiredToReproduce / 2;
+                newCreature.NutrientsRequiredToReproduce = creature.NutrientsRequiredToReproduce;
+                newCreature.EnergyRequiredToReproduce = creature.EnergyRequiredToReproduce;
+                newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
+
+                newCreature.X = creature.X + Globals.Random.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
+                newCreature.Y = creature.Y + Globals.Random.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
+
+                if (creature.MX < WorldBounds.X)
+                {
+                    if (LoopWorldBounds)
+                    {
+                        creature.X = (WorldBounds.X + WorldBounds.Width) - creature.Size / 2;
+                    }
+                    else
+                    {
+                        creature.X = WorldBounds.X - creature.Size / 2;
+                    }
+                }
+                else if (creature.MX > WorldBounds.X + WorldBounds.Width)
+                {
+                    if (LoopWorldBounds)
+                    {
+                        creature.X = WorldBounds.X - creature.Size / 2;
+                    }
+                    else
+                    {
+                        creature.X = (WorldBounds.X + WorldBounds.Width) - creature.Size / 2;
+                    }
+                }
+
+                if (creature.MY < WorldBounds.Y)
+                {
+                    if (LoopWorldBounds)
+                    {
+                        creature.Y = (WorldBounds.Y + WorldBounds.Height) - creature.Size / 2;
+                    }
+                    else
+                    {
+                        creature.Y = WorldBounds.Y - creature.Size / 2;
+                    }
+                }
+                else if (creature.MY > WorldBounds.Y + WorldBounds.Height)
+                {
+                    if (LoopWorldBounds)
+                    {
+                        creature.Y = WorldBounds.Y - creature.Size / 2;
+                    }
+                    else
+                    {
+                        creature.Y = (WorldBounds.Y + WorldBounds.Height) - creature.Size / 2;
+                    }
+                }
+
+                creature.Energy -= creature.EnergyRequiredToReproduce;
+                creature.Nutrients -= creature.NutrientsRequiredToReproduce;
+
+                for (int j = 0; j < creature.OffspringBrainMutationAttempts; j++)
+                {
+                    bool mutated = newCreature.Brain.MutateNetwork(
+                        createRandomNodeChance: creature.OffspringBrainMutationChance,
+                        removeRandomNodeChance: creature.OffspringBrainMutationChance / 20,
+                        mutateRandomNodeBiasChance: creature.OffspringBrainMutationChance,
+                        createRandomConnectionChance: creature.OffspringBrainMutationChance,
+                        removeRandomConnectionChance: creature.OffspringBrainMutationChance,
+                        mutateRandomConnectionSourceChance: creature.OffspringBrainMutationChance,
+                        mutateRandomConnectionTargetChance: creature.OffspringBrainMutationChance,
+                        mutateRandomConnectionWeightChance: creature.OffspringBrainMutationChance,
+                        possibleInputs: Globals.AllCreatureInputs,
+                        possibleOutputs: Globals.AllCreatureActions,
+                        minCreatureConnections: MinCreatureConnections,
+                        maxCreatureConnections: MaxCreatureConnections,
+                        maxCreatureProcessNodes: MaxCreatureProcessNodes,
+                        connectionWeightBound: ConnectionWeightBound);
+                }
+
+                creature.TimesReproduced += 1;
+                offSpring.Add(newCreature);
+            }
+
+            return offSpring;
+        }
+        public static TCreature CreateOffSpring(IList<TCreature> parents)
+        {
+            Dictionary<TCreature, List<Connection>> availableParentConnections = parents.ToDictionary(x => x, x => x.Brain.Connections.ToList());
+            Dictionary<TCreature, Dictionary<int, int>> parentToOffspringNodesMap = new Dictionary<TCreature, Dictionary<int, int>>();
+
+            TCreature offspring = new TCreature()
+            {
+                Brain = new NeuralNetwork()
+            };
+
+            float averageNumberOfParentConnections = (float)parents.Average(x => x.Brain.Connections.Count);
+
+            if (averageNumberOfParentConnections > 0 && averageNumberOfParentConnections < 1)
+            {
+                averageNumberOfParentConnections = 1;
+            }
+
+            while (offspring.Brain.Connections.Count < averageNumberOfParentConnections)
+            {
+                TCreature randomParent = parents[Globals.Random.Next(parents.Count)];
+                List<Connection> randomParentAvailableConnections = availableParentConnections[randomParent];
+
+                if (randomParentAvailableConnections.Count > 0)
+                {
+                    Connection randomParentConnection = randomParentAvailableConnections[Globals.Random.Next(randomParentAvailableConnections.Count)];
+
+                    //If a parent's node has not been added and mapped to an offspring's node, create a new node and map it to the parent's node.
+                    if (!(parentToOffspringNodesMap.ContainsKey(randomParent) && parentToOffspringNodesMap[randomParent].ContainsKey(randomParentConnection.SourceId)))
+                    {
+                        Node randomParentConnectionSourceNode = randomParent.Brain.NodeIdsToNodesDict[randomParentConnection.SourceId];
+                        Node newNode = new Node(randomParentConnectionSourceNode.NodeType, randomParentConnectionSourceNode.Bias, randomParentConnectionSourceNode.CreatureInput, randomParentConnectionSourceNode.CreatureAction);
+                        int newNodeId = offspring.Brain.AddNode(newNode);
+
+                        //Map the newly added offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
+                        if (!parentToOffspringNodesMap.ContainsKey(randomParent))
+                        {
+                            parentToOffspringNodesMap.Add(randomParent, new Dictionary<int, int>());
+                        }
+
+                        parentToOffspringNodesMap[randomParent][randomParentConnection.SourceId] = newNodeId;
+                    }
+
+                    if (!(parentToOffspringNodesMap.ContainsKey(randomParent) && parentToOffspringNodesMap[randomParent].ContainsKey(randomParentConnection.TargetId)))
+                    {
+                        Node randomParentConnectionTargetNode = randomParent.Brain.NodeIdsToNodesDict[randomParentConnection.TargetId];
+                        Node newNode = new Node(randomParentConnectionTargetNode.NodeType, randomParentConnectionTargetNode.Bias, randomParentConnectionTargetNode.CreatureInput, randomParentConnectionTargetNode.CreatureAction);
+                        int newNodeId = offspring.Brain.AddNode(newNode);
+
+                        //Map the newly added offspring node to the parent's node so that duplicates aren't created if two of the parent's connections reference the same node.
+                        if (!parentToOffspringNodesMap.ContainsKey(randomParent))
+                        {
+                            parentToOffspringNodesMap.Add(randomParent, new Dictionary<int, int>());
+                        }
+
+                        parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId] = newNodeId;
+                    }
+
+                    //Apply any variance to the connection's weight.
+                    float connectionToAddWeight = randomParentConnection.Weight;
+                    int connectionToAddSourceId = parentToOffspringNodesMap[randomParent][randomParentConnection.SourceId];
+                    int connectionToAddTargetId = parentToOffspringNodesMap[randomParent][randomParentConnection.TargetId];
+
+                    offspring.Brain.Connections.Add(new Connection(connectionToAddSourceId, connectionToAddTargetId, connectionToAddWeight));
+                    availableParentConnections[randomParent].Remove(randomParentConnection);
+                }
+            }
+
+            return offspring;
+        }
         public void CreatureMoveForwards(TCreature creature)
         {
             creature.Y -= creature.Speed;
             if (creature.MY < WorldBounds.Y)
             {
-                creature.Y += creature.Speed;
+                if (LoopWorldBounds)
+                {
+                    creature.Y = ((WorldBounds.Y + WorldBounds.Height) - creature.Size / 2) - (WorldBounds.Y - creature.MY);
+                }
+                else
+                {
+                    creature.Y += creature.Speed;
+                }
+
                 //Y += WorldBounds.WorldBounds.Height;
             }
             creature.Energy -= creature.MoveCost;
@@ -234,7 +433,15 @@ namespace MaceEvolve.Core.Models
             float worldBoundsBottom = WorldBounds.Y + WorldBounds.Height;
             if (creature.MY > worldBoundsBottom)
             {
-                creature.Y -= creature.Speed;
+                if (LoopWorldBounds)
+                {
+                    creature.Y = (WorldBounds.Y - creature.Size / 2) + (creature.MY - worldBoundsBottom);
+                }
+                else
+                {
+                    creature.Y -= creature.Speed;
+                }
+
                 //Y -= WorldBounds.WorldBounds.Height;
             }
             creature.Energy -= creature.MoveCost;
@@ -244,7 +451,15 @@ namespace MaceEvolve.Core.Models
             creature.X -= creature.Speed;
             if (creature.MX < WorldBounds.X)
             {
-                creature.X += creature.Speed;
+                if (LoopWorldBounds)
+                {
+                    creature.X = ((WorldBounds.X + WorldBounds.Width) - creature.Size / 2) - (WorldBounds.X - creature.MX);
+                }
+                else
+                {
+                    creature.X += creature.Speed;
+                }
+
                 //X += WorldBounds.WorldBounds.Width;
             }
             creature.Energy -= creature.MoveCost;
@@ -255,10 +470,21 @@ namespace MaceEvolve.Core.Models
             float worldBoundsRight = WorldBounds.X + WorldBounds.Width;
             if (creature.MX > worldBoundsRight)
             {
-                creature.X -= creature.Speed;
+                if (LoopWorldBounds)
+                {
+                    creature.X = (WorldBounds.X - creature.Size / 2) + (creature.MX - worldBoundsRight);
+                }
+                else
+                {
+                    creature.X -= creature.Speed;
+                }
                 //X -= WorldBounds.WorldBounds.Width;
             }
             creature.Energy -= creature.MoveCost;
+        }
+        public void CreatureDoNothing()
+        {
+
         }
         public void CreatureMoveTowardsClosestFood(TCreature creature)
         {
@@ -334,6 +560,18 @@ namespace MaceEvolve.Core.Models
                             CreatureTryEat(stepAction.Creature);
                             break;
 
+                        case CreatureAction.TryReproduce:
+                            IList<TCreature> offSpring = CreatureTryReproduce(stepAction.Creature);
+                            if (offSpring.Count > 0)
+                            {
+                                Creatures.AddRange(offSpring);
+                            }
+                            break;
+
+                        case CreatureAction.DoNothing:
+                            CreatureDoNothing();
+                            break;
+
                         default:
                             throw new NotImplementedException();
                     }
@@ -386,6 +624,12 @@ namespace MaceEvolve.Core.Models
 
                 case CreatureInput.RandomInput:
                     return RandomInput();
+
+                case CreatureInput.PercentNutrientsRequiredToReproduce:
+                    return PercentNutrientsRequiredToReproduce(creature);
+
+                case CreatureInput.PercentEnergyRequiredToReproduce:
+                    return PercentEnergyRequiredToReproduce(creature);
 
                 default:
                     throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");

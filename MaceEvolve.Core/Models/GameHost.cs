@@ -4,6 +4,7 @@ using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 
 namespace MaceEvolve.Core.Models
@@ -17,24 +18,35 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Properties
-        public TStep CurrentStep { get; set; }
+        public TStep CurrentStep { get; private set; }
         public int MaxCreatureAmount { get; set; } = 300;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
         public IRectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
-        public int MaxCreatureConnections { get; set; } = 128;
+        public int MaxCreatureConnections { get; set; } = 64;
         public float CreatureSpeed { get; set; }
-        public int MaxCreatureProcessNodes { get; set; } = 3;
-        public float MutationChance { get; set; } = 1 / 3f;
-        public int MutationAttempts { get; set; } = 1;
+        public int MaxCreatureProcessNodes { get; set; } = 2;
+        public float CreatureOffspringBrainMutationChance { get; set; } = 1 / 3f;
+        public int CreatureOffspringBrainMutationAttempts { get; set; } = 1;
         public float ConnectionWeightBound { get; set; } = 4;
-        public float MaxCreatureEnergy { get; set; } = 150;
+        public float MaxCreatureEnergy { get; set; } = 1000;
         public float FoodSize { get; set; } = 7;
         public float CreatureSize { get; set; } = 10;
-        public float MinimumSuccessfulCreatureFitness { get; set; } = 0.5f;
+        public float InitialCreatureNutrients { get; set; } = 30;
+        public float EnergyRequiredForCreatureToReproduce { get; set; } = 100;
+        public float NutrientsRequiredForCreatureToReproduce { get; set; } = 50;
+        public float MinimumSuccessfulCreatureFitness { get; set; } = 0.25f;
         public float ReproductionNodeBiasVariance { get; set; }
         public float ReproductionConnectionWeightVariance { get; set; }
+        public float CreatureMetabolism { get; set; } = 0.1f;
+        public float FoodEnergyPerServing { get; set; } = 150;
+        public float FoodNutrientsPerServing { get; set; } = 50;
+        public float FoodServingDigestionCost { get; set; } = 0.05f;
+        public float CreatureSightRange { get; set; } = 100;
+        public int MaxCreatureOffSpringPerReproduction { get; set; } = 2;
+        public bool LoopWorldBounds { get; set; } = true;
+
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
         public bool UseSuccessBounds { get; set; }
@@ -80,136 +92,11 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public virtual void Reset()
+        public virtual void ResetStep(List<TCreature> creatures, List<TFood> food)
         {
-            CurrentStep = null;
             BestCreature = null;
             SelectedCreature = null;
-        }
-        public virtual List<TCreature> CreateNewGenerationSexual(IEnumerable<TCreature> sourceCreatures)
-        {
-            Dictionary<TCreature, float> creaturesFitnesses = GetFitnesses(sourceCreatures);
-            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = creaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-
-            if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
-            {
-                return new List<TCreature>();
-            }
-
-            List<TCreature> newCreatures = new List<TCreature>();
-            IEnumerable<NeuralNetwork> topPercentileCreatureFitnessesOrderedDescendingNeuralNetworks = topPercentileCreatureFitnessesOrderedDescending.Select(x => x.Key.Brain);
-
-            while (newCreatures.Count < MaxCreatureAmount)
-            {
-                foreach (var keyValuePair in topPercentileCreatureFitnessesOrderedDescending)
-                {
-                    TCreature successfulCreature = keyValuePair.Key;
-                    float successfulCreatureFitness = keyValuePair.Value;
-
-                    if (random.NextFloat() <= successfulCreatureFitness)
-                    {
-                        int numberOfChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(successfulCreatureFitness, 0, 1, 0, MaxCreatureAmount / 10) : successfulCreature.FoodEaten;
-
-                        for (int i = 0; i < numberOfChildrenToCreate; i++)
-                        {
-                            if (newCreatures.Count >= MaxCreatureAmount)
-                            {
-                                break;
-                            }
-
-                            TCreature newCreature = new TCreature();
-                            newCreature.Brain = NeuralNetwork.CombineNetworks(topPercentileCreatureFitnessesOrderedDescendingNeuralNetworks);
-                            newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
-                            newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
-                            newCreature.Size = CreatureSize;
-                            newCreature.Speed = CreatureSpeed;
-                            newCreature.Metabolism = 0.1f;
-                            newCreature.Energy = MaxCreatureEnergy;
-                            newCreature.MaxEnergy = MaxCreatureEnergy;
-                            newCreature.SightRange = 100;
-
-                            for (int j = 0; j < MutationAttempts; j++)
-                            {
-                                bool mutated = MutateNetwork(newCreature.Brain,
-                                    createRandomNodeChance: MutationChance,
-                                    removeRandomNodeChance: MutationChance / 20,
-                                    mutateRandomNodeBiasChance: MutationChance,
-                                    createRandomConnectionChance: MutationChance,
-                                    removeRandomConnectionChance: MutationChance,
-                                    mutateRandomConnectionSourceChance: MutationChance,
-                                    mutateRandomConnectionTargetChance: MutationChance,
-                                    mutateRandomConnectionWeightChance: MutationChance);
-                            }
-
-                            newCreatures.Add(newCreature);
-                        }
-                    }
-                }
-            }
-
-            return newCreatures;
-        }
-        public virtual List<TCreature> CreateNewGenerationAsexual(IEnumerable<TCreature> sourceCreatures)
-        {
-            Dictionary<TCreature, float> creaturesFitnesses = GetFitnesses(sourceCreatures);
-            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = creaturesFitnesses.Where(x => x.Value >= MinimumSuccessfulCreatureFitness).OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-
-            if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
-            {
-                return new List<TCreature>();
-            }
-
-            List<TCreature> newCreatures = new List<TCreature>();
-
-            while (newCreatures.Count < MaxCreatureAmount)
-            {
-                foreach (var keyValuePair in topPercentileCreatureFitnessesOrderedDescending)
-                {
-                    TCreature successfulCreature = keyValuePair.Key;
-                    float successfulCreatureFitness = keyValuePair.Value;
-
-                    if (random.NextFloat() <= successfulCreatureFitness)
-                    {
-                        int numberOfChildrenToCreate = UseSuccessBounds ? (int)Globals.Map(successfulCreatureFitness, 0, 1, 0, MaxCreatureAmount / 10) : successfulCreature.FoodEaten;
-
-                        for (int i = 0; i < numberOfChildrenToCreate; i++)
-                        {
-                            if (newCreatures.Count >= MaxCreatureAmount)
-                            {
-                                break;
-                            }
-
-                            TCreature newCreature = new TCreature();
-                            newCreature.Brain = NeuralNetwork.CombineNetworks(new List<NeuralNetwork>() { successfulCreature.Brain });
-                            newCreature.X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width);
-                            newCreature.Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
-                            newCreature.Size = CreatureSize;
-                            newCreature.Speed = CreatureSpeed;
-                            newCreature.Metabolism = 0.1f;
-                            newCreature.Energy = MaxCreatureEnergy;
-                            newCreature.MaxEnergy = MaxCreatureEnergy;
-                            newCreature.SightRange = 100;
-
-                            for (int j = 0; j < MutationAttempts; j++)
-                            {
-                                bool mutated = MutateNetwork(newCreature.Brain,
-                                    createRandomNodeChance: MutationChance,
-                                    removeRandomNodeChance: MutationChance / 20,
-                                    mutateRandomNodeBiasChance: MutationChance,
-                                    createRandomConnectionChance: MutationChance,
-                                    removeRandomConnectionChance: MutationChance,
-                                    mutateRandomConnectionSourceChance: MutationChance,
-                                    mutateRandomConnectionTargetChance: MutationChance,
-                                    mutateRandomConnectionWeightChance: MutationChance);
-                            }
-
-                            newCreatures.Add(newCreature);
-                        }
-                    }
-                }
-            }
-
-            return newCreatures;
+            CurrentStep = CreateStep(creatures, food);
         }
         public virtual Dictionary<TCreature, float> GetFitnesses(IEnumerable<TCreature> creatures)
         {
@@ -232,228 +119,52 @@ namespace MaceEvolve.Core.Models
                     float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
                     float successBoundsHypotenuse = Globals.Hypotenuse(SuccessBounds.Width, SuccessBounds.Height);
 
-                    successfulCreaturesFitnesses.Add(creature, Globals.Map(distanceFromMiddle, 0, successBoundsHypotenuse, 1, 0)); ;
+                    successfulCreaturesFitnesses.Add(creature, Globals.Map(distanceFromMiddle, 0, successBoundsHypotenuse, 1, 0));
                 }
             }
             else
             {
-                int mostFoodEaten = creatures.Max(x => x.FoodEaten);
+                float mostEnergy = creatures.Max(x => x.Energy);
+                float mostNutrients = creatures.Max(x => x.Nutrients);
+                float mostTimesReproduced = creatures.Max(x => x.TimesReproduced);
 
-                if (mostFoodEaten == 0)
+                if (mostEnergy == 0 && mostNutrients == 0 && mostTimesReproduced == 0)
                 {
                     return new Dictionary<TCreature, float>();
                 }
 
-                successfulCreaturesFitnesses = creatures.ToDictionary(
-                    x => x,
-                    x => (float)x.FoodEaten / mostFoodEaten);
+                foreach (var creature in creatures)
+                {
+                    float energyFitness = mostEnergy == 0 ? 0 : creature.Energy / mostEnergy;
+                    float nutrientsFitness = mostNutrients == 0 ? 0 : creature.Nutrients / mostNutrients;
+                    float timesReproducedFitness = mostTimesReproduced == 0 ? 0 : creature.TimesReproduced / mostTimesReproduced;
+                    float fitness = Globals.Map(energyFitness + nutrientsFitness + timesReproducedFitness, 0, 3, 0, 1);
+
+                    successfulCreaturesFitnesses.Add(creature, fitness);
+                }
             }
 
             return successfulCreaturesFitnesses;
         }
-        public virtual bool MutateNetwork(NeuralNetwork network, float createRandomNodeChance, float removeRandomNodeChance, float mutateRandomNodeBiasChance, float createRandomConnectionChance, float removeRandomConnectionChance, float mutateRandomConnectionSourceChance, float mutateRandomConnectionTargetChance, float mutateRandomConnectionWeightChance)
+        public virtual TStep CreateStep(List<TCreature> creatures, List<TFood> food)
         {
-            int processNodeCount = network.GetNodeIds((_, node) => node.NodeType == NodeType.Process).Count;
-            bool mutationAttempted = false;
-
-            //Things should be removed before being added so that there isn't a chance that the newly added thing is deleted straight after.
-            //Connections should be added after nodes are added so that there is a chance the newly created node gets a connection.
-
-            //Remove an existing node. Input nodes should not be removed. 
-            if (random.NextFloat() <= removeRandomNodeChance)
+            return new TStep()
             {
-                mutationAttempted = true;
-
-                List<int> processNodeIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Process);
-                List<int> outputNodeIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Output);
-
-                List<int> possibleNodeIdsToRemove = new List<int>(processNodeIds);
-
-                //There must be at least one target node in a network.
-                if (outputNodeIds.Count > 1)
-                {
-                    possibleNodeIdsToRemove.AddRange(outputNodeIds);
-                }
-
-                if (possibleNodeIdsToRemove.Count > 0)
-                {
-                    int nodeIdToRemove = possibleNodeIdsToRemove[random.Next(possibleNodeIdsToRemove.Count)];
-
-                    network.RemoveNode(nodeIdToRemove, true);
-                }
-            }
-
-            //Change a random node's bias.
-            if (random.NextFloat() <= mutateRandomNodeBiasChance)
-            {
-                mutationAttempted = true;
-
-                int randomNodeId = network.GetNodeIds()[random.Next(network.NodeIdsToNodesDict.Count)];
-                Node randomNode = network.NodeIdsToNodesDict[randomNodeId];
-                Node newNode = new Node(randomNode.NodeType, random.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
-
-                network.ReplaceNode(randomNodeId, newNode);
-            }
-
-            //Create a new node with a default connection.
-            if (random.NextFloat() <= createRandomNodeChance)
-            {
-                List<CreatureInput> possibleCreatureInputsToAdd = GetPossibleInputsToAdd(network).ToList();
-                List<CreatureAction> possibleCreatureActionsToAdd = GetPossibleActionsToAdd(network).ToList();
-
-                mutationAttempted = true;
-
-                Node nodeToAdd;
-                float nodeTypeRandomNum = random.NextFloat();
-                float chanceForSingleNodeType = 1f / Globals.AllNodeTypes.Count;
-
-                if (nodeTypeRandomNum <= chanceForSingleNodeType && possibleCreatureInputsToAdd.Count > 0)
-                {
-                    nodeToAdd = new Node(NodeType.Input, random.NextFloat(-1, 1), possibleCreatureInputsToAdd[random.Next(possibleCreatureInputsToAdd.Count)]);
-                }
-                else if (nodeTypeRandomNum <= chanceForSingleNodeType * 2 && possibleCreatureActionsToAdd.Count > 0)
-                {
-                    nodeToAdd = new Node(NodeType.Output, random.NextFloat(-1, 1), creatureAction: possibleCreatureActionsToAdd[random.Next(possibleCreatureActionsToAdd.Count)]);
-                }
-                else if (processNodeCount < MaxCreatureProcessNodes)
-                {
-                    nodeToAdd = new Node(NodeType.Process, random.NextFloat(-1, 1));
-                }
-                else
-                {
-                    nodeToAdd = null;
-                }
-
-                if (nodeToAdd != null)
-                {
-                    List<int> possibleSourceNodesIds = network.GetNodeIds((_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
-                    List<int> possibleTargetNodesIds = network.GetNodeIds((_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
-
-                    int nodeToAddId = network.AddNode(nodeToAdd);
-
-                    if (network.Connections.Count < MaxCreatureConnections && possibleSourceNodesIds.Count > 0 && possibleTargetNodesIds.Count > 0)
-                    {
-                        Connection newConnection;
-                        float newConnectionWeight = random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound);
-
-                        switch (nodeToAdd.NodeType)
-                        {
-                            case NodeType.Input:
-                                newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
-                                break;
-
-                            case NodeType.Process:
-                                if (random.NextDouble() <= 0.5)
-                                {
-                                    newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
-                                }
-                                else
-                                {
-                                    newConnection = new Connection(possibleSourceNodesIds[random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
-                                }
-                                break;
-
-                            case NodeType.Output:
-                                newConnection = new Connection(possibleSourceNodesIds[random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
-                                break;
-
-                            default:
-                                throw new NotImplementedException();
-                        }
-
-                        network.Connections.Add(newConnection);
-                    }
-                }
-            }
-
-            //Remove a random connection.
-            if (network.Connections.Count > MinCreatureConnections && random.NextFloat() <= removeRandomConnectionChance)
-            {
-                mutationAttempted = true;
-
-                Connection randomConnection = network.Connections[random.Next(network.Connections.Count)];
-                network.Connections.Remove(randomConnection);
-            }
-
-            //Change a random connection's weight.
-            if (network.Connections.Count > 0 && random.NextFloat() <= mutateRandomConnectionWeightChance)
-            {
-                mutationAttempted = true;
-
-                int randomConnectionIndex = random.Next(network.Connections.Count);
-
-                network.Connections[randomConnectionIndex] = new Connection(network.Connections[randomConnectionIndex].SourceId, network.Connections[randomConnectionIndex].TargetId, random.NextFloat(-ConnectionWeightBound, ConnectionWeightBound));
-            }
-
-            //Change a random connection's source.
-            if (network.Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionSourceChance)
-            {
-                mutationAttempted = true;
-
-                int randomConnectionIndex = random.Next(network.Connections.Count);
-                List<int> possibleSourceNodesIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
-
-                if (possibleSourceNodesIds.Count > 0)
-                {
-                    int randomSourceNodeId = possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)];
-
-                    Connection mutatedConnection = new Connection(randomSourceNodeId, network.Connections[randomConnectionIndex].TargetId, network.Connections[randomConnectionIndex].Weight);
-                    network.Connections[randomConnectionIndex] = mutatedConnection;
-                }
-            }
-
-            //Change a random connection's target.
-            if (network.Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionTargetChance)
-            {
-                mutationAttempted = true;
-
-                int randomConnectionIndex = random.Next(network.Connections.Count);
-                List<int> possibleTargetNodesIds = network.GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
-
-                if (possibleTargetNodesIds.Count > 0)
-                {
-                    int randomTargetNodeId = possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)];
-
-                    Connection mutatedConnection = new Connection(network.Connections[randomConnectionIndex].SourceId, randomTargetNodeId, network.Connections[randomConnectionIndex].Weight);
-                    network.Connections[randomConnectionIndex] = mutatedConnection;
-                }
-            }
-
-            //Create a new connection.
-            if (network.Connections.Count < MaxCreatureConnections && random.NextDouble() <= createRandomConnectionChance)
-            {
-                mutationAttempted = true;
-
-                Connection? newConnection = network.GenerateRandomConnections(1, 1, ConnectionWeightBound).FirstOrDefault();
-
-                if (newConnection != null)
-                {
-                    network.Connections.Add(newConnection.Value);
-                }
-            }
-
-            return mutationAttempted;
-        }
-        public virtual IEnumerable<CreatureInput> GetPossibleInputsToAdd(NeuralNetwork network)
-        {
-            //Return any inputs that aren't already used by a node in the network.
-            return PossibleCreatureInputs.Where(x => !network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Input && x == y.Value.CreatureInput));
-        }
-        public virtual IEnumerable<CreatureAction> GetPossibleActionsToAdd(NeuralNetwork network)
-        {
-            //Return any actions that aren't already used by a node in the network.
-            return PossibleCreatureActions.Where(x => !network.NodeIdsToNodesDict.Any(y => y.Value.NodeType == NodeType.Output && x == y.Value.CreatureAction));
+                Creatures = creatures,
+                Food = food,
+                WorldBounds = WorldBounds,
+                ConnectionWeightBound = ConnectionWeightBound,
+                MinCreatureConnections = MinCreatureConnections,
+                MaxCreatureConnections = MaxCreatureConnections,
+                MaxCreatureProcessNodes = MaxCreatureProcessNodes,
+                LoopWorldBounds = LoopWorldBounds
+            };
         }
         public virtual void NextStep(bool gatherInfoForAllCreatures = false)
         {
             CurrentStep.ExecuteActions(CurrentStep.RequestedActions);
 
-            TStep generatedStep =  new TStep()
-            {
-                Creatures = CurrentStep.Creatures.ToList(),
-                Food = CurrentStep.Food.Where(x => x.Servings > 0).ToList(),
-                WorldBounds = WorldBounds
-            };
+            TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead).ToList(), CurrentStep.Food.Where(x => x.Servings > 0).ToList());
 
             TCreature newBestCreature = null;
 
@@ -490,14 +201,21 @@ namespace MaceEvolve.Core.Models
                         }
                     }
 
-                    if (highestOutputNodeId != null && nodeIdToOutputDict[highestOutputNodeId.Value] > 0)
+                    StepAction<TCreature> stepAction = new StepAction<TCreature>()
                     {
-                        creatureStepActions.Enqueue(new StepAction<TCreature>() 
-                        {
-                            Creature = creature,
-                            Action = creature.Brain.NodeIdsToNodesDict[highestOutputNodeId.Value].CreatureAction.Value 
-                        });
+                        Creature = creature
+                    };
+
+                    if (highestOutputNodeId == null || nodeIdToOutputDict[highestOutputNodeId.Value] <= 0)
+                    {
+                        stepAction.Action = CreatureAction.DoNothing;
                     }
+                    else
+                    {
+                        stepAction.Action = creature.Brain.NodeIdsToNodesDict[highestOutputNodeId.Value].CreatureAction.Value;
+                    }
+
+                    creatureStepActions.Enqueue(stepAction);
 
                     foreach (var creatureStepAction in creatureStepActions)
                     {
@@ -594,9 +312,10 @@ namespace MaceEvolve.Core.Models
                 X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
                 Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                 Servings = 1,
-                EnergyPerServing = 30,
-                ServingDigestionCost = 0.05f,
-                Size = FoodSize
+                EnergyPerServing = FoodEnergyPerServing,
+                ServingDigestionCost = FoodServingDigestionCost,
+                Size = FoodSize,
+                NutrientsPerServing = FoodNutrientsPerServing,
             };
         }
         public virtual List<TFood> GenerateFood()
@@ -622,17 +341,24 @@ namespace MaceEvolve.Core.Models
                     Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                     Size = CreatureSize,
                     Speed = CreatureSpeed,
-                    Metabolism = 0.1f,
-                    Energy = MaxCreatureEnergy,
+                    Metabolism = CreatureMetabolism,
+                    Energy = MaxCreatureEnergy * 0.75f,
                     MaxEnergy = MaxCreatureEnergy,
-                    SightRange = 100
+                    SightRange = CreatureSightRange,
+                    Nutrients = InitialCreatureNutrients,
+                    NutrientsRequiredToReproduce = NutrientsRequiredForCreatureToReproduce,
+                    EnergyRequiredToReproduce = EnergyRequiredForCreatureToReproduce,
+                    MaxOffspringPerReproduction = MaxCreatureOffSpringPerReproduction,
+                    OffspringBrainMutationAttempts = CreatureOffspringBrainMutationAttempts,
+                    OffspringBrainMutationChance = CreatureOffspringBrainMutationChance,
+                    MoveCost = 0.25f
                 };
 
                 newCreature.Brain = new NeuralNetwork(NeuralNetwork.GenerateInputNodes(PossibleCreatureInputs)
                     .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes, 0.75f))
                     .Concat(NeuralNetwork.GenerateOutputNodes(PossibleCreatureActions)));
 
-                newCreature.Brain.Connections = newCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MinCreatureConnections, ConnectionWeightBound);
+                newCreature.Brain.Connections = newCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound);
 
                 creatures.Add(newCreature);
             }

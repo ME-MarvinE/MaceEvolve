@@ -38,9 +38,7 @@ namespace MaceEvolve.WinForms
             lblGenEndsIn = new Label();
             lblGenerationCount = new Label();
             lblSimulationRunning = new Label();
-            btnForwardGen = new Button();
-            btnForwardGens = new Button();
-            btnForwardAllGens = new Button();
+            btnFastFoward = new Button();
             GameTimer = new Timer(components);
             GatherStepInfoForAllCreaturesButton = new Button();
             SuspendLayout();
@@ -137,47 +135,19 @@ namespace MaceEvolve.WinForms
             lblSimulationRunning.TabIndex = 6;
             lblSimulationRunning.Text = "Stopped";
             // 
-            // btnForwardGen
+            // btnFastFoward
             // 
-            btnForwardGen.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnForwardGen.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
-            btnForwardGen.Cursor = Cursors.Hand;
-            btnForwardGen.FlatStyle = FlatStyle.Flat;
-            btnForwardGen.Location = new System.Drawing.Point(620, 52);
-            btnForwardGen.Name = "btnForwardGen";
-            btnForwardGen.Size = new System.Drawing.Size(156, 32);
-            btnForwardGen.TabIndex = 1;
-            btnForwardGen.Text = "Forward 1 Gen";
-            btnForwardGen.UseVisualStyleBackColor = false;
-            btnForwardGen.Click += btnForwardGen_Click;
-            // 
-            // btnForwardGens
-            // 
-            btnForwardGens.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnForwardGens.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
-            btnForwardGens.Cursor = Cursors.Hand;
-            btnForwardGens.FlatStyle = FlatStyle.Flat;
-            btnForwardGens.Location = new System.Drawing.Point(620, 90);
-            btnForwardGens.Name = "btnForwardGens";
-            btnForwardGens.Size = new System.Drawing.Size(156, 32);
-            btnForwardGens.TabIndex = 1;
-            btnForwardGens.Text = "Forward 100 Gens";
-            btnForwardGens.UseVisualStyleBackColor = false;
-            btnForwardGens.Click += btnForwardGens_Click;
-            // 
-            // btnForwardAllGens
-            // 
-            btnForwardAllGens.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnForwardAllGens.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
-            btnForwardAllGens.Cursor = Cursors.Hand;
-            btnForwardAllGens.FlatStyle = FlatStyle.Flat;
-            btnForwardAllGens.Location = new System.Drawing.Point(620, 128);
-            btnForwardAllGens.Name = "btnForwardAllGens";
-            btnForwardAllGens.Size = new System.Drawing.Size(156, 32);
-            btnForwardAllGens.TabIndex = 1;
-            btnForwardAllGens.Text = "Forward All Gens";
-            btnForwardAllGens.UseVisualStyleBackColor = false;
-            btnForwardAllGens.Click += btnForwardAllGens_Click;
+            btnFastFoward.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnFastFoward.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnFastFoward.Cursor = Cursors.Hand;
+            btnFastFoward.FlatStyle = FlatStyle.Flat;
+            btnFastFoward.Location = new System.Drawing.Point(620, 52);
+            btnFastFoward.Name = "btnFastFoward";
+            btnFastFoward.Size = new System.Drawing.Size(156, 32);
+            btnFastFoward.TabIndex = 1;
+            btnFastFoward.Text = "Fast Forward";
+            btnFastFoward.UseVisualStyleBackColor = false;
+            btnFastFoward.Click += btnFastForward_Click;
             // 
             // GameTimer
             // 
@@ -211,9 +181,7 @@ namespace MaceEvolve.WinForms
             Controls.Add(GatherStepInfoForAllCreaturesButton);
             Controls.Add(ResetButton);
             Controls.Add(StopButton);
-            Controls.Add(btnForwardAllGens);
-            Controls.Add(btnForwardGens);
-            Controls.Add(btnForwardGen);
+            Controls.Add(btnFastFoward);
             Controls.Add(StartButton);
             KeyPreview = true;
             Name = "MainForm";
@@ -235,9 +203,7 @@ namespace MaceEvolve.WinForms
         private Label lblGenEndsIn;
         private Label lblGenerationCount;
         private Label lblSimulationRunning;
-        private Button btnForwardGen;
-        private Button btnForwardGens;
-        private Button btnForwardAllGens;
+        private Button btnFastFoward;
         private Timer GameTimer;
         private Button GatherStepInfoForAllCreaturesButton;
     }
