@@ -283,7 +283,7 @@ namespace MaceEvolve.Core.Models
                 }
                 else
                 {
-                    if (newBestCreature == null || creature.FoodEaten > newBestCreature.FoodEaten)
+                    if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
                     {
                         newBestCreature = creature;
                     }
