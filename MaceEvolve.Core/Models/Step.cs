@@ -256,9 +256,9 @@ namespace MaceEvolve.Core.Models
                 newCreature.MoveCost = creature.MoveCost;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
-                newCreature.Energy = creature.EnergyRequiredToReproduce;
+                newCreature.Energy = creature.EnergyRequiredToReproduce / 2;
                 newCreature.MaxEnergy = creature.MaxEnergy;
-                newCreature.Nutrients = creature.NutrientsRequiredToReproduce;
+                newCreature.Nutrients = creature.NutrientsRequiredToReproduce / 2;
                 newCreature.NutrientsRequiredToReproduce = creature.NutrientsRequiredToReproduce;
                 newCreature.EnergyRequiredToReproduce = creature.EnergyRequiredToReproduce;
                 newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
@@ -334,6 +334,7 @@ namespace MaceEvolve.Core.Models
                         connectionWeightBound: ConnectionWeightBound);
                 }
 
+                creature.TimesReproduced += 1;
                 offSpring.Add(newCreature);
             }
 

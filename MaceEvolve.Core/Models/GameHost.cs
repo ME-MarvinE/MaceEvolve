@@ -40,7 +40,7 @@ namespace MaceEvolve.Core.Models
         public float ReproductionNodeBiasVariance { get; set; }
         public float ReproductionConnectionWeightVariance { get; set; }
         public float CreatureMetabolism { get; set; } = 0.1f;
-        public float FoodEnergyPerServing { get; set; } = 500;
+        public float FoodEnergyPerServing { get; set; } = 150;
         public float FoodNutrientsPerServing { get; set; } = 50;
         public float FoodServingDigestionCost { get; set; } = 0.05f;
         public float CreatureSightRange { get; set; } = 100;
@@ -164,7 +164,7 @@ namespace MaceEvolve.Core.Models
         {
             CurrentStep.ExecuteActions(CurrentStep.RequestedActions);
 
-            TStep generatedStep = CreateStep(CurrentStep.Creatures.ToList(), CurrentStep.Food.Where(x => x.Servings > 0).ToList());
+            TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead).ToList(), CurrentStep.Food.Where(x => x.Servings > 0).ToList());
 
             TCreature newBestCreature = null;
 

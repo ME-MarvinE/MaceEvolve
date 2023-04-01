@@ -307,6 +307,7 @@ namespace MaceEvolve.WinForms
         }
         public void UpdateSimulation()
         {
+            MainGameHost.CreatureOffspringColor = MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, _random.Next(256));
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
             SelectedCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
@@ -334,7 +335,6 @@ namespace MaceEvolve.WinForms
             TicksPerGeneration = SimulationTPS * 30; //30 Seconds per generation.
 
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
-            MainGameHost.CreatureOffspringColor = Color.Yellow;
             MainGameHost.CreatureSize = 10;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
             MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
