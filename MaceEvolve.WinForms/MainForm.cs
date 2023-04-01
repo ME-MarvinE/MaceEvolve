@@ -264,7 +264,7 @@ namespace MaceEvolve.WinForms
 
             CurrentRunTicksElapsed += 1;
 
-            if (CurrentRunTicksElapsed % 400 == 0)
+            if (CurrentRunTicksElapsed % 500 == 0)
             {
                 int numberOfDeadCreatures = previousStep.Creatures.Count(x => x.IsDead);
 
