@@ -94,9 +94,9 @@ namespace MaceEvolve.Core.Models
         #region Methods
         public virtual void ResetStep(List<TCreature> creatures, List<TFood> food)
         {
-            CurrentStep = CreateStep(creatures, food);
             BestCreature = null;
             SelectedCreature = null;
+            CurrentStep = CreateStep(creatures, food);
         }
         public virtual Dictionary<TCreature, float> GetFitnesses(IEnumerable<TCreature> creatures)
         {
@@ -146,7 +146,7 @@ namespace MaceEvolve.Core.Models
 
             return successfulCreaturesFitnesses;
         }
-        protected virtual TStep CreateStep(List<TCreature> creatures, List<TFood> food)
+        public virtual TStep CreateStep(List<TCreature> creatures, List<TFood> food)
         {
             return new TStep()
             {
