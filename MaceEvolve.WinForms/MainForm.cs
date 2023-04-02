@@ -151,11 +151,6 @@ namespace MaceEvolve.WinForms
         }
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
         {
-            if (IsInFastMode)
-            {
-                return;
-            }
-
             BestCreatureNetworkViewerForm.Show();
         }
         private void GameTimer_Tick(object sender, EventArgs e)

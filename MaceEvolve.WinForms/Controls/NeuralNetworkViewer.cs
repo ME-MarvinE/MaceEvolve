@@ -3,7 +3,9 @@ using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Models;
+using Microsoft.VisualBasic.Devices;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -16,10 +18,24 @@ namespace MaceEvolve.WinForms.Controls
     {
         #region Fields
         public NeuralNetwork _neuralNetwork;
+        public IStep<GraphicalCreature, GraphicalFood> _step;
         #endregion
 
         #region Properties
-        public IStep<GraphicalCreature, GraphicalFood> Step { get; set; }
+        public IStep<GraphicalCreature, GraphicalFood> Step
+        {
+            get
+            {
+                return _step;
+            }
+            set
+            {
+                lock (_lock)
+                {
+                    _step = value;
+                }
+            }
+        }
         public NeuralNetwork NeuralNetwork
         {
             get
@@ -28,14 +44,17 @@ namespace MaceEvolve.WinForms.Controls
             }
             set
             {
-                if (_neuralNetwork != value)
+                lock (_lock)
                 {
-                    SelectedNodeId = null;
-                    MovingNodeId = null;
+                    if (_neuralNetwork != value)
+                    {
+                        SelectedNodeId = null;
+                        MovingNodeId = null;
 
-                    _neuralNetwork = value;
+                        _neuralNetwork = value;
 
-                    ResetDrawnNodes();
+                        ResetDrawnNodes();
+                    }
                 }
             }
         }
@@ -46,11 +65,12 @@ namespace MaceEvolve.WinForms.Controls
             { NodeType.Output, Color.Orange }
         };
         private Dictionary<NodeType, Brush> NodeTypeToBrushDict { get; }
-        private Dictionary<int, GameObject> DrawnNodeIdsToGameObject { get; set; } = new Dictionary<int, GameObject>();
+        private ConcurrentDictionary<int, GameObject> DrawnNodeIdsToGameObject { get; set; } = new ConcurrentDictionary<int, GameObject>();
         public int NodeSize = 75;
         public int NodeFontSize = 14;
         public int? SelectedNodeId { get; set; }
         public int? MovingNodeId { get; set; }
+        private object _lock { get; set; } = new object();
         #endregion
 
         #region Constructors
@@ -114,7 +134,7 @@ namespace MaceEvolve.WinForms.Controls
                     nodeGameObject.X = MaceRandom.Current.Next(xLowerimit, xUpperLimit);
                     nodeGameObject.Y = (Bounds.Bottom - nodeGameObject.Size) > 0 ? MaceRandom.Current.Next(Bounds.Bottom - (int)nodeGameObject.Size) : 0;
 
-                    DrawnNodeIdsToGameObject.Add(nodeId, nodeGameObject);
+                    DrawnNodeIdsToGameObject[nodeId] = nodeGameObject;
                 }
             }
         }
@@ -150,124 +170,127 @@ namespace MaceEvolve.WinForms.Controls
         }
         private void NeuralNetworkViewer_Paint(object sender, PaintEventArgs e)
         {
-            if (NeuralNetwork != null && Step != null)
+            lock (_lock)
             {
-                GraphicalCreature networkCreatureInStep = Step?.CreaturesBrainOutput.FirstOrDefault(x => x.Key.Brain == NeuralNetwork).Key;
-
-                if (networkCreatureInStep == null)
+                if (NeuralNetwork != null && Step != null)
                 {
-                    return;
-                }
+                    GraphicalCreature networkCreatureInStep = Step.CreaturesBrainOutput.FirstOrDefault(x => x.Key.Brain == NeuralNetwork).Key;
 
-                e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
-                e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-
-                //Draw connections between nodes.
-                //Currently, duplicate connections will draw over each other.
-                List<Connection> drawableConnections = networkCreatureInStep.Brain.Connections.Where(x => DrawnNodeIdsToGameObject.Keys.Contains(x.SourceId) && DrawnNodeIdsToGameObject.Keys.Contains(x.TargetId)).ToList();
-
-                foreach (var connection in drawableConnections)
-                {
-                    if (connection.SourceId != connection.TargetId)
+                    if (networkCreatureInStep == null)
                     {
-                        GameObject sourceIdGameObject = DrawnNodeIdsToGameObject[connection.SourceId];
-                        GameObject targetIdGameObject = DrawnNodeIdsToGameObject[connection.TargetId];
-                        Color penColor = GetConnectionPenColor(connection);
-                        float penSize = GetConnectionPenSize(connection);
-
-                        e.Graphics.DrawLine(new Pen(penColor, penSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
-                    }
-                }
-
-                NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
-
-                //Draw nodes and self referencing connections.
-                foreach (var keyValuePair in DrawnNodeIdsToGameObject)
-                {
-                    int nodeId = keyValuePair.Key;
-                    Node node = networkCreatureInStep.Brain.NodeIdsToNodesDict[nodeId];
-                    GameObject nodeGameObject = keyValuePair.Value;
-                    Brush nodeBrush = NodeTypeToBrushDict[node.NodeType];
-
-                    //Draw the node's self referencing connections.
-                    List<Connection> selfReferencingConnections = drawableConnections.Where(x => x.SourceId == nodeId && x.SourceId == x.TargetId).ToList();
-                    float selfReferencingConnectionAngle = selfReferencingConnections.Count <= 1 ? 0 : 360 / selfReferencingConnections.Count;
-
-                    for (int i = 0; i < selfReferencingConnections.Count; i++)
-                    {
-                        float angleToDrawConnection = (i + 1) * selfReferencingConnectionAngle;
-                        angleToDrawConnection += 225; //Offset because ellipse is drawn from top left. This makes the first circle be drawn above te node instead of to the right.
-
-                        Connection connection = selfReferencingConnections[i];
-                        GameObject sourceIdGameObject = DrawnNodeIdsToGameObject[connection.SourceId];
-                        GameObject targetIdGameObject = DrawnNodeIdsToGameObject[connection.TargetId];
-
-                        Color penColor = GetConnectionPenColor(connection);
-                        float penSize = GetConnectionPenSize(connection);
-
-                        e.Graphics.TranslateTransform(sourceIdGameObject.MX, sourceIdGameObject.MY);
-                        e.Graphics.RotateTransform(angleToDrawConnection);
-                        e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
-                        e.Graphics.ResetTransform();
+                        return;
                     }
 
-                    //Draw the node.
-                    NeuralNetworkStepNodeInfo nodeNetworkStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == nodeId);
+                    e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+                    e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-                    string previousOutputString = nodeNetworkStepInfo == null ? "N/A" : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
-                    int nodeIdFontSize = NodeFontSize - 4;
-                    int nodePreviousOutputFontSize = NodeFontSize;
+                    //Draw connections between nodes.
+                    //Currently, duplicate connections will draw over each other.
+                    List<Connection> drawableConnections = networkCreatureInStep.Brain.Connections.Where(x => DrawnNodeIdsToGameObject.Keys.Contains(x.SourceId) && DrawnNodeIdsToGameObject.Keys.Contains(x.TargetId)).ToList();
 
-                    e.Graphics.FillEllipse(nodeBrush, nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
-
-                    if (highestOutputNodeStepInfo != null && nodeNetworkStepInfo == highestOutputNodeStepInfo)
+                    foreach (var connection in drawableConnections)
                     {
-                        e.Graphics.DrawEllipse(new Pen(Color.White, 3), nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
+                        if (connection.SourceId != connection.TargetId)
+                        {
+                            GameObject sourceIdGameObject = DrawnNodeIdsToGameObject[connection.SourceId];
+                            GameObject targetIdGameObject = DrawnNodeIdsToGameObject[connection.TargetId];
+                            Color penColor = GetConnectionPenColor(connection);
+                            float penSize = GetConnectionPenSize(connection);
+
+                            e.Graphics.DrawLine(new Pen(penColor, penSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
+                        }
                     }
 
-                    if (nodeId == SelectedNodeId)
+                    NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
+
+                    //Draw nodes and self referencing connections.
+                    foreach (var keyValuePair in DrawnNodeIdsToGameObject)
                     {
-                        e.Graphics.DrawEllipse(new Pen(Color.White, 6), nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
+                        int nodeId = keyValuePair.Key;
+                        Node node = networkCreatureInStep.Brain.NodeIdsToNodesDict[nodeId];
+                        GameObject nodeGameObject = keyValuePair.Value;
+                        Brush nodeBrush = NodeTypeToBrushDict[node.NodeType];
+
+                        //Draw the node's self referencing connections.
+                        List<Connection> selfReferencingConnections = drawableConnections.Where(x => x.SourceId == nodeId && x.SourceId == x.TargetId).ToList();
+                        float selfReferencingConnectionAngle = selfReferencingConnections.Count <= 1 ? 0 : 360 / selfReferencingConnections.Count;
+
+                        for (int i = 0; i < selfReferencingConnections.Count; i++)
+                        {
+                            float angleToDrawConnection = (i + 1) * selfReferencingConnectionAngle;
+                            angleToDrawConnection += 225; //Offset because ellipse is drawn from top left. This makes the first circle be drawn above te node instead of to the right.
+
+                            Connection connection = selfReferencingConnections[i];
+                            GameObject sourceIdGameObject = DrawnNodeIdsToGameObject[connection.SourceId];
+                            GameObject targetIdGameObject = DrawnNodeIdsToGameObject[connection.TargetId];
+
+                            Color penColor = GetConnectionPenColor(connection);
+                            float penSize = GetConnectionPenSize(connection);
+
+                            e.Graphics.TranslateTransform(sourceIdGameObject.MX, sourceIdGameObject.MY);
+                            e.Graphics.RotateTransform(angleToDrawConnection);
+                            e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
+                            e.Graphics.ResetTransform();
+                        }
+
+                        //Draw the node.
+                        NeuralNetworkStepNodeInfo nodeNetworkStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == nodeId);
+
+                        string previousOutputString = nodeNetworkStepInfo == null ? "N/A" : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
+                        int nodeIdFontSize = NodeFontSize - 4;
+                        int nodePreviousOutputFontSize = NodeFontSize;
+
+                        e.Graphics.FillEllipse(nodeBrush, nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
+
+                        if (highestOutputNodeStepInfo != null && nodeNetworkStepInfo == highestOutputNodeStepInfo)
+                        {
+                            e.Graphics.DrawEllipse(new Pen(Color.White, 3), nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
+                        }
+
+                        if (nodeId == SelectedNodeId)
+                        {
+                            e.Graphics.DrawEllipse(new Pen(Color.White, 6), nodeGameObject.X, nodeGameObject.Y, nodeGameObject.Size, nodeGameObject.Size);
+                        }
+
+                        e.Graphics.DrawString($"{nodeId}", new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), nodeGameObject.MX - nodeIdFontSize, nodeGameObject.MY - nodePreviousOutputFontSize * 2);
+                        e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), nodeGameObject.MX - nodePreviousOutputFontSize * 2, nodeGameObject.MY);
                     }
 
-                    e.Graphics.DrawString($"{nodeId}", new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), nodeGameObject.MX - nodeIdFontSize, nodeGameObject.MY - nodePreviousOutputFontSize * 2);
-                    e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), nodeGameObject.MX - nodePreviousOutputFontSize * 2, nodeGameObject.MY);
-                }
+                    lblNetworkConnectionsCount.Text = $"Connections: {networkCreatureInStep.Brain.Connections.Count}";
+                    lblNetworkNodesCount.Text = $"Nodes: {networkCreatureInStep.Brain.NodeIdsToNodesDict.Count}";
 
-                lblNetworkConnectionsCount.Text = $"Connections: {networkCreatureInStep.Brain.Connections.Count}";
-                lblNetworkNodesCount.Text = $"Nodes: {networkCreatureInStep.Brain.NodeIdsToNodesDict.Count}";
-
-                lblSelectedNodeId.Visible = SelectedNodeId != null;
-                lblSelectedNodePreviousOutput.Visible = SelectedNodeId != null;
-                lblSelectedNodeConnectionCount.Visible = SelectedNodeId != null;
-                lblNodeInputOrAction.Visible = SelectedNodeId != null;
-                if (SelectedNodeId != null)
-                {
-                    NeuralNetworkStepNodeInfo selectedNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == SelectedNodeId);
-
-                    lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
-                    lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "N/A" : selectedNodeStepInfo.PreviousOutput)}";
-                    lblSelectedNodeConnectionCount.Text = $"Connections: {networkCreatureInStep.Brain.Connections.Count(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId)}";
-
-
-                    Node selectedNode = networkCreatureInStep.Brain.NodeIdsToNodesDict[SelectedNodeId.Value];
-
-                    switch (selectedNode.NodeType)
+                    lblSelectedNodeId.Visible = SelectedNodeId != null;
+                    lblSelectedNodePreviousOutput.Visible = SelectedNodeId != null;
+                    lblSelectedNodeConnectionCount.Visible = SelectedNodeId != null;
+                    lblNodeInputOrAction.Visible = SelectedNodeId != null;
+                    if (SelectedNodeId != null)
                     {
-                        case NodeType.Input:
-                            lblNodeInputOrAction.Text = $"Type: Input ({selectedNode.CreatureInput})";
-                            break;
+                        NeuralNetworkStepNodeInfo selectedNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == SelectedNodeId);
 
-                        case NodeType.Process:
-                            lblNodeInputOrAction.Text = "Type: Process";
-                            break;
+                        lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
+                        lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "N/A" : selectedNodeStepInfo.PreviousOutput)}";
+                        lblSelectedNodeConnectionCount.Text = $"Connections: {networkCreatureInStep.Brain.Connections.Count(x => x.SourceId == SelectedNodeId || x.TargetId == SelectedNodeId)}";
 
-                        case NodeType.Output:
-                            lblNodeInputOrAction.Text = $"Type: Output ({selectedNode.CreatureAction})";
-                            break;
 
-                        default:
-                            throw new NotImplementedException();
+                        Node selectedNode = networkCreatureInStep.Brain.NodeIdsToNodesDict[SelectedNodeId.Value];
+
+                        switch (selectedNode.NodeType)
+                        {
+                            case NodeType.Input:
+                                lblNodeInputOrAction.Text = $"Type: Input ({selectedNode.CreatureInput})";
+                                break;
+
+                            case NodeType.Process:
+                                lblNodeInputOrAction.Text = "Type: Process";
+                                break;
+
+                            case NodeType.Output:
+                                lblNodeInputOrAction.Text = $"Type: Output ({selectedNode.CreatureAction})";
+                                break;
+
+                            default:
+                                throw new NotImplementedException();
+                        }
                     }
                 }
             }
