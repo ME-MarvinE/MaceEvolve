@@ -104,16 +104,15 @@ namespace MaceEvolve.Mono.Desktop
         {
             GraphicsDevice.Clear(BackgroundColor);
 
-            double MillisecondsInFailedRuns = 0;
+            double millisecondsInFailedRuns = 0;
 
             foreach (var failedRunTimeSpan in FailedRunsUptimes)
             {
-                MillisecondsInFailedRuns += failedRunTimeSpan.TotalMilliseconds;
-
+                millisecondsInFailedRuns += failedRunTimeSpan.TotalMilliseconds;
             }
 
             TimeSpan timeInCurrentRun = TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt);
-            TimeSpan timeInFailedRuns = TimeSpan.FromMilliseconds(MillisecondsInFailedRuns);
+            TimeSpan timeInFailedRuns = TimeSpan.FromMilliseconds(millisecondsInFailedRuns);
             TimeSpan timeInAllRuns = timeInFailedRuns.Add(timeInCurrentRun);
             TimeSpan averageTimePerRun = TimeSpan.FromMilliseconds(FailedRunsUptimes.Count == 0 ? 0 : FailedRunsUptimes.Average(x => x.TotalMilliseconds));
 
