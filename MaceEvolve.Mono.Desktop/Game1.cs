@@ -76,7 +76,7 @@ namespace MaceEvolve.Mono.Desktop
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 5;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
-            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
+            MainGameHost.CreatureSpeed = 2.75f;
 
             Reset();
 
@@ -159,11 +159,6 @@ namespace MaceEvolve.Mono.Desktop
                 _spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
             }
 
-            if (MainGameHost.UseSuccessBounds)
-            {
-                _spriteBatch.DrawRectangle(MainGameHost.SuccessBounds.X, MainGameHost.SuccessBounds.Y, MainGameHost.SuccessBounds.Width, MainGameHost.SuccessBounds.Height, new Color(Color.Green, 100));
-            }
-
             if (SimulationRunning)
             {
                 _spriteBatch.DrawString(BigUIFont, IsInFastMode ? "Running (Fast)" : "Running", new Vector2(10, 15), Color.White);
@@ -231,11 +226,6 @@ namespace MaceEvolve.Mono.Desktop
         {
             Rectangle gameBounds = _graphics.GraphicsDevice.PresentationParameters.Bounds;
             MainGameHost.WorldBounds = new Core.Models.Rectangle(gameBounds.X, gameBounds.Y, gameBounds.Width, gameBounds.Height);
-
-            float MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
-            float MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
-
-            MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
 
             MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 

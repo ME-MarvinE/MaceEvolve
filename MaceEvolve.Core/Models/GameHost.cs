@@ -18,10 +18,9 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public TStep CurrentStep { get; private set; }
-        public int MaxCreatureAmount { get; set; } = 300;
+        public int MaxCreatureAmount { get; set; } = 1000;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
-        public IRectangle SuccessBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 64;
         public float CreatureSpeed { get; set; }
@@ -48,7 +47,6 @@ namespace MaceEvolve.Core.Models
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
-        public bool UseSuccessBounds { get; set; }
         public TCreature SelectedCreature
         {
             get
@@ -97,54 +95,6 @@ namespace MaceEvolve.Core.Models
             SelectedCreature = null;
             CurrentStep = CreateStep(creatures, food);
         }
-        public virtual Dictionary<TCreature, float> GetFitnesses(IEnumerable<TCreature> creatures)
-        {
-            if (creatures == null) { throw new ArgumentNullException(); }
-
-            if (!creatures.Any())
-            {
-                return new Dictionary<TCreature, float>();
-            }
-
-            Dictionary<TCreature, float> successfulCreaturesFitnesses = new Dictionary<TCreature, float>();
-
-            if (UseSuccessBounds)
-            {
-                float successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
-                float successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
-
-                foreach (var creature in creatures)
-                {
-                    float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
-                    float successBoundsHypotenuse = Globals.Hypotenuse(SuccessBounds.Width, SuccessBounds.Height);
-
-                    successfulCreaturesFitnesses.Add(creature, Globals.Map(distanceFromMiddle, 0, successBoundsHypotenuse, 1, 0));
-                }
-            }
-            else
-            {
-                float mostEnergy = creatures.Max(x => x.Energy);
-                float mostNutrients = creatures.Max(x => x.Nutrients);
-                float mostTimesReproduced = creatures.Max(x => x.TimesReproduced);
-
-                if (mostEnergy == 0 && mostNutrients == 0 && mostTimesReproduced == 0)
-                {
-                    return new Dictionary<TCreature, float>();
-                }
-
-                foreach (var creature in creatures)
-                {
-                    float energyFitness = mostEnergy == 0 ? 0 : creature.Energy / mostEnergy;
-                    float nutrientsFitness = mostNutrients == 0 ? 0 : creature.Nutrients / mostNutrients;
-                    float timesReproducedFitness = mostTimesReproduced == 0 ? 0 : creature.TimesReproduced / mostTimesReproduced;
-                    float fitness = Globals.Map(energyFitness + nutrientsFitness + timesReproducedFitness, 0, 3, 0, 1);
-
-                    successfulCreaturesFitnesses.Add(creature, fitness);
-                }
-            }
-
-            return successfulCreaturesFitnesses;
-        }
         public virtual TStep CreateStep(IEnumerable<TCreature> creatures, IEnumerable<TFood> food)
         {
             return new TStep()
@@ -166,9 +116,6 @@ namespace MaceEvolve.Core.Models
             generatedStep.ExecuteActions(CurrentStep.RequestedActions);
 
             TCreature newBestCreature = null;
-
-            float successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
-            float successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
             Parallel.ForEach(generatedStep.Creatures, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount }, creature =>
             {
@@ -262,17 +209,7 @@ namespace MaceEvolve.Core.Models
 
                 //Identify the best creature in the step.
 
-                if (UseSuccessBounds)
-                {
-                    float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
-                    float? newBestCreatureDistanceFromMiddle = newBestCreature == null ? (float?)null : Globals.GetDistanceFrom(newBestCreature.MX, newBestCreature.MY, successBoundsMiddleX, successBoundsMiddleY);
-
-                    if (newBestCreatureDistanceFromMiddle == null || distanceFromMiddle < newBestCreatureDistanceFromMiddle)
-                    {
-                        newBestCreature = creature;
-                    }
-                }
-                else if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
+                if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
                 {
                     newBestCreature = creature;
                 }

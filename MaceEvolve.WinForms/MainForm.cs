@@ -49,11 +49,6 @@ namespace MaceEvolve.WinForms
         {
             MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
 
-            float MiddleWorldBoundsX = Globals.MiddleX(MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.Width);
-            float MiddleWorldBoundsY = Globals.MiddleX(MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Height);
-
-            MainGameHost.SuccessBounds = new Core.Models.Rectangle(MiddleWorldBoundsX - 75, MiddleWorldBoundsY - 75, 150, 150);
-
             BestCreatureNetworkViewerForm.NetworkViewer.Step = null;
             BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
@@ -218,11 +213,6 @@ namespace MaceEvolve.WinForms
                     e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
                 }
             }
-
-            if (MainGameHost.UseSuccessBounds)
-            {
-                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Green)), new System.Drawing.Rectangle((int)MainGameHost.SuccessBounds.X, (int)MainGameHost.SuccessBounds.Y, (int)MainGameHost.SuccessBounds.Width, (int)MainGameHost.SuccessBounds.Height));
-            }
         }
         private void MainForm_MouseClick(object sender, MouseEventArgs e)
         {
@@ -269,7 +259,7 @@ namespace MaceEvolve.WinForms
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 10;
             MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
-            MainGameHost.CreatureSpeed = MainGameHost.UseSuccessBounds ? 2.75f * 1.3f : 2.75f;
+            MainGameHost.CreatureSpeed = 2.75f;
 
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
