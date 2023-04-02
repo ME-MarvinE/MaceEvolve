@@ -1,7 +1,7 @@
 ﻿using MaceEvolve.Core.Enums;
-using MaceEvolve.Core.Extensions;
 using MaceEvolve.Core.Interfaces;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -11,8 +11,8 @@ namespace MaceEvolve.Core.Models
     public class Step<TCreature, TFood> : IStep<TCreature, TFood> where TCreature : ICreature, new() where TFood : IFood
     {
         #region Properties
-        public Queue<StepAction<TCreature>> RequestedActions { get; set; } = new Queue<StepAction<TCreature>>();
-        public Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; } = new Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
+        public ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; } = new ConcurrentQueue<StepAction<TCreature>>();
+        public ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; } = new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
         public List<TCreature> Creatures { get; set; }
         public List<TFood> Food { get; set; }
         public IRectangle WorldBounds { get; set; }
@@ -98,7 +98,7 @@ namespace MaceEvolve.Core.Models
 
             List<TCreature> offSpring = new List<TCreature>();
 
-            int childrenToCreate = Math.Min(Globals.Random.Next(numberOfChildrenThatCanBeCreated + 1), creature.MaxOffspringPerReproduction);
+            int childrenToCreate = Math.Min(MaceRandom.Current.Next(numberOfChildrenThatCanBeCreated + 1), creature.MaxOffspringPerReproduction);
             float maxXDistanceOfOffspring = creature.Size * 2;
             float maxYDistanceOfOffspring = creature.Size * 2;
 
@@ -119,8 +119,8 @@ namespace MaceEvolve.Core.Models
                 newCreature.EnergyRequiredToReproduce = creature.EnergyRequiredToReproduce;
                 newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
 
-                newCreature.X = creature.X + Globals.Random.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
-                newCreature.Y = creature.Y + Globals.Random.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
+                newCreature.X = creature.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
+                newCreature.Y = creature.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
 
                 if (creature.MX < WorldBounds.X)
                 {
@@ -215,12 +215,12 @@ namespace MaceEvolve.Core.Models
 
             while (offspring.Brain.Connections.Count < averageNumberOfParentConnections)
             {
-                TCreature randomParent = parents[Globals.Random.Next(parents.Count)];
+                TCreature randomParent = parents[MaceRandom.Current.Next(parents.Count)];
                 List<Connection> randomParentAvailableConnections = availableParentConnections[randomParent];
 
                 if (randomParentAvailableConnections.Count > 0)
                 {
-                    Connection randomParentConnection = randomParentAvailableConnections[Globals.Random.Next(randomParentAvailableConnections.Count)];
+                    Connection randomParentConnection = randomParentAvailableConnections[MaceRandom.Current.Next(randomParentAvailableConnections.Count)];
 
                     //If a parent's node has not been added and mapped to an offspring's node, create a new node and map it to the parent's node.
                     if (!(parentToOffspringNodesMap.ContainsKey(randomParent) && parentToOffspringNodesMap[randomParent].ContainsKey(randomParentConnection.SourceId)))

@@ -99,7 +99,7 @@ namespace MaceEvolve.WinForms
 
             foreach (var creature in creatures)
             {
-                creature.Color = Color.FromArgb(255, 64, 64, Globals.Random.Next(256));
+                creature.Color = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
             }
 
             return creatures;
@@ -139,13 +139,14 @@ namespace MaceEvolve.WinForms
         private async void btnFastForward_Click(object sender, EventArgs e)
         {
             IsInFastMode = true;
-            await Task.Run(() =>
+
+            await Task.Factory.StartNew(() =>
             {
                 while (SimulationRunning)
                 {
                     UpdateSimulation();
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
             IsInFastMode = false;
         }
         private void btnTrackBestCreature_Click(object sender, EventArgs e)
@@ -255,7 +256,7 @@ namespace MaceEvolve.WinForms
         }
         public void UpdateSimulation()
         {
-            MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, Globals.Random.Next(256));
+            MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
             GraphicalStep<GraphicalCreature, GraphicalFood> previousStep = MainGameHost.CurrentStep;
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 

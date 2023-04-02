@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Models;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -9,7 +10,6 @@ namespace MaceEvolve.Core
     public static class Globals
     {
         #region Properties
-        public static Random Random = new Random();
         public static ReadOnlyCollection<CreatureInput> AllCreatureInputs { get; } = Enum.GetValues(typeof(CreatureInput)).Cast<CreatureInput>().ToList().AsReadOnly();
         public static ReadOnlyCollection<CreatureAction> AllCreatureActions { get; } = Enum.GetValues(typeof(CreatureAction)).Cast<CreatureAction>().ToList().AsReadOnly();
         public static ReadOnlyCollection<NodeType> AllNodeTypes { get; } = Enum.GetValues(typeof(NodeType)).Cast<NodeType>().ToList().AsReadOnly();

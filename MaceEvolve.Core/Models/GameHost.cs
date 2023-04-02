@@ -1,17 +1,16 @@
 ﻿using MaceEvolve.Core.Enums;
-using MaceEvolve.Core.Extensions;
 using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MaceEvolve.Core.Models
 {
     public class GameHost<TStep, TCreature, TFood> where TCreature : class, ICreature, new() where TFood : class, IFood, new() where TStep : class, IStep<TCreature, TFood>, new()
     {
         #region Fields
-        protected static Random random = new Random();
         protected TCreature bestCreature;
         protected TCreature selectedCreature;
         #endregion
@@ -161,25 +160,25 @@ namespace MaceEvolve.Core.Models
         }
         public virtual void NextStep(bool gatherInfoForAllCreatures = false)
         {
-            CurrentStep.ExecuteActions(CurrentStep.RequestedActions);
-
             TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead).ToList(), CurrentStep.Food.Where(x => x.Servings > 0).ToList());
+
+            generatedStep.ExecuteActions(CurrentStep.RequestedActions);
 
             TCreature newBestCreature = null;
 
             float successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
             float successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
 
-            foreach (TCreature creature in generatedStep.Creatures)
+            Parallel.ForEach(generatedStep.Creatures, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount }, creature =>
             {
                 if (!creature.IsDead || creature == BestCreature || creature == SelectedCreature)
                 {
+                    //Calculate the output values for the creature's nodes.
                     IEnumerable<CreatureInput> inputsRequiredForStep = creature.Brain.GetInputsRequiredForStep();
                     Dictionary<CreatureInput, float> inputToInputValueDict = generatedStep.GenerateCreatureInputValues(inputsRequiredForStep, creature);
                     Dictionary<int, float> nodeIdToOutputValueDict = creature.Brain.GenerateNodeOutputs(inputToInputValueDict);
 
-                    Queue<StepAction<TCreature>> creatureStepActions = new Queue<StepAction<TCreature>>();
-
+                    //Get the output node with the highest output value.
                     int? highestOutputNodeId = null;
 
                     foreach (var keyValuePair in nodeIdToOutputValueDict)
@@ -198,22 +197,18 @@ namespace MaceEvolve.Core.Models
                         Creature = creature
                     };
 
-                    if (highestOutputNodeId == null || nodeIdToOutputValueDict[highestOutputNodeId.Value] <= 0)
-                    {
-                        stepAction.Action = CreatureAction.DoNothing;
-                    }
-                    else
+                    if (highestOutputNodeId != null && nodeIdToOutputValueDict[highestOutputNodeId.Value] > 0)
                     {
                         stepAction.Action = creature.Brain.NodeIdsToNodesDict[highestOutputNodeId.Value].CreatureAction.Value;
                     }
-
-                    creatureStepActions.Enqueue(stepAction);
-
-                    foreach (var creatureStepAction in creatureStepActions)
+                    else
                     {
-                        generatedStep.QueueAction(creatureStepAction);
+                        stepAction.Action = CreatureAction.DoNothing;
                     }
 
+                    generatedStep.QueueAction(stepAction);
+
+                    //Store properties of the creature's current status.
                     bool trackBrainOutput = gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature;
 
                     if (trackBrainOutput)
@@ -264,7 +259,8 @@ namespace MaceEvolve.Core.Models
                     }
                 }
 
-                //Update best creature.
+                //Identify the best creature in the step.
+
                 if (UseSuccessBounds)
                 {
                     float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
@@ -275,26 +271,17 @@ namespace MaceEvolve.Core.Models
                         newBestCreature = creature;
                     }
                 }
-                else
+                else if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
                 {
-                    if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
-                    {
-                        newBestCreature = creature;
-                    }
+                    newBestCreature = creature;
                 }
-            }
+            });
 
-            if (newBestCreature != null && BestCreature != newBestCreature)
-            {
-                BestCreature = newBestCreature;
-            }
+            BestCreature = newBestCreature;
 
-            if (random.NextFloat() <= 0.8)
+            if (MaceRandom.Current.NextFloat() <= 0.8 && generatedStep.Food.Count < MaxFoodAmount)
             {
-                if (generatedStep.Food.Count < MaxFoodAmount)
-                {
-                    generatedStep.Food.Add(CreateFoodWithRandomLocation());
-                }
+                generatedStep.Food.Add(CreateFoodWithRandomLocation());
             }
 
             CurrentStep = generatedStep;
@@ -303,8 +290,8 @@ namespace MaceEvolve.Core.Models
         {
             return new TFood()
             {
-                X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
-                Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
+                X = MaceRandom.Current.NextFloat(0, WorldBounds.X + WorldBounds.Width),
+                Y = MaceRandom.Current.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                 Servings = 1,
                 EnergyPerServing = FoodEnergyPerServing,
                 ServingDigestionCost = FoodServingDigestionCost,
@@ -331,8 +318,8 @@ namespace MaceEvolve.Core.Models
             {
                 TCreature newCreature = new TCreature()
                 {
-                    X = random.NextFloat(0, WorldBounds.X + WorldBounds.Width),
-                    Y = random.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
+                    X = MaceRandom.Current.NextFloat(0, WorldBounds.X + WorldBounds.Width),
+                    Y = MaceRandom.Current.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                     Size = CreatureSize,
                     Speed = CreatureSpeed,
                     Metabolism = CreatureMetabolism,

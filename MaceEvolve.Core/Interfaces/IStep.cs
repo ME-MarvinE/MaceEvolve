@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Models;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace MaceEvolve.Core.Interfaces
@@ -8,9 +9,9 @@ namespace MaceEvolve.Core.Interfaces
     {
         #region Properties
         List<TCreature> Creatures { get; set; }
-        Dictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; }
+        ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; }
         List<TFood> Food { get; set; }
-        Queue<StepAction<TCreature>> RequestedActions { get; set; }
+        ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; }
         IRectangle WorldBounds { get; set; }
         float ConnectionWeightBound { get; set; }
         int MaxCreatureConnections { get; set; }

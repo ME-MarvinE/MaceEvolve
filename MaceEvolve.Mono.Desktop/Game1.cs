@@ -190,7 +190,7 @@ namespace MaceEvolve.Mono.Desktop
         }
         public void UpdateSimulation()
         {
-            MainGameHost.CreatureOffspringColor = new Color(64, 64, Globals.Random.Next(256));
+            MainGameHost.CreatureOffspringColor = new Color(64, 64, MaceRandom.Current.Next(256));
             GraphicalStep<GraphicalCreature, GraphicalFood> previousStep = MainGameHost.CurrentStep;
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
@@ -227,7 +227,7 @@ namespace MaceEvolve.Mono.Desktop
 
             foreach (var creature in creatures)
             {
-                creature.Color = new Color(64, 64, Globals.Random.Next(256));
+                creature.Color = new Color(64, 64, MaceRandom.Current.Next(256));
             }
 
             return creatures;
@@ -274,13 +274,14 @@ namespace MaceEvolve.Mono.Desktop
             if (GamePad.GetState(PlayerIndex.One).Buttons.Y == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.F))
             {
                 IsInFastMode = true;
-                await Task.Run(() =>
+
+                await Task.Factory.StartNew(() =>
                 {
                     while (SimulationRunning)
                     {
                         UpdateSimulation();
                     }
-                });
+                }, TaskCreationOptions.LongRunning);
                 IsInFastMode = false;
             }
 

@@ -111,8 +111,8 @@ namespace MaceEvolve.WinForms.Controls
                         xUpperLimit = xLowerimit;
                     }
 
-                    nodeGameObject.X = Globals.Random.Next(xLowerimit, xUpperLimit);
-                    nodeGameObject.Y = (Bounds.Bottom - nodeGameObject.Size) > 0 ? Globals.Random.Next(Bounds.Bottom - (int)nodeGameObject.Size) : 0;
+                    nodeGameObject.X = MaceRandom.Current.Next(xLowerimit, xUpperLimit);
+                    nodeGameObject.Y = (Bounds.Bottom - nodeGameObject.Size) > 0 ? MaceRandom.Current.Next(Bounds.Bottom - (int)nodeGameObject.Size) : 0;
 
                     DrawnNodeIdsToGameObject.Add(nodeId, nodeGameObject);
                 }

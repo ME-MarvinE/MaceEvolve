@@ -1,6 +1,4 @@
 ﻿using MaceEvolve.Core.Enums;
-using MaceEvolve.Core.Extensions;
-using MaceEvolve.Core.Interfaces;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -44,7 +42,7 @@ namespace MaceEvolve.Core.Models
         public List<Connection> GenerateRandomConnections(int minConnections, int maxConnections, float weightBound)
         {
             List<Connection> generatedConnections = new List<Connection>();
-            int targetConnectionAmount = Globals.Random.Next(minConnections, maxConnections + 1);
+            int targetConnectionAmount = MaceRandom.Current.Next(minConnections, maxConnections + 1);
 
             List<int> possibleSourceNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
             List<int> possibleTargetNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
@@ -54,10 +52,10 @@ namespace MaceEvolve.Core.Models
 
             while (generatedConnections.Count < targetConnectionAmount)
             {
-                int randomConnectionSource = possibleSourceNodesIds[Globals.Random.Next(0, possibleSourceNodesIds.Count)];
-                int randomConnectionTarget = possibleTargetNodesIds[Globals.Random.Next(0, possibleTargetNodesIds.Count)];
+                int randomConnectionSource = possibleSourceNodesIds[MaceRandom.Current.Next(0, possibleSourceNodesIds.Count)];
+                int randomConnectionTarget = possibleTargetNodesIds[MaceRandom.Current.Next(0, possibleTargetNodesIds.Count)];
 
-                Connection newConnection = new Connection(randomConnectionSource, randomConnectionTarget, Globals.Random.NextFloat(-weightBound, weightBound));
+                Connection newConnection = new Connection(randomConnectionSource, randomConnectionTarget, MaceRandom.Current.NextFloat(-weightBound, weightBound));
                 generatedConnections.Add(newConnection);
             }
 
@@ -65,11 +63,11 @@ namespace MaceEvolve.Core.Models
         }
         public static List<Node> GenerateInputNodes(IEnumerable<CreatureInput> possibleInputs)
         {
-            return possibleInputs.Select(x => new Node(NodeType.Input, Globals.Random.NextFloat(-1, 1), creatureInput: x)).ToList();
+            return possibleInputs.Select(x => new Node(NodeType.Input, MaceRandom.Current.NextFloat(-1, 1), creatureInput: x)).ToList();
         }
         public static List<Node> GenerateOutputNodes(IEnumerable<CreatureAction> possibleOutputs)
         {
-            return possibleOutputs.Select(x => new Node(NodeType.Output, Globals.Random.NextFloat(-1, 1), creatureAction: x)).ToList();
+            return possibleOutputs.Select(x => new Node(NodeType.Output, MaceRandom.Current.NextFloat(-1, 1), creatureAction: x)).ToList();
         }
         public static List<Node> GenerateProcessNodes(int maxProcessNodes, float processNodeCreationChance)
         {
@@ -77,9 +75,9 @@ namespace MaceEvolve.Core.Models
 
             for (int i = 0; i < maxProcessNodes; i++)
             {
-                if (Globals.Random.NextFloat() < processNodeCreationChance)
+                if (MaceRandom.Current.NextFloat() < processNodeCreationChance)
                 {
-                    processNodes.Add(new Node(NodeType.Process, Globals.Random.NextFloat(-1, 1)));
+                    processNodes.Add(new Node(NodeType.Process, MaceRandom.Current.NextFloat(-1, 1)));
                 }
             }
 
@@ -366,12 +364,12 @@ namespace MaceEvolve.Core.Models
 
             while (newNetwork.Connections.Count < averageNumberOfParentConnections)
             {
-                NeuralNetwork randomParent = networksToCombine.ElementAt(Globals.Random.Next(networksToCombineCount));
+                NeuralNetwork randomParent = networksToCombine.ElementAt(MaceRandom.Current.Next(networksToCombineCount));
                 List<Connection> randomParentAvailableConnections = availableParentConnections[randomParent];
 
                 if (randomParentAvailableConnections.Count > 0)
                 {
-                    Connection randomParentConnection = randomParentAvailableConnections[Globals.Random.Next(randomParentAvailableConnections.Count)];
+                    Connection randomParentConnection = randomParentAvailableConnections[MaceRandom.Current.Next(randomParentAvailableConnections.Count)];
 
                     //If a parent's node has not been added and mapped to a newNetwork's node, create a new node and map it to the parent's node.
                     if (!(parentToNewNetworkNodesMap.ContainsKey(randomParent) && parentToNewNetworkNodesMap[randomParent].ContainsKey(randomParentConnection.SourceId)))
@@ -425,7 +423,7 @@ namespace MaceEvolve.Core.Models
             //Connections should be added after nodes are added so that there is a chance the newly created node gets a connection.
 
             //Remove an existing node. Input nodes should not be removed. 
-            if (Globals.Random.NextFloat() <= removeRandomNodeChance)
+            if (MaceRandom.Current.NextFloat() <= removeRandomNodeChance)
             {
                 mutationAttempted = true;
 
@@ -442,26 +440,26 @@ namespace MaceEvolve.Core.Models
 
                 if (possibleNodeIdsToRemove.Count > 0)
                 {
-                    int nodeIdToRemove = possibleNodeIdsToRemove[Globals.Random.Next(possibleNodeIdsToRemove.Count)];
+                    int nodeIdToRemove = possibleNodeIdsToRemove[MaceRandom.Current.Next(possibleNodeIdsToRemove.Count)];
 
                     RemoveNode(nodeIdToRemove, true);
                 }
             }
 
             //Change a random node's bias.
-            if (Globals.Random.NextFloat() <= mutateRandomNodeBiasChance)
+            if (MaceRandom.Current.NextFloat() <= mutateRandomNodeBiasChance)
             {
                 mutationAttempted = true;
 
-                int randomNodeId = GetNodeIds()[Globals.Random.Next(NodeIdsToNodesDict.Count)];
+                int randomNodeId = GetNodeIds()[MaceRandom.Current.Next(NodeIdsToNodesDict.Count)];
                 Node randomNode = NodeIdsToNodesDict[randomNodeId];
-                Node newNode = new Node(randomNode.NodeType, Globals.Random.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
+                Node newNode = new Node(randomNode.NodeType, MaceRandom.Current.NextFloat(-1, 1), randomNode.CreatureInput, randomNode.CreatureAction);
 
                 ReplaceNode(randomNodeId, newNode);
             }
 
             //Create a new node with a default connection.
-            if (Globals.Random.NextFloat() <= createRandomNodeChance)
+            if (MaceRandom.Current.NextFloat() <= createRandomNodeChance)
             {
                 List<CreatureInput> possibleCreatureInputsToAdd = GetPossibleInputsToAdd(possibleInputs).ToList();
                 List<CreatureAction> possibleCreatureActionsToAdd = GetPossibleActionsToAdd(possibleOutputs).ToList();
@@ -469,20 +467,20 @@ namespace MaceEvolve.Core.Models
                 mutationAttempted = true;
 
                 Node nodeToAdd;
-                float nodeTypeRandomNum = Globals.Random.NextFloat();
+                float nodeTypeRandomNum = MaceRandom.Current.NextFloat();
                 float chanceForSingleNodeType = 1f / Globals.AllNodeTypes.Count;
 
                 if (nodeTypeRandomNum <= chanceForSingleNodeType && possibleCreatureInputsToAdd.Count > 0)
                 {
-                    nodeToAdd = new Node(NodeType.Input, Globals.Random.NextFloat(-1, 1), possibleCreatureInputsToAdd[Globals.Random.Next(possibleCreatureInputsToAdd.Count)]);
+                    nodeToAdd = new Node(NodeType.Input, MaceRandom.Current.NextFloat(-1, 1), possibleCreatureInputsToAdd[MaceRandom.Current.Next(possibleCreatureInputsToAdd.Count)]);
                 }
                 else if (nodeTypeRandomNum <= chanceForSingleNodeType * 2 && possibleCreatureActionsToAdd.Count > 0)
                 {
-                    nodeToAdd = new Node(NodeType.Output, Globals.Random.NextFloat(-1, 1), creatureAction: possibleCreatureActionsToAdd[Globals.Random.Next(possibleCreatureActionsToAdd.Count)]);
+                    nodeToAdd = new Node(NodeType.Output, MaceRandom.Current.NextFloat(-1, 1), creatureAction: possibleCreatureActionsToAdd[MaceRandom.Current.Next(possibleCreatureActionsToAdd.Count)]);
                 }
                 else if (processNodeCount < maxCreatureProcessNodes)
                 {
-                    nodeToAdd = new Node(NodeType.Process, Globals.Random.NextFloat(-1, 1));
+                    nodeToAdd = new Node(NodeType.Process, MaceRandom.Current.NextFloat(-1, 1));
                 }
                 else
                 {
@@ -499,27 +497,27 @@ namespace MaceEvolve.Core.Models
                     if (Connections.Count < maxCreatureConnections && possibleSourceNodesIds.Count > 0 && possibleTargetNodesIds.Count > 0)
                     {
                         Connection newConnection;
-                        float newConnectionWeight = Globals.Random.NextFloat(-connectionWeightBound, connectionWeightBound);
+                        float newConnectionWeight = MaceRandom.Current.NextFloat(-connectionWeightBound, connectionWeightBound);
 
                         switch (nodeToAdd.NodeType)
                         {
                             case NodeType.Input:
-                                newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
+                                newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[MaceRandom.Current.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
                                 break;
 
                             case NodeType.Process:
-                                if (Globals.Random.NextDouble() <= 0.5)
+                                if (MaceRandom.Current.NextDouble() <= 0.5)
                                 {
-                                    newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
+                                    newConnection = new Connection(nodeToAddId, possibleTargetNodesIds[MaceRandom.Current.Next(possibleTargetNodesIds.Count)], newConnectionWeight);
                                 }
                                 else
                                 {
-                                    newConnection = new Connection(possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
+                                    newConnection = new Connection(possibleSourceNodesIds[MaceRandom.Current.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
                                 }
                                 break;
 
                             case NodeType.Output:
-                                newConnection = new Connection(possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
+                                newConnection = new Connection(possibleSourceNodesIds[MaceRandom.Current.Next(possibleSourceNodesIds.Count)], nodeToAddId, newConnectionWeight);
                                 break;
 
                             default:
@@ -532,35 +530,35 @@ namespace MaceEvolve.Core.Models
             }
 
             //Remove a random connection.
-            if (Connections.Count > minCreatureConnections && Globals.Random.NextFloat() <= removeRandomConnectionChance)
+            if (Connections.Count > minCreatureConnections && MaceRandom.Current.NextFloat() <= removeRandomConnectionChance)
             {
                 mutationAttempted = true;
 
-                Connection randomConnection = Connections[Globals.Random.Next(Connections.Count)];
+                Connection randomConnection = Connections[MaceRandom.Current.Next(Connections.Count)];
                 Connections.Remove(randomConnection);
             }
 
             //Change a random connection's weight.
-            if (Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionWeightChance)
+            if (Connections.Count > 0 && MaceRandom.Current.NextFloat() <= mutateRandomConnectionWeightChance)
             {
                 mutationAttempted = true;
 
-                int randomConnectionIndex = Globals.Random.Next(Connections.Count);
+                int randomConnectionIndex = MaceRandom.Current.Next(Connections.Count);
 
-                Connections[randomConnectionIndex] = new Connection(Connections[randomConnectionIndex].SourceId, Connections[randomConnectionIndex].TargetId, Globals.Random.NextFloat(-connectionWeightBound, connectionWeightBound));
+                Connections[randomConnectionIndex] = new Connection(Connections[randomConnectionIndex].SourceId, Connections[randomConnectionIndex].TargetId, MaceRandom.Current.NextFloat(-connectionWeightBound, connectionWeightBound));
             }
 
             //Change a random connection's source.
-            if (Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionSourceChance)
+            if (Connections.Count > 0 && MaceRandom.Current.NextFloat() <= mutateRandomConnectionSourceChance)
             {
                 mutationAttempted = true;
 
-                int randomConnectionIndex = Globals.Random.Next(Connections.Count);
+                int randomConnectionIndex = MaceRandom.Current.Next(Connections.Count);
                 List<int> possibleSourceNodesIds = GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
 
                 if (possibleSourceNodesIds.Count > 0)
                 {
-                    int randomSourceNodeId = possibleSourceNodesIds[Globals.Random.Next(possibleSourceNodesIds.Count)];
+                    int randomSourceNodeId = possibleSourceNodesIds[MaceRandom.Current.Next(possibleSourceNodesIds.Count)];
 
                     Connection mutatedConnection = new Connection(randomSourceNodeId, Connections[randomConnectionIndex].TargetId, Connections[randomConnectionIndex].Weight);
                     Connections[randomConnectionIndex] = mutatedConnection;
@@ -568,16 +566,16 @@ namespace MaceEvolve.Core.Models
             }
 
             //Change a random connection's target.
-            if (Connections.Count > 0 && Globals.Random.NextFloat() <= mutateRandomConnectionTargetChance)
+            if (Connections.Count > 0 && MaceRandom.Current.NextFloat() <= mutateRandomConnectionTargetChance)
             {
                 mutationAttempted = true;
 
-                int randomConnectionIndex = Globals.Random.Next(Connections.Count);
+                int randomConnectionIndex = MaceRandom.Current.Next(Connections.Count);
                 List<int> possibleTargetNodesIds = GetNodeIds(predicate: (_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
 
                 if (possibleTargetNodesIds.Count > 0)
                 {
-                    int randomTargetNodeId = possibleTargetNodesIds[Globals.Random.Next(possibleTargetNodesIds.Count)];
+                    int randomTargetNodeId = possibleTargetNodesIds[MaceRandom.Current.Next(possibleTargetNodesIds.Count)];
 
                     Connection mutatedConnection = new Connection(Connections[randomConnectionIndex].SourceId, randomTargetNodeId, Connections[randomConnectionIndex].Weight);
                     Connections[randomConnectionIndex] = mutatedConnection;
@@ -585,7 +583,7 @@ namespace MaceEvolve.Core.Models
             }
 
             //Create a new connection.
-            if (Connections.Count < maxCreatureConnections && Globals.Random.NextDouble() <= createRandomConnectionChance)
+            if (Connections.Count < maxCreatureConnections && MaceRandom.Current.NextDouble() <= createRandomConnectionChance)
             {
                 mutationAttempted = true;
 
