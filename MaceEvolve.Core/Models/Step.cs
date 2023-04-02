@@ -175,7 +175,7 @@ namespace MaceEvolve.Core.Models
                 {
                     bool mutated = newCreature.Brain.MutateNetwork(
                         createRandomNodeChance: creature.OffspringBrainMutationChance,
-                        removeRandomNodeChance: creature.OffspringBrainMutationChance / 20,
+                        removeRandomNodeChance: creature.OffspringBrainMutationChance,
                         mutateRandomNodeBiasChance: creature.OffspringBrainMutationChance,
                         createRandomConnectionChance: creature.OffspringBrainMutationChance,
                         removeRandomConnectionChance: creature.OffspringBrainMutationChance,

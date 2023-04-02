@@ -42,7 +42,7 @@ namespace MaceEvolve.Core.Models
         public float FoodNutrientsPerServing { get; set; } = 50;
         public float FoodServingDigestionCost { get; set; } = 0.05f;
         public float CreatureSightRange { get; set; } = 100;
-        public int MaxCreatureOffSpringPerReproduction { get; set; } = 2;
+        public int MaxCreatureOffSpringPerReproduction { get; set; } = 1;
         public bool LoopWorldBounds { get; set; } = true;
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
