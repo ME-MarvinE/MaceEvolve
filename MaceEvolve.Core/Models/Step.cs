@@ -13,8 +13,8 @@ namespace MaceEvolve.Core.Models
         #region Properties
         public ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; } = new ConcurrentQueue<StepAction<TCreature>>();
         public ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; } = new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
-        public List<TCreature> Creatures { get; set; }
-        public List<TFood> Food { get; set; }
+        public ConcurrentBag<TCreature> Creatures { get; set; }
+        public ConcurrentBag<TFood> Food { get; set; }
         public IRectangle WorldBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
@@ -72,7 +72,7 @@ namespace MaceEvolve.Core.Models
 
             IFood closestFood = VisibleFoodOrderedByDistance.FirstOrDefault();
 
-            if (closestFood != null && closestFood.Servings > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) < creature.Size / 2)
+            if (closestFood?.Servings > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) < creature.Size / 2)
             {
                 closestFood.Servings -= 1;
                 creature.Energy -= closestFood.ServingDigestionCost;
@@ -420,7 +420,10 @@ namespace MaceEvolve.Core.Models
                             IList<TCreature> offSpring = CreatureTryReproduce(stepAction.Creature);
                             if (offSpring.Count > 0)
                             {
-                                Creatures.AddRange(offSpring);
+                                foreach (var creature in offSpring)
+                                {
+                                    Creatures.Add(creature);
+                                }
                             }
                             break;
 

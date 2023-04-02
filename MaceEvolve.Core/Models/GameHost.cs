@@ -1,6 +1,7 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -144,12 +145,12 @@ namespace MaceEvolve.Core.Models
 
             return successfulCreaturesFitnesses;
         }
-        public virtual TStep CreateStep(List<TCreature> creatures, List<TFood> food)
+        public virtual TStep CreateStep(IEnumerable<TCreature> creatures, IEnumerable<TFood> food)
         {
             return new TStep()
             {
-                Creatures = creatures,
-                Food = food,
+                Creatures = new ConcurrentBag<TCreature>(creatures),
+                Food = new ConcurrentBag<TFood>(food),
                 WorldBounds = WorldBounds,
                 ConnectionWeightBound = ConnectionWeightBound,
                 MinCreatureConnections = MinCreatureConnections,
@@ -160,7 +161,7 @@ namespace MaceEvolve.Core.Models
         }
         public virtual void NextStep(bool gatherInfoForAllCreatures = false)
         {
-            TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead).ToList(), CurrentStep.Food.Where(x => x.Servings > 0).ToList());
+            TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead), CurrentStep.Food.Where(x => x.Servings > 0));
 
             generatedStep.ExecuteActions(CurrentStep.RequestedActions);
 

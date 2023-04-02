@@ -8,9 +8,9 @@ namespace MaceEvolve.Core.Interfaces
     public interface IStep<TCreature, TFood>  where TCreature : ICreature where TFood : IFood
     {
         #region Properties
-        List<TCreature> Creatures { get; set; }
+        ConcurrentBag<TCreature> Creatures { get; set; }
         ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; }
-        List<TFood> Food { get; set; }
+        ConcurrentBag<TFood> Food { get; set; }
         ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; }
         IRectangle WorldBounds { get; set; }
         float ConnectionWeightBound { get; set; }
