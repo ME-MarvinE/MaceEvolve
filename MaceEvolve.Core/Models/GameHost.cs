@@ -117,7 +117,7 @@ namespace MaceEvolve.Core.Models
 
             TCreature newBestCreature = null;
 
-            Parallel.ForEach(generatedStep.Creatures, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount }, creature =>
+            Parallel.ForEach(generatedStep.Creatures, creature =>
             {
                 if (!creature.IsDead || creature == BestCreature || creature == SelectedCreature)
                 {
