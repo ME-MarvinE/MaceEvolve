@@ -169,56 +169,53 @@ namespace MaceEvolve.WinForms
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            if (!IsInFastMode)
+            foreach (var creature in MainGameHost.CurrentStep.Creatures)
             {
-                foreach (var creature in MainGameHost.CurrentStep.Creatures)
+                Color creatureColor;
+
+                if (creature.IsDead)
                 {
-                    Color creatureColor;
-
-                    if (creature.IsDead)
-                    {
-                        creatureColor = Color.FromArgb(255, 165, 41, 41);
-                    }
-                    else
-                    {
-                        creatureColor = Color.FromArgb(creature.Color.A, creature.Color.R, creature.Color.G, creature.Color.B);
-                    }
-
-                    Color? creatureRingColor;
-
-                    if (creature == MainGameHost.SelectedCreature)
-                    {
-                        creatureRingColor = Color.White;
-                    }
-                    else if (creature == MainGameHost.BestCreature)
-                    {
-                        creatureRingColor = Color.Gold;
-                    }
-                    else
-                    {
-                        creatureRingColor = null;
-                    }
-
-                    using (SolidBrush brush = new SolidBrush(creatureColor))
-                    {
-                        e.Graphics.FillEllipse(brush, creature.X, creature.Y, creature.Size, creature.Size);
-                    }
-
-                    if (creatureRingColor != null)
-                    {
-                        using (Pen pen = new Pen(creatureRingColor.Value, 2))
-                        {
-                            e.Graphics.DrawEllipse(pen, creature.X, creature.Y, creature.Size, creature.Size);
-                        }
-                    }
+                    creatureColor = Color.FromArgb(255, 165, 41, 41);
+                }
+                else
+                {
+                    creatureColor = Color.FromArgb(creature.Color.A, creature.Color.R, creature.Color.G, creature.Color.B);
                 }
 
-                foreach (GraphicalFood food in MainGameHost.CurrentStep.Food)
+                Color? creatureRingColor;
+
+                if (creature == MainGameHost.SelectedCreature)
                 {
-                    using (SolidBrush brush = new SolidBrush(Color.Green))
+                    creatureRingColor = Color.White;
+                }
+                else if (creature == MainGameHost.BestCreature)
+                {
+                    creatureRingColor = Color.Gold;
+                }
+                else
+                {
+                    creatureRingColor = null;
+                }
+
+                using (SolidBrush brush = new SolidBrush(creatureColor))
+                {
+                    e.Graphics.FillEllipse(brush, creature.X, creature.Y, creature.Size, creature.Size);
+                }
+
+                if (creatureRingColor != null)
+                {
+                    using (Pen pen = new Pen(creatureRingColor.Value, 2))
                     {
-                        e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
+                        e.Graphics.DrawEllipse(pen, creature.X, creature.Y, creature.Size, creature.Size);
                     }
+                }
+            }
+
+            foreach (GraphicalFood food in MainGameHost.CurrentStep.Food)
+            {
+                using (SolidBrush brush = new SolidBrush(Color.Green))
+                {
+                    e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
                 }
             }
 
@@ -229,11 +226,6 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_MouseClick(object sender, MouseEventArgs e)
         {
-            if (IsInFastMode)
-            {
-                return;
-            }
-
             Point relativeMouseLocation = new Point(e.X, e.Y);
             IEnumerable<GraphicalCreature> creaturesOrderedByDistanceToMouse = MainGameHost.CurrentStep.Creatures.OrderBy(x => Globals.GetDistanceFrom(relativeMouseLocation.X, relativeMouseLocation.Y, x.MX, x.MY));
 

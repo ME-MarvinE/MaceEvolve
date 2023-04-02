@@ -121,47 +121,44 @@ namespace MaceEvolve.Mono.Desktop
 
             _spriteBatch.Begin();
 
-            if (!IsInFastMode)
+            foreach (var creature in MainGameHost.CurrentStep.Creatures)
             {
-                foreach (var creature in MainGameHost.CurrentStep.Creatures)
+                Color creatureColor;
+
+                if (creature.IsDead)
                 {
-                    Color creatureColor;
-
-                    if (creature.IsDead)
-                    {
-                        creatureColor = new Color(165, 41, 41);
-                    }
-                    else
-                    {
-                        creatureColor = new Color(creature.Color.R, creature.Color.G, creature.Color.B, creature.Color.A);
-                    }
-
-                    Color? creatureRingColor;
-
-                    if (creature == MainGameHost.SelectedCreature)
-                    {
-                        creatureRingColor = Color.White;
-                    }
-                    else if (creature == MainGameHost.BestCreature)
-                    {
-                        creatureRingColor = Color.Gold;
-                    }
-                    else
-                    {
-                        creatureRingColor = null;
-                    }
-
-                    _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size, 18, creatureColor, creature.Size);
-
-                    if (creatureRingColor != null)
-                    {
-                        _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size + 2, 18, creatureRingColor.Value, creature.Size * 0.3f);
-                    }
+                    creatureColor = new Color(165, 41, 41);
                 }
-                foreach (var food in MainGameHost.CurrentStep.Food)
+                else
                 {
-                    _spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
+                    creatureColor = new Color(creature.Color.R, creature.Color.G, creature.Color.B, creature.Color.A);
                 }
+
+                Color? creatureRingColor;
+
+                if (creature == MainGameHost.SelectedCreature)
+                {
+                    creatureRingColor = Color.White;
+                }
+                else if (creature == MainGameHost.BestCreature)
+                {
+                    creatureRingColor = Color.Gold;
+                }
+                else
+                {
+                    creatureRingColor = null;
+                }
+
+                _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size, 18, creatureColor, creature.Size);
+
+                if (creatureRingColor != null)
+                {
+                    _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size + 2, 18, creatureRingColor.Value, creature.Size * 0.3f);
+                }
+            }
+            foreach (var food in MainGameHost.CurrentStep.Food)
+            {
+                _spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
             }
 
             if (MainGameHost.UseSuccessBounds)
