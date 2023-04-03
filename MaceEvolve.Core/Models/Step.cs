@@ -396,7 +396,7 @@ namespace MaceEvolve.Core.Models
                             creatureInputValue = Globals.Map(creature.Energy, 0, creature.MaxEnergy, 0, 1);
                             break;
 
-                        case CreatureInput.ProximityToCreatureToLeft:
+                        case CreatureInput.CreatureToLeftProximity:
                             visibleCreatures ??= GetVisibleCreatures(creature).ToList();
                             visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
 
@@ -414,7 +414,7 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ProximityToCreatureToRight:
+                        case CreatureInput.CreatureToRightProximity:
                             visibleCreatures ??= GetVisibleCreatures(creature).ToList();
                             visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
 
@@ -432,7 +432,7 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ProximityToCreatureToFront:
+                        case CreatureInput.CreatureToFrontProximity:
                             visibleCreatures ??= GetVisibleCreatures(creature).ToList();
                             visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
 
@@ -450,7 +450,7 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ProximityToCreatureToBack:
+                        case CreatureInput.CreatureToBackProximity:
                             visibleCreatures ??= GetVisibleCreatures(creature).ToList();
                             visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
 
@@ -468,7 +468,7 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ProximityToFoodToLeft:
+                        case CreatureInput.FoodToLeftProximity:
                             visibleFood ??= GetVisibleFood(creature).ToList();
                             visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
 
@@ -486,7 +486,7 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ProximityToFoodToRight:
+                        case CreatureInput.FoodToRightProximity:
                             visibleFood ??= GetVisibleFood(creature).ToList();
                             visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
 
@@ -504,7 +504,7 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ProximityToFoodToFront:
+                        case CreatureInput.FoodToFrontProximity:
                             visibleFood ??= GetVisibleFood(creature).ToList();
                             visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
 
@@ -522,7 +522,7 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ProximityToFoodToBack:
+                        case CreatureInput.FoodToBackProximity:
                             visibleFood ??= GetVisibleFood(creature).ToList();
                             visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
 
