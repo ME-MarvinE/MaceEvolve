@@ -1,4 +1,5 @@
-﻿using MaceEvolve.Core.Models;
+﻿using MaceEvolve.Core;
+using MaceEvolve.Core.Models;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
@@ -14,6 +15,15 @@ namespace MaceEvolve.Mono.Desktop.Models
             step.CreatureOffspringColor = CreatureOffspringColor;
 
             return step;
+        }
+        public override TFood CreateFoodWithRandomLocation()
+        {
+            TFood food = base.CreateFoodWithRandomLocation();
+            int foodG = (int)Globals.Map(food.Nutrients, 0, MaxFoodNutrients, 32, 255);
+
+            food.Color = new Color(0, foodG, 0);
+
+            return food;
         }
     }
 }
