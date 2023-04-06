@@ -72,7 +72,7 @@ namespace MaceEvolve.Core.Models
 
             IFood closestFood = VisibleFoodOrderedByDistance.FirstOrDefault();
 
-            if (closestFood?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) < creature.Size / 2)
+            if (closestFood?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) < (closestFood.Size + creature.Size) / 2)
             {
                 float energyToTake = Math.Min(creature.EnergyPerEat, closestFood.Energy);
                 float nutrientsToTake = Math.Min(creature.NutrientsPerEat, closestFood.Nutrients);
