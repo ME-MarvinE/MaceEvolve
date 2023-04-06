@@ -6,6 +6,7 @@ namespace MaceEvolve.Core.Models
     {
         #region Fields
         private float _energy = 100;
+        private float _nutrients = 30;
         #endregion
 
         #region Properties
@@ -39,13 +40,38 @@ namespace MaceEvolve.Core.Models
         public float Metabolism { get; set; } = 0.1f;
         public int FoodEaten { get; set; }
         public bool IsDead { get; set; }
-        public float Nutrients { get; set; } = 30;
+        public float Nutrients
+        {
+            get
+            {
+                return _nutrients;
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    _nutrients = 0;
+                }
+                else if (value > MaxNutrients)
+                {
+                    _nutrients = MaxNutrients;
+                }
+                else
+                {
+                    _nutrients = value;
+                }
+            }
+        }
+        public float MaxNutrients { get; set; } = 30;
         public float EnergyRequiredToReproduce { get; set; } = 50;
         public float NutrientsRequiredToReproduce { get; set; } = 100;
         public int TimesReproduced { get; set; }
         public int MaxOffspringPerReproduction { get; set; }
         public int OffspringBrainMutationAttempts { get; set; } = 1;
         public float OffspringBrainMutationChance { get; set; } = 1 / 3f;
+        public float EnergyPerEat { get; set; }
+        public float NutrientsPerEat { get; set; }
+
 
         //public int StomachSize { get; set; } = 5;
         //public List<food> StomachContents { get; set; } = 5;

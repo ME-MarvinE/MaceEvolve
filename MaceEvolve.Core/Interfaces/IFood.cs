@@ -2,9 +2,9 @@
 {
     public interface IFood : IGameObject
     {
-        int Servings { get; set; }
-        float EnergyPerServing { get; set; }
-        float ServingDigestionCost { get; set; }
-        float NutrientsPerServing { get; set; }
+        float Energy { get; set; }
+        float MaxEnergy { get; set; }
+        float Nutrients { get; set; }
+        float MaxNutrients { get; set; }
     }
 }

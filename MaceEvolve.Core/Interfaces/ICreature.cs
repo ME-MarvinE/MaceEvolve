@@ -15,12 +15,15 @@ namespace MaceEvolve.Core.Interfaces
         int FoodEaten { get; set; }
         bool IsDead { get; set; }
         public float Nutrients { get; set; }
+        public float MaxNutrients { get; set; }
         public float EnergyRequiredToReproduce { get; set; }
         public float NutrientsRequiredToReproduce { get; set; }
         public int TimesReproduced { get; set; }
         public int MaxOffspringPerReproduction { get; set; }
         public int OffspringBrainMutationAttempts { get; set; }
         public float OffspringBrainMutationChance { get; set; }
+        public float EnergyPerEat { get; set; }
+        public float NutrientsPerEat { get; set; }
         #endregion
 
         #region Methods

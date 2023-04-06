@@ -31,19 +31,23 @@ namespace MaceEvolve.Core.Models
         public float MaxCreatureEnergy { get; set; } = 1000;
         public float FoodSize { get; set; } = 7;
         public float CreatureSize { get; set; } = 10;
-        public float InitialCreatureNutrients { get; set; } = 30;
+        public float CreatureNutrients { get; set; } = 30;
         public float EnergyRequiredForCreatureToReproduce { get; set; } = 100;
         public float NutrientsRequiredForCreatureToReproduce { get; set; } = 50;
         public float MinimumSuccessfulCreatureFitness { get; set; } = 0.25f;
         public float ReproductionNodeBiasVariance { get; set; }
         public float ReproductionConnectionWeightVariance { get; set; }
         public float CreatureMetabolism { get; set; } = 0.1f;
-        public float FoodEnergyPerServing { get; set; } = 150;
-        public float FoodNutrientsPerServing { get; set; } = 50;
-        public float FoodServingDigestionCost { get; set; } = 0.05f;
+        public float FoodEnergy { get; set; } = 150;
+        public float MaxFoodEnergy { get; set; } = 300;
+        public float FoodNutrients { get; set; } = 50;
+        public float MaxFoodNutrients { get; set; } = 50;
         public float CreatureSightRange { get; set; } = 100;
         public int MaxCreatureOffSpringPerReproduction { get; set; } = 1;
         public bool LoopWorldBounds { get; set; } = true;
+        public float CreatureEnergyPerEat { get; set; } = 150;
+        public float CreatureNutrientsPerEat { get; set; } = 50;
+        public float MaxCreatureNutrients { get; set; } = 200;
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
@@ -111,7 +115,7 @@ namespace MaceEvolve.Core.Models
         }
         public virtual void NextStep(bool gatherInfoForAllCreatures = false)
         {
-            TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead), CurrentStep.Food.Where(x => x.Servings > 0));
+            TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead), CurrentStep.Food.Where(x => x.Energy > 0));
 
             generatedStep.ExecuteActions(CurrentStep.RequestedActions);
 
@@ -230,11 +234,11 @@ namespace MaceEvolve.Core.Models
             {
                 X = MaceRandom.Current.NextFloat(0, WorldBounds.X + WorldBounds.Width),
                 Y = MaceRandom.Current.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
-                Servings = 1,
-                EnergyPerServing = FoodEnergyPerServing,
-                ServingDigestionCost = FoodServingDigestionCost,
+                MaxEnergy = MaxFoodEnergy,
+                Energy = FoodEnergy,
+                MaxNutrients = MaxFoodNutrients,
+                Nutrients = FoodNutrients,
                 Size = FoodSize,
-                NutrientsPerServing = FoodNutrientsPerServing,
             };
         }
         public virtual List<TFood> GenerateFood()
@@ -261,15 +265,18 @@ namespace MaceEvolve.Core.Models
                     Size = CreatureSize,
                     Speed = CreatureSpeed,
                     Metabolism = CreatureMetabolism,
-                    Energy = MaxCreatureEnergy * 0.75f,
                     MaxEnergy = MaxCreatureEnergy,
+                    Energy = MaxCreatureEnergy * 0.75f,
                     SightRange = CreatureSightRange,
-                    Nutrients = InitialCreatureNutrients,
+                    MaxNutrients = MaxCreatureNutrients,
+                    Nutrients = CreatureNutrients,
                     NutrientsRequiredToReproduce = NutrientsRequiredForCreatureToReproduce,
                     EnergyRequiredToReproduce = EnergyRequiredForCreatureToReproduce,
                     MaxOffspringPerReproduction = MaxCreatureOffSpringPerReproduction,
                     OffspringBrainMutationAttempts = CreatureOffspringBrainMutationAttempts,
                     OffspringBrainMutationChance = CreatureOffspringBrainMutationChance,
+                    EnergyPerEat = CreatureEnergyPerEat,
+                    NutrientsPerEat = CreatureNutrientsPerEat,
                     MoveCost = 0.25f
                 };
 
