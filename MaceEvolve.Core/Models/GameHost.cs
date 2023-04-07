@@ -28,8 +28,9 @@ namespace MaceEvolve.Core.Models
         public float CreatureOffspringBrainMutationChance { get; set; } = 1 / 3f;
         public int CreatureOffspringBrainMutationAttempts { get; set; } = 1;
         public float ConnectionWeightBound { get; set; } = 4;
-        public float MaxCreatureEnergy { get; set; } = 1000;
-        public float FoodSize { get; set; } = 7;
+        public float MaxCreatureEnergy { get; set; } = 900;
+        public float MinFoodSize { get; set; } = 2;
+        public float MaxFoodSize { get; set; } = 7;
         public float CreatureSize { get; set; } = 10;
         public float CreatureNutrients { get; set; } = 30;
         public float EnergyRequiredForCreatureToReproduce { get; set; } = 100;
@@ -38,9 +39,9 @@ namespace MaceEvolve.Core.Models
         public float ReproductionNodeBiasVariance { get; set; }
         public float ReproductionConnectionWeightVariance { get; set; }
         public float CreatureMetabolism { get; set; } = 0.1f;
-        public float FoodEnergy { get; set; } = 150;
+        public float MinFoodEnergy { get; set; } = 150;
         public float MaxFoodEnergy { get; set; } = 300;
-        public float FoodNutrients { get; set; } = 50;
+        public float MinFoodNutrients { get; set; } = 10;
         public float MaxFoodNutrients { get; set; } = 50;
         public float CreatureSightRange { get; set; } = 100;
         public int MaxCreatureOffSpringPerReproduction { get; set; } = 1;
@@ -230,16 +231,19 @@ namespace MaceEvolve.Core.Models
         }
         public virtual TFood CreateFoodWithRandomLocation()
         {
-            return new TFood()
+            TFood newFood = new TFood()
             {
                 X = MaceRandom.Current.NextFloat(0, WorldBounds.X + WorldBounds.Width),
                 Y = MaceRandom.Current.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                 MaxEnergy = MaxFoodEnergy,
-                Energy = FoodEnergy,
-                MaxNutrients = MaxFoodNutrients,
-                Nutrients = FoodNutrients,
-                Size = FoodSize,
+                MaxNutrients = MaxFoodNutrients
             };
+
+            newFood.Energy = MaceRandom.Current.NextFloat(MinFoodEnergy, MaxFoodEnergy);
+            newFood.Nutrients =  MaceRandom.Current.NextFloat(MinFoodNutrients, MaxFoodNutrients);
+            newFood.Size = Globals.Map(newFood.Energy, 0, newFood.MaxEnergy, MinFoodSize, MaxFoodSize);
+            
+            return newFood;
         }
         public virtual List<TFood> GenerateFood()
         {

@@ -208,7 +208,7 @@ namespace MaceEvolve.WinForms
 
             foreach (GraphicalFood food in MainGameHost.CurrentStep.Food)
             {
-                using (SolidBrush brush = new SolidBrush(Color.Green))
+                using (SolidBrush brush = new SolidBrush(food.Color))
                 {
                     e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
                 }
@@ -258,7 +258,9 @@ namespace MaceEvolve.WinForms
 
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 10;
-            MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
+            float baseFoodSize = MainGameHost.CreatureSize;
+            MainGameHost.MinFoodSize = baseFoodSize * 0.2f;
+            MainGameHost.MaxFoodSize = baseFoodSize * 1.2f;
             MainGameHost.CreatureSpeed = 2.75f;
 
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;

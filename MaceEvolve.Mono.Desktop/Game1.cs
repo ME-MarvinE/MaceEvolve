@@ -75,7 +75,9 @@ namespace MaceEvolve.Mono.Desktop
 
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
             MainGameHost.CreatureSize = 5;
-            MainGameHost.FoodSize = MainGameHost.CreatureSize * 0.7f;
+            float baseFoodSize = MainGameHost.CreatureSize;
+            MainGameHost.MinFoodSize = baseFoodSize * 0.2f;
+            MainGameHost.MaxFoodSize = baseFoodSize * 1.2f;
             MainGameHost.CreatureSpeed = 2.75f;
 
             Reset();
