@@ -11,13 +11,13 @@ namespace MaceEvolve.Core.Models
     public class NeuralNetwork
     {
         #region Fields
-        private Dictionary<int, Node> _nodeIdsToNodesDict = new Dictionary<int, Node>();
+        private readonly Dictionary<int, Node> _nodeIdsToNodesDict = new Dictionary<int, Node>();
         #endregion
 
         #region Properties
-        public List<Connection> Connections { get; set; } = new List<Connection>();
+        public List<Connection> Connections { get; } = new List<Connection>();
 
-        public IReadOnlyDictionary<int, Node> NodeIdsToNodesDict { get; } = new Dictionary<int, Node>();
+        public IReadOnlyDictionary<int, Node> NodeIdsToNodesDict { get; }
         #endregion
 
         #region Constructors

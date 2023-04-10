@@ -38,7 +38,7 @@ namespace MaceEvolve.Core.Models
         }
         public IEnumerable<TCreature> GetVisibleCreatures(TCreature creature)
         {
-            return Creatures.Where(x => creature.IsWithinSight(x) && (ICreature)x != (ICreature)creature);
+            return Creatures.Where(x => creature.IsWithinSight(x) && x != creature);
         }
         public IEnumerable<TFood> GetVisibleFood(TCreature creature)
         {
