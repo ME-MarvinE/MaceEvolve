@@ -2,7 +2,7 @@
 
 namespace MaceEvolve.Core.Models
 {
-    public struct Connection : IEquatable<Connection>
+    public readonly struct Connection : IEquatable<Connection>
     {
         #region Properties
         public int SourceId { get; }

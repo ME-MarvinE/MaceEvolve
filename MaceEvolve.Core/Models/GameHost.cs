@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MaceEvolve.Core.Models
 {
-    public class GameHost<TStep, TCreature, TFood> where TCreature : class, ICreature, new() where TFood : class, IFood, new() where TStep : class, IStep<TCreature, TFood>, new()
+    public class GameHost<TStep, TCreature, TFood> where TStep : class, IStep<TCreature, TFood>, new() where TCreature : class, ICreature, new() where TFood : class, IFood, new()
     {
         #region Fields
         protected TCreature bestCreature;

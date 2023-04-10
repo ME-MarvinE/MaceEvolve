@@ -68,9 +68,9 @@ namespace MaceEvolve.Core.Models
         }
         public bool CreatureTryEat(TCreature creature)
         {
-            IEnumerable<TFood> VisibleFoodOrderedByDistance = GetVisibleFoodOrderedByDistance(creature);
+            IEnumerable<TFood> visibleFoodOrderedByDistance = GetVisibleFoodOrderedByDistance(creature);
 
-            IFood closestFood = VisibleFoodOrderedByDistance.FirstOrDefault();
+            IFood closestFood = visibleFoodOrderedByDistance.FirstOrDefault();
 
             if (closestFood?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) < (closestFood.Size + creature.Size) / 2)
             {
