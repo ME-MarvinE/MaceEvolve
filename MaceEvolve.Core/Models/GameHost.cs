@@ -120,7 +120,7 @@ namespace MaceEvolve.Core.Models
 
             generatedStep.ExecuteActions(CurrentStep.RequestedActions);
 
-            TCreature newBestCreature = null;
+            TCreature newBestCreature = BestCreature == null || BestCreature.IsDead ? null : BestCreature;
 
             Parallel.ForEach(generatedStep.Creatures, creature =>
             {
@@ -210,13 +210,12 @@ namespace MaceEvolve.Core.Models
 
                         generatedStep.CreaturesBrainOutput[creature] = currentStepNodeInfo;
                     }
-                }
 
-                //Identify the best creature in the step.
-
-                if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
-                {
-                    newBestCreature = creature;
+                    //Identify the best creature in the step.
+                    if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
+                    {
+                        newBestCreature = creature;
+                    }
                 }
             });
 
