@@ -212,7 +212,7 @@ namespace MaceEvolve.Core.Models
                     }
 
                     //Identify the best creature in the step.
-                    if (newBestCreature == null || creature.TimesReproduced > newBestCreature.TimesReproduced)
+                    if (newBestCreature == null || (creature.FoodEaten > newBestCreature.FoodEaten && creature.TimesReproduced > newBestCreature.TimesReproduced))
                     {
                         newBestCreature = creature;
                     }
