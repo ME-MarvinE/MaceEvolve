@@ -71,6 +71,8 @@ namespace MaceEvolve.Core.Models
         public float OffspringBrainMutationChance { get; set; } = 1 / 3f;
         public float EnergyPerEat { get; set; }
         public float NutrientsPerEat { get; set; }
+        public int MaxAge { get; set; } = 4000;
+        public int Age { get; set; }
 
 
         //public int StomachSize { get; set; } = 5;

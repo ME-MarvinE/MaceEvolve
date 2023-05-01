@@ -49,6 +49,7 @@ namespace MaceEvolve.Core.Models
         public float CreatureEnergyPerEat { get; set; } = 150;
         public float CreatureNutrientsPerEat { get; set; } = 50;
         public float MaxCreatureNutrients { get; set; } = 200;
+        public int CreatureMaxAge { get; set; } = 4000;
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
@@ -211,6 +212,15 @@ namespace MaceEvolve.Core.Models
                         generatedStep.CreaturesBrainOutput[creature] = currentStepNodeInfo;
                     }
 
+                    if (!creature.IsDead)
+                    {
+                        creature.Age += 1;
+                        if (creature.Age > CreatureMaxAge)
+                        {
+                            creature.Die();
+                        }
+                    }
+
                     //Identify the best creature in the step.
                     if (newBestCreature == null || (creature.FoodEaten > newBestCreature.FoodEaten && creature.TimesReproduced > newBestCreature.TimesReproduced))
                     {
@@ -268,6 +278,7 @@ namespace MaceEvolve.Core.Models
                     Size = CreatureSize,
                     Speed = CreatureSpeed,
                     Metabolism = CreatureMetabolism,
+                    MaxAge = CreatureMaxAge,
                     MaxEnergy = MaxCreatureEnergy,
                     Energy = MaxCreatureEnergy * 0.75f,
                     SightRange = CreatureSightRange,

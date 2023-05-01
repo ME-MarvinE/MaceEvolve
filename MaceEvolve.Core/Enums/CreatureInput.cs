@@ -23,6 +23,7 @@
         DistanceFromLeftWorldBound,
         RandomInput,
         PercentNutrientsRequiredToReproduce,
-        PercentEnergyRequiredToReproduce
+        PercentEnergyRequiredToReproduce,
+        PercentMaxAge
     }
 }

@@ -113,6 +113,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.Speed = creature.Speed;
                 newCreature.Metabolism = creature.Metabolism;
                 newCreature.MoveCost = creature.MoveCost;
+                newCreature.MaxAge = creature.MaxAge;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
                 newCreature.MaxEnergy = creature.MaxEnergy;
@@ -685,6 +686,10 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureInput.PercentEnergyRequiredToReproduce:
                             creatureInputValue = Globals.Map(creature.Energy, 0, creature.EnergyRequiredToReproduce, 0, 1);
+                            break;
+
+                        case CreatureInput.PercentMaxAge:
+                            creatureInputValue = Globals.Map((float)creature.Age, 0, creature.MaxAge, 0, 1);
                             break;
 
                         default:

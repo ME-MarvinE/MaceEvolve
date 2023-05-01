@@ -24,6 +24,8 @@ namespace MaceEvolve.Core.Interfaces
         public float OffspringBrainMutationChance { get; set; }
         public float EnergyPerEat { get; set; }
         public float NutrientsPerEat { get; set; }
+        public int Age { get; set; }
+        public int MaxAge { get; set; }
         #endregion
 
         #region Methods
