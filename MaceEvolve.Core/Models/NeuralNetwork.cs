@@ -36,6 +36,13 @@ namespace MaceEvolve.Core.Models
                 AddNode(node);
             }
         }
+        public NeuralNetwork(Dictionary<int, Node> nodeIdsToNodesDict)
+        {
+            if (nodeIdsToNodesDict == null) { throw new ArgumentNullException(nameof(nodeIdsToNodesDict)); }
+
+            _nodeIdsToNodesDict = nodeIdsToNodesDict;
+            NodeIdsToNodesDict = new ReadOnlyDictionary<int, Node>(_nodeIdsToNodesDict);
+        }
         #endregion
 
         #region Methods
