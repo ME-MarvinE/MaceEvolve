@@ -36,6 +36,7 @@ namespace MaceEvolve.Core.Models
                 AddNode(node);
             }
         }
+        [JsonConstructor]
         public NeuralNetwork(Dictionary<int, Node> nodeIdsToNodesDict)
         {
             if (nodeIdsToNodesDict == null) { throw new ArgumentNullException(nameof(nodeIdsToNodesDict)); }

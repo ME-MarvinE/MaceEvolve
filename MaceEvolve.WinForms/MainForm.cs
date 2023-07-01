@@ -242,14 +242,9 @@ namespace MaceEvolve.WinForms
 
             CurrentRunTicksElapsed += 1;
 
-            if (CurrentRunTicksElapsed % 500 == 0)
+            if (CurrentRunTicksElapsed % 500 == 0 && previousStep.Creatures.All(x => x.IsDead))
             {
-                int numberOfDeadCreatures = previousStep.Creatures.Count(x => x.IsDead);
-
-                if (numberOfDeadCreatures == previousStep.Creatures.Count)
-                {
-                    FailRun();
-                }
+                FailRun();
             }
         }
         private void MainForm_Load(object sender, EventArgs e)

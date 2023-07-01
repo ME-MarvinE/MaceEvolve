@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
+using Newtonsoft.Json;
 
 namespace MaceEvolve.Core.Models
 {
@@ -25,6 +26,7 @@ namespace MaceEvolve.Core.Models
             : this(nodeType, bias, null, creatureAction)
         {
         }
+        [JsonConstructor]
         public Node(NodeType nodeType, float bias, CreatureInput? creatureInput, CreatureAction? creatureAction)
         {
             NodeType = nodeType;
