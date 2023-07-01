@@ -12,7 +12,7 @@ namespace MaceEvolve.Core.Interfaces
         ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; }
         ConcurrentBag<TFood> Food { get; set; }
         ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; }
-        IRectangle WorldBounds { get; set; }
+        Rectangle WorldBounds { get; set; }
         float ConnectionWeightBound { get; set; }
         int MaxCreatureConnections { get; set; }
         int MaxCreatureProcessNodes { get; set; }

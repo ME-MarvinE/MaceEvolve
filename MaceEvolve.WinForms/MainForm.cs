@@ -3,10 +3,13 @@ using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.Models;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -73,11 +76,9 @@ namespace MaceEvolve.WinForms
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
         }
-        public List<GraphicalFood> GenerateFood()
+        public List<GraphicalFood> GenerateFood(List<GraphicalFood> foodToCovert = null)
         {
-            List<GraphicalFood> foodList = new List<GraphicalFood>();
-
-            foodList.AddRange(MainGameHost.GenerateFood());
+            List<GraphicalFood> foodList = foodToCovert ?? MainGameHost.GenerateFood();
 
             foreach (var food in foodList)
             {
@@ -86,11 +87,9 @@ namespace MaceEvolve.WinForms
 
             return foodList;
         }
-        public List<GraphicalCreature> GenerateCreatures()
+        public List<GraphicalCreature> GenerateCreatures(List<GraphicalCreature> creaturesToCovert = null)
         {
-            List<GraphicalCreature> creatures = new List<GraphicalCreature>();
-
-            creatures.AddRange(MainGameHost.GenerateCreatures());
+            List<GraphicalCreature> creatures = creaturesToCovert ?? MainGameHost.GenerateCreatures();
 
             foreach (var creature in creatures)
             {
@@ -206,7 +205,7 @@ namespace MaceEvolve.WinForms
                 }
             }
 
-            foreach (GraphicalFood food in MainGameHost.CurrentStep.Food)
+            foreach (var food in MainGameHost.CurrentStep.Food)
             {
                 using (SolidBrush brush = new SolidBrush(food.Color))
                 {
@@ -234,7 +233,6 @@ namespace MaceEvolve.WinForms
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
-            GraphicalStep<GraphicalCreature, GraphicalFood> previousStep = MainGameHost.CurrentStep;
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
             SelectedCreatureNetworkViewerForm.NetworkViewer.Step = MainGameHost.CurrentStep;
@@ -242,7 +240,7 @@ namespace MaceEvolve.WinForms
 
             CurrentRunTicksElapsed += 1;
 
-            if (CurrentRunTicksElapsed % 500 == 0 && previousStep.Creatures.All(x => x.IsDead))
+            if (CurrentRunTicksElapsed % 500 == 0 && MainGameHost.CurrentStep.Creatures.All(x => x.IsDead))
             {
                 FailRun();
             }
@@ -340,5 +338,38 @@ namespace MaceEvolve.WinForms
             GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
         }
         #endregion
+
+        private void btnLoadStep_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog() { Filter = "JSON Files (*.json)|*.json", DefaultExt = "json" };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string serializedStep = File.ReadAllText(openFileDialog.FileName);
+                GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood>>(serializedStep);
+
+                MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
+                MainGameHost.MinCreatureConnections = savedStep.MinCreatureConnections;
+                MainGameHost.MaxCreatureConnections = savedStep.MaxCreatureConnections;
+                MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
+                MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
+                MainGameHost.WorldBounds = savedStep.WorldBounds;
+                MainGameHost.CreatureOffspringColor = savedStep.CreatureOffspringColor;
+                MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures.ToList()), GenerateFood(savedStep.Food.ToList()));
+                MessageBox.Show("Step Loaded Successfully.");
+            }
+        }
+
+        private void btnSaveCurrentStep_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog() { Filter = "JSON Files (*.json)|*.json", DefaultExt = "json" };
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string serializedStep = JsonConvert.SerializeObject(MainGameHost.CurrentStep, new JsonSerializerSettings() { Formatting = Formatting.Indented });
+                File.WriteAllText(saveFileDialog.FileName, serializedStep);
+                MessageBox.Show("Step Saved Successfully.");
+            }
+        }
     }
 }

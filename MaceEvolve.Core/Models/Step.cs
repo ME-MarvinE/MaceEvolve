@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,11 +12,13 @@ namespace MaceEvolve.Core.Models
     public class Step<TCreature, TFood> : IStep<TCreature, TFood> where TCreature : class, ICreature, new() where TFood : class, IFood
     {
         #region Properties
+        [JsonIgnore]
         public ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; } = new ConcurrentQueue<StepAction<TCreature>>();
+        [JsonIgnore]
         public ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; } = new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
         public ConcurrentBag<TCreature> Creatures { get; set; }
         public ConcurrentBag<TFood> Food { get; set; }
-        public IRectangle WorldBounds { get; set; }
+        public Rectangle WorldBounds { get; set; }
         public int MinCreatureConnections { get; set; } = 4;
         public int MaxCreatureConnections { get; set; } = 128;
         public int MaxCreatureProcessNodes { get; set; } = 3;

@@ -182,12 +182,11 @@ namespace MaceEvolve.Mono.Desktop
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = new Color(64, 64, MaceRandom.Current.Next(256));
-            GraphicalStep<GraphicalCreature, GraphicalFood> previousStep = MainGameHost.CurrentStep;
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 
-            if (CurrentRunTicksElapsed % 500 == 0 && previousStep.Creatures.All(x => x.IsDead))
+            if (CurrentRunTicksElapsed % 500 == 0 && MainGameHost.CurrentStep.Creatures.All(x => x.IsDead))
             {
                 FailRun();
             }

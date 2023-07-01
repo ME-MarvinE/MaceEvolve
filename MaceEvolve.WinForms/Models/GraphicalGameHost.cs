@@ -16,6 +16,11 @@ namespace MaceEvolve.WinForms.Models
 
             return step;
         }
+        public override void NextStep(bool gatherInfoForAllCreatures = false)
+        {
+            CurrentStep.CreatureOffspringColor = CreatureOffspringColor;
+            base.NextStep(gatherInfoForAllCreatures);
+        }
         public override TFood CreateFoodWithRandomLocation()
         {
             TFood food = base.CreateFoodWithRandomLocation();

@@ -1,7 +1,6 @@
 ﻿using MaceEvolve.Core.Models;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -32,6 +31,7 @@ namespace MaceEvolve.Benchmark
         public Timer PeriodicInfoTimer { get; }
         public bool AutoClearConsole { get; set; }
         public bool PeriodicInfo { get; set; } = true;
+        public bool GameTimerElapsing { get; set; }
         #endregion
 
         #region Constructors
@@ -91,6 +91,7 @@ namespace MaceEvolve.Benchmark
                     break;
                 case ConsoleKey.R:
                     Reset();
+                    Console.WriteLine("Simulation has been reset.");
                     break;
                 case ConsoleKey.F:
                     IsInFastMode = true;
@@ -126,51 +127,72 @@ namespace MaceEvolve.Benchmark
                     break;
                 case ConsoleKey.S:
                     {
-                        Console.WriteLine("Saving...");
+                        Console.WriteLine("Enter file path");
+                        string filePath = Console.ReadLine();
 
-                        if (!Directory.Exists("SavedCreatures"))
-                        {
-                            Directory.CreateDirectory("SavedCreatures");
-                        }
-
-                        string serializedCreatures = JsonConvert.SerializeObject(MainGameHost.CurrentStep.Creatures);
-                        File.WriteAllText("SavedCreatures/Creatures.json", JsonConvert.SerializeObject(MainGameHost.CurrentStep.Creatures, new JsonSerializerSettings() { Formatting = Formatting.Indented }));
-                        Console.WriteLine("Creatures Saved Successfully.");
+                        Console.WriteLine("Saving Current Step...");
+                        SaveStep(MainGameHost.CurrentStep, filePath);
+                        Console.WriteLine("Step Saved Successfully.");
                     }
 
                     break;
                 case ConsoleKey.L:
                     {
-                        if (Path.Exists("SavedCreatures/Creatures.json"))
+                        Console.WriteLine("Enter file path");
+                        string savedStepFilePath = Console.ReadLine();
+
+                        if (Path.Exists(savedStepFilePath))
                         {
-                            Console.WriteLine("Loading creatures...");
+                            Console.WriteLine("Loading Step...");
+                            Step<Creature, Food> savedStep = LoadSavedStep(savedStepFilePath);
 
-                            string serializedCreatures = File.ReadAllText("SavedCreatures/Creatures.json");
-                            ConcurrentBag<Creature> savedCreatures = JsonConvert.DeserializeObject<ConcurrentBag<Creature>>(serializedCreatures, new JsonSerializerSettings() { Formatting = Formatting.Indented });
-                            MainGameHost.ResetStep(savedCreatures.ToList(), MainGameHost.CurrentStep.Food.ToList());
+                            MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
+                            MainGameHost.MinCreatureConnections = savedStep.MinCreatureConnections;
+                            MainGameHost.MaxCreatureConnections = savedStep.MaxCreatureConnections;
+                            MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
+                            MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
+                            MainGameHost.WorldBounds = savedStep.WorldBounds;
+                            MainGameHost.CurrentStep = savedStep;
 
-                            Console.WriteLine("Creatures Loaded.");
+                            Console.WriteLine("Step Loaded Successfully.");
                         }
                         else
                         {
-                            Console.WriteLine("Unable to find saved creatures.");
+                            Console.WriteLine("Unable to locate file.");
                         }
                     }
 
                     break;
                 case ConsoleKey.B:
-                    BenchmarkSteps(500);
+                    BenchmarkSteps(200);
                     break;
             }
         }
+        public void SaveStep(Step<Creature, Food> step, string filePath)
+        {
+            string directoryName = Path.GetDirectoryName(filePath);
+
+            if (!Directory.Exists(directoryName))
+            {
+                Directory.CreateDirectory(directoryName);
+            }
+
+            string serializedStep = JsonConvert.SerializeObject(step, new JsonSerializerSettings() { Formatting = Formatting.Indented });
+            File.WriteAllText(filePath, serializedStep);
+        }
+        public Step<Creature, Food> LoadSavedStep(string filePath)
+        {
+            string serializedStep = File.ReadAllText(filePath);
+            Step<Creature, Food> savedStep = JsonConvert.DeserializeObject<Step<Creature, Food>>(serializedStep);
+            return savedStep;
+        }
         public void UpdateSimulation()
         {
-            Step<Creature, Food> previousStep = MainGameHost.CurrentStep;
             MainGameHost.NextStep(GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 
-            if (CurrentRunTicksElapsed % 500 == 0 && previousStep.Creatures.All(x => x.IsDead))
+            if (CurrentRunTicksElapsed % 500 == 0 && MainGameHost.CurrentStep.Creatures.All(x => x.IsDead))
             {
                 FailRun();
             }
@@ -224,33 +246,18 @@ namespace MaceEvolve.Benchmark
 
             Console.WriteLine("");
             Console.WriteLine("--------------------------Simulation Info----------------");
-            Console.WriteLine((IsSimulationRunning ? "Running" : "Stopped") + (IsInFastMode ? " (Fast)" : ""));
-            Console.WriteLine($"Fast Mode: {IsInFastMode}");
+            Console.WriteLine(IsSimulationRunning ? "Running" : "Stopped");
             Console.WriteLine($"Uptime: {timeInAllRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Failed: {timeInFailedRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
                 $"\nRun {FailedRunsUptimes.Count + 1}, {timeInCurrentRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Average: {averageTimePerRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}");
             Console.WriteLine("-----------------------");
             Console.WriteLine($"{MainGameHost.CurrentStep.Creatures.Count} Creatures");
             Console.WriteLine($"{MainGameHost.CurrentStep.Food.Count} Food");
+            Console.WriteLine($"Fast Mode: {IsInFastMode}");
             Console.WriteLine($"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}");
             Console.WriteLine($"Auto Clear Console: {AutoClearConsole}");
             Console.WriteLine($"Periodic Info: {PeriodicInfo}");
             Console.WriteLine("---------------------------------------------------------");
         }
-        private void GameTimer_Elapsed(object? sender, ElapsedEventArgs e)
-        {
-            if (!IsInFastMode && IsSimulationRunning)
-            {
-                UpdateSimulation();
-            }
-        }
-        private void PeriodicInfoTimer_Elapsed(object? sender, ElapsedEventArgs e)
-        {
-            if (IsSimulationRunning)
-            {
-                ListSimulationInfo();
-            }
-        }
-
         public async void BenchmarkSteps(int numberOfStepsToBenchmark)
         {
             IsSimulationRunning = false;
@@ -273,6 +280,22 @@ namespace MaceEvolve.Benchmark
             Console.WriteLine("--------------------------Benchmark----------------------");
             Console.WriteLine($"Time taken for {numberOfStepsToBenchmark} steps: {stopWatch.ElapsedMilliseconds / 1000d}s");
             Console.WriteLine("---------------------------------------------------------");
+        }
+        private void GameTimer_Elapsed(object? sender, ElapsedEventArgs e)
+        {
+            if (!IsInFastMode && IsSimulationRunning && !GameTimerElapsing)
+            {
+                GameTimerElapsing = true;
+                UpdateSimulation();
+                GameTimerElapsing = false;
+            }
+        }
+        private void PeriodicInfoTimer_Elapsed(object? sender, ElapsedEventArgs e)
+        {
+            if (IsSimulationRunning)
+            {
+                ListSimulationInfo();
+            }
         }
         #endregion
     }

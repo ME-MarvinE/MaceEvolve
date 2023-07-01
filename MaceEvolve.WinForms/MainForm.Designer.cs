@@ -41,6 +41,8 @@ namespace MaceEvolve.WinForms
             btnFastFoward = new Button();
             GameTimer = new Timer(components);
             GatherStepInfoForAllCreaturesButton = new Button();
+            btnLoadStep = new Button();
+            btnSaveCurrentStep = new Button();
             SuspendLayout();
             // 
             // StartButton
@@ -168,6 +170,34 @@ namespace MaceEvolve.WinForms
             GatherStepInfoForAllCreaturesButton.UseVisualStyleBackColor = false;
             GatherStepInfoForAllCreaturesButton.Click += GatherStepInfoForAllCreaturesButton_Click;
             // 
+            // btnLoadStep
+            // 
+            btnLoadStep.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnLoadStep.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnLoadStep.Cursor = Cursors.Hand;
+            btnLoadStep.FlatStyle = FlatStyle.Flat;
+            btnLoadStep.Location = new System.Drawing.Point(620, 128);
+            btnLoadStep.Name = "btnLoadStep";
+            btnLoadStep.Size = new System.Drawing.Size(156, 32);
+            btnLoadStep.TabIndex = 1;
+            btnLoadStep.Text = "Load Step";
+            btnLoadStep.UseVisualStyleBackColor = false;
+            btnLoadStep.Click += btnLoadStep_Click;
+            // 
+            // btnSaveCurrentStep
+            // 
+            btnSaveCurrentStep.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnSaveCurrentStep.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnSaveCurrentStep.Cursor = Cursors.Hand;
+            btnSaveCurrentStep.FlatStyle = FlatStyle.Flat;
+            btnSaveCurrentStep.Location = new System.Drawing.Point(620, 90);
+            btnSaveCurrentStep.Name = "btnSaveCurrentStep";
+            btnSaveCurrentStep.Size = new System.Drawing.Size(156, 32);
+            btnSaveCurrentStep.TabIndex = 1;
+            btnSaveCurrentStep.Text = "Save Current Step";
+            btnSaveCurrentStep.UseVisualStyleBackColor = false;
+            btnSaveCurrentStep.Click += btnSaveCurrentStep_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -181,6 +211,8 @@ namespace MaceEvolve.WinForms
             Controls.Add(GatherStepInfoForAllCreaturesButton);
             Controls.Add(ResetButton);
             Controls.Add(StopButton);
+            Controls.Add(btnSaveCurrentStep);
+            Controls.Add(btnLoadStep);
             Controls.Add(btnFastFoward);
             Controls.Add(StartButton);
             KeyPreview = true;
@@ -206,5 +238,8 @@ namespace MaceEvolve.WinForms
         private Button btnFastFoward;
         private Timer GameTimer;
         private Button GatherStepInfoForAllCreaturesButton;
+        private Button btnLoadStepList;
+        private Button btnLoadStep;
+        private Button btnSaveCurrentStep;
     }
 }

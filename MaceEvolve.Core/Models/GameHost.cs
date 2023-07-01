@@ -17,7 +17,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Properties
-        public TStep CurrentStep { get; private set; }
+        public TStep CurrentStep { get; set; }
         public int MaxCreatureAmount { get; set; } = 1000;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
@@ -95,7 +95,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public virtual void ResetStep(List<TCreature> creatures, List<TFood> food)
+        public virtual void ResetStep(IEnumerable<TCreature> creatures, IEnumerable<TFood> food)
         {
             BestCreature = null;
             SelectedCreature = null;
@@ -107,7 +107,7 @@ namespace MaceEvolve.Core.Models
             {
                 Creatures = new ConcurrentBag<TCreature>(creatures),
                 Food = new ConcurrentBag<TFood>(food),
-                WorldBounds = WorldBounds,
+                WorldBounds = new Rectangle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height),
                 ConnectionWeightBound = ConnectionWeightBound,
                 MinCreatureConnections = MinCreatureConnections,
                 MaxCreatureConnections = MaxCreatureConnections,
@@ -117,19 +117,21 @@ namespace MaceEvolve.Core.Models
         }
         public virtual void NextStep(bool gatherInfoForAllCreatures = false)
         {
-            TStep generatedStep = CreateStep(CurrentStep.Creatures.Where(x => !x.IsDead), CurrentStep.Food.Where(x => x.Energy > 0));
-
-            generatedStep.ExecuteActions(CurrentStep.RequestedActions);
+            CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => !x.IsDead));
+            CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Energy > 0));
+            CurrentStep.ExecuteActions(CurrentStep.RequestedActions);
+            CurrentStep.RequestedActions.Clear();
+            CurrentStep.CreaturesBrainOutput.Clear();
 
             TCreature newBestCreature = BestCreature == null || BestCreature.IsDead ? null : BestCreature;
 
-            Parallel.ForEach(generatedStep.Creatures, creature =>
+            Parallel.ForEach(CurrentStep.Creatures, creature =>
             {
                 if (!creature.IsDead || creature == BestCreature || creature == SelectedCreature)
                 {
                     //Calculate the output values for the creature's nodes.
                     IEnumerable<CreatureInput> inputsRequiredForStep = creature.Brain.GetInputsRequiredForStep();
-                    Dictionary<CreatureInput, float> inputToInputValueDict = generatedStep.GenerateCreatureInputValues(inputsRequiredForStep, creature);
+                    Dictionary<CreatureInput, float> inputToInputValueDict = CurrentStep.GenerateCreatureInputValues(inputsRequiredForStep, creature);
                     Dictionary<int, float> nodeIdToOutputValueDict = creature.Brain.GenerateNodeOutputs(inputToInputValueDict);
 
                     //Get the output node with the highest output value.
@@ -160,7 +162,7 @@ namespace MaceEvolve.Core.Models
                         stepAction.Action = CreatureAction.DoNothing;
                     }
 
-                    generatedStep.QueueAction(stepAction);
+                    CurrentStep.QueueAction(stepAction);
 
                     //Store properties of the creature's current status.
                     bool trackBrainOutput = gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature;
@@ -209,7 +211,7 @@ namespace MaceEvolve.Core.Models
                             currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
                         }
 
-                        generatedStep.CreaturesBrainOutput[creature] = currentStepNodeInfo;
+                        CurrentStep.CreaturesBrainOutput[creature] = currentStepNodeInfo;
                     }
 
                     if (!creature.IsDead)
@@ -231,12 +233,12 @@ namespace MaceEvolve.Core.Models
 
             BestCreature = newBestCreature;
 
-            if (MaceRandom.Current.NextFloat() <= 0.8 && generatedStep.Food.Count < MaxFoodAmount)
+            if (MaceRandom.Current.NextFloat() <= 0.8 && CurrentStep.Food.Count < MaxFoodAmount)
             {
-                generatedStep.Food.Add(CreateFoodWithRandomLocation());
+                CurrentStep.Food.Add(CreateFoodWithRandomLocation());
             }
 
-            CurrentStep = generatedStep;
+            CurrentStep = CurrentStep;
         }
         public virtual TFood CreateFoodWithRandomLocation()
         {
