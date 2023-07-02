@@ -122,8 +122,8 @@ namespace MaceEvolve.Core.Models
                 newCreature.MaxEnergy = creature.MaxEnergy;
                 newCreature.Energy = creature.EnergyRequiredToReproduce / 2;
                 newCreature.MaxNutrients = creature.MaxNutrients;
-                newCreature.Nutrients = creature.NutrientsRequiredToReproduce;
-                newCreature.NutrientsRequiredToReproduce = creature.NutrientsRequiredToReproduce / 2;
+                newCreature.Nutrients = creature.NutrientsRequiredToReproduce / 2;
+                newCreature.NutrientsRequiredToReproduce = creature.NutrientsRequiredToReproduce;
                 newCreature.EnergyRequiredToReproduce = creature.EnergyRequiredToReproduce;
                 newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
                 newCreature.EnergyPerEat = creature.EnergyPerEat;
