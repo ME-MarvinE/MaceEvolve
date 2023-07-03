@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaceEvolve.Core", "MaceEvol
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaceEvolve.Mono.Desktop", "MaceEvolve.Mono.Desktop\MaceEvolve.Mono.Desktop.csproj", "{67EB2D01-077C-4FCF-90C4-F66F2434A32E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaceEvolve.Benchmark", "MaceEvolve.Benchmark\MaceEvolve.Benchmark.csproj", "{ED31E7AD-F2B2-44B1-A9B6-29686076C569}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaceEvolve.Console", "MaceEvolve.Console\MaceEvolve.Console.csproj", "{ED31E7AD-F2B2-44B1-A9B6-29686076C569}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

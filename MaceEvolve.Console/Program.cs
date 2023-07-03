@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace MaceEvolve.Benchmark
+namespace MaceEvolve.Console
 {
     public class Program
     {
@@ -67,18 +67,18 @@ namespace MaceEvolve.Benchmark
 
             while (true)
             {
-                program.ExecuteKeyAction(Console.ReadKey().Key);
+                program.ExecuteKeyAction(System.Console.ReadKey().Key);
             }
         }
         public void ExecuteKeyAction(ConsoleKey key)
         {
             if (AutoClearConsole)
             {
-                Console.Clear();
+                System.Console.Clear();
             }
             else
             {
-                Console.WriteLine("");
+                System.Console.WriteLine("");
             }
 
             switch (key)
@@ -91,7 +91,7 @@ namespace MaceEvolve.Benchmark
                     break;
                 case ConsoleKey.R:
                     Reset();
-                    Console.WriteLine("Simulation has been reset.");
+                    System.Console.WriteLine("Simulation has been reset.");
                     break;
                 case ConsoleKey.F:
                     IsInFastMode = true;
@@ -116,7 +116,7 @@ namespace MaceEvolve.Benchmark
                     ListSimulationInfo();
                     break;
                 case ConsoleKey.C:
-                    Console.Clear();
+                    System.Console.Clear();
                     break;
                 case ConsoleKey.A:
                     AutoClearConsole = !AutoClearConsole;
@@ -127,23 +127,23 @@ namespace MaceEvolve.Benchmark
                     break;
                 case ConsoleKey.S:
                     {
-                        Console.WriteLine("Enter file path");
-                        string filePath = Console.ReadLine();
+                        System.Console.WriteLine("Enter file path");
+                        string filePath = System.Console.ReadLine();
 
-                        Console.WriteLine("Saving Current Step...");
+                        System.Console.WriteLine("Saving Current Step...");
                         SaveStep(MainGameHost.CurrentStep, filePath);
-                        Console.WriteLine("Step Saved Successfully.");
+                        System.Console.WriteLine("Step Saved Successfully.");
                     }
 
                     break;
                 case ConsoleKey.L:
                     {
-                        Console.WriteLine("Enter file path");
-                        string savedStepFilePath = Console.ReadLine();
+                        System.Console.WriteLine("Enter file path");
+                        string savedStepFilePath = System.Console.ReadLine();
 
                         if (Path.Exists(savedStepFilePath))
                         {
-                            Console.WriteLine("Loading Step...");
+                            System.Console.WriteLine("Loading Step...");
                             Step<Creature, Food> savedStep = LoadSavedStep(savedStepFilePath);
 
                             MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
@@ -154,11 +154,11 @@ namespace MaceEvolve.Benchmark
                             MainGameHost.WorldBounds = savedStep.WorldBounds;
                             MainGameHost.CurrentStep = savedStep;
 
-                            Console.WriteLine("Step Loaded Successfully.");
+                            System.Console.WriteLine("Step Loaded Successfully.");
                         }
                         else
                         {
-                            Console.WriteLine("Unable to locate file.");
+                            System.Console.WriteLine("Unable to locate file.");
                         }
                     }
 
@@ -214,21 +214,21 @@ namespace MaceEvolve.Benchmark
         }
         public static void ListCommands()
         {
-            Console.WriteLine("");
-            Console.WriteLine("--------------------------Commands-----------------------");
-            Console.WriteLine("P = Start/Pause");
-            Console.WriteLine("R = Reset");
-            Console.WriteLine("G = Toggle Gather step info for all creatures");
-            Console.WriteLine("Escape = Exit");
-            Console.WriteLine("H = List Commands");
-            Console.WriteLine("I = List Simulation Info");
-            Console.WriteLine("C = Clear Console");
-            Console.WriteLine("A = Toggle Auto Clear Console");
-            Console.WriteLine("O = Toggle Periodic Info");
-            Console.WriteLine("S = Save Creatures");
-            Console.WriteLine("L = Load Creatures");
-            Console.WriteLine("B = Benchmark Current Step");
-            Console.WriteLine("---------------------------------------------------------");
+            System.Console.WriteLine("");
+            System.Console.WriteLine("--------------------------Commands-----------------------");
+            System.Console.WriteLine("P = Start/Pause");
+            System.Console.WriteLine("R = Reset");
+            System.Console.WriteLine("G = Toggle Gather step info for all creatures");
+            System.Console.WriteLine("Escape = Exit");
+            System.Console.WriteLine("H = List Commands");
+            System.Console.WriteLine("I = List Simulation Info");
+            System.Console.WriteLine("C = Clear Console");
+            System.Console.WriteLine("A = Toggle Auto Clear Console");
+            System.Console.WriteLine("O = Toggle Periodic Info");
+            System.Console.WriteLine("S = Save Creatures");
+            System.Console.WriteLine("L = Load Creatures");
+            System.Console.WriteLine("B = Benchmark Current Step");
+            System.Console.WriteLine("---------------------------------------------------------");
         }
         public void ListSimulationInfo()
         {
@@ -244,25 +244,25 @@ namespace MaceEvolve.Benchmark
             TimeSpan timeInAllRuns = timeInFailedRuns.Add(timeInCurrentRun);
             TimeSpan averageTimePerRun = TimeSpan.FromMilliseconds(FailedRunsUptimes.Count == 0 ? 0 : FailedRunsUptimes.Average(x => x.TotalMilliseconds));
 
-            Console.WriteLine("");
-            Console.WriteLine("--------------------------Simulation Info----------------");
-            Console.WriteLine(IsSimulationRunning ? "Running" : "Stopped");
-            Console.WriteLine($"Uptime: {timeInAllRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Failed: {timeInFailedRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
+            System.Console.WriteLine("");
+            System.Console.WriteLine("--------------------------Simulation Info----------------");
+            System.Console.WriteLine(IsSimulationRunning ? "Running" : "Stopped");
+            System.Console.WriteLine($"Uptime: {timeInAllRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Failed: {timeInFailedRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
                 $"\nRun {FailedRunsUptimes.Count + 1}, {timeInCurrentRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Average: {averageTimePerRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}");
-            Console.WriteLine("-----------------------");
-            Console.WriteLine($"{MainGameHost.CurrentStep.Creatures.Count} Creatures");
-            Console.WriteLine($"{MainGameHost.CurrentStep.Food.Count} Food");
-            Console.WriteLine($"Fast Mode: {IsInFastMode}");
-            Console.WriteLine($"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}");
-            Console.WriteLine($"Auto Clear Console: {AutoClearConsole}");
-            Console.WriteLine($"Periodic Info: {PeriodicInfo}");
-            Console.WriteLine("---------------------------------------------------------");
+            System.Console.WriteLine("-----------------------");
+            System.Console.WriteLine($"{MainGameHost.CurrentStep.Creatures.Count} Creatures");
+            System.Console.WriteLine($"{MainGameHost.CurrentStep.Food.Count} Food");
+            System.Console.WriteLine($"Fast Mode: {IsInFastMode}");
+            System.Console.WriteLine($"Gather Step Info For All Creatures: {GatherStepInfoForAllCreatures}");
+            System.Console.WriteLine($"Auto Clear Console: {AutoClearConsole}");
+            System.Console.WriteLine($"Periodic Info: {PeriodicInfo}");
+            System.Console.WriteLine("---------------------------------------------------------");
         }
         public async void BenchmarkSteps(int numberOfStepsToBenchmark)
         {
             IsSimulationRunning = false;
 
-            Console.WriteLine("Benchmarking...");
+            System.Console.WriteLine("Benchmarking...");
 
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -277,9 +277,9 @@ namespace MaceEvolve.Benchmark
 
             stopWatch.Stop();
 
-            Console.WriteLine("--------------------------Benchmark----------------------");
-            Console.WriteLine($"Time taken for {numberOfStepsToBenchmark} steps: {stopWatch.ElapsedMilliseconds / 1000d}s");
-            Console.WriteLine("---------------------------------------------------------");
+            System.Console.WriteLine("--------------------------Benchmark----------------------");
+            System.Console.WriteLine($"Time taken for {numberOfStepsToBenchmark} steps: {stopWatch.ElapsedMilliseconds / 1000d}s");
+            System.Console.WriteLine("---------------------------------------------------------");
         }
         private void GameTimer_Elapsed(object? sender, ElapsedEventArgs e)
         {
