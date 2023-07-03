@@ -43,6 +43,7 @@ namespace MaceEvolve.WinForms
             GatherStepInfoForAllCreaturesButton = new Button();
             btnLoadStep = new Button();
             btnSaveCurrentStep = new Button();
+            btnBenchmark = new Button();
             SuspendLayout();
             // 
             // StartButton
@@ -198,6 +199,20 @@ namespace MaceEvolve.WinForms
             btnSaveCurrentStep.UseVisualStyleBackColor = false;
             btnSaveCurrentStep.Click += btnSaveCurrentStep_Click;
             // 
+            // btnBenchmark
+            // 
+            btnBenchmark.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnBenchmark.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnBenchmark.Cursor = Cursors.Hand;
+            btnBenchmark.FlatStyle = FlatStyle.Flat;
+            btnBenchmark.Location = new System.Drawing.Point(620, 166);
+            btnBenchmark.Name = "btnBenchmark";
+            btnBenchmark.Size = new System.Drawing.Size(156, 32);
+            btnBenchmark.TabIndex = 1;
+            btnBenchmark.Text = "Benchmark";
+            btnBenchmark.UseVisualStyleBackColor = false;
+            btnBenchmark.Click += btnBenchmark_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -212,6 +227,7 @@ namespace MaceEvolve.WinForms
             Controls.Add(ResetButton);
             Controls.Add(StopButton);
             Controls.Add(btnSaveCurrentStep);
+            Controls.Add(btnBenchmark);
             Controls.Add(btnLoadStep);
             Controls.Add(btnFastFoward);
             Controls.Add(StartButton);
@@ -241,5 +257,6 @@ namespace MaceEvolve.WinForms
         private Button btnLoadStepList;
         private Button btnLoadStep;
         private Button btnSaveCurrentStep;
+        private Button btnBenchmark;
     }
 }

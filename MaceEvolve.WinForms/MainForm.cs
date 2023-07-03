@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -48,6 +49,31 @@ namespace MaceEvolve.WinForms
         #endregion
 
         #region Methods
+        public async Task BenchmarkSteps(int numberOfStepsToBenchmark)
+        {
+            SimulationRunning = false;
+
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            await Task.Factory.StartNew(() =>
+            {
+                for (int i = 0; i < numberOfStepsToBenchmark; i++)
+                {
+                    UpdateSimulation();
+                }
+            }, TaskCreationOptions.LongRunning);
+
+            stopWatch.Stop();
+
+            MessageBox.Show($"Time taken for {numberOfStepsToBenchmark} steps: {stopWatch.ElapsedMilliseconds / 1000d}s");
+        }
+        public GraphicalStep<GraphicalCreature, GraphicalFood> LoadSavedStep(string filePath)
+        {
+            string serializedStep = File.ReadAllText(filePath);
+            GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood>>(serializedStep);
+            return savedStep;
+        }
         public void Reset()
         {
             MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
@@ -337,16 +363,13 @@ namespace MaceEvolve.WinForms
 
             GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
         }
-        #endregion
-
         private void btnLoadStep_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog() { Filter = "JSON Files (*.json)|*.json", DefaultExt = "json" };
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                string serializedStep = File.ReadAllText(openFileDialog.FileName);
-                GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood>>(serializedStep);
+                GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = LoadSavedStep(openFileDialog.FileName);
 
                 MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
                 MainGameHost.MinCreatureConnections = savedStep.MinCreatureConnections;
@@ -359,7 +382,6 @@ namespace MaceEvolve.WinForms
                 MessageBox.Show("Step Loaded Successfully.");
             }
         }
-
         private void btnSaveCurrentStep_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog() { Filter = "JSON Files (*.json)|*.json", DefaultExt = "json" };
@@ -371,5 +393,10 @@ namespace MaceEvolve.WinForms
                 MessageBox.Show("Step Saved Successfully.");
             }
         }
+        private async void btnBenchmark_Click(object sender, EventArgs e)
+        {
+            await BenchmarkSteps(200);
+        }
+        #endregion
     }
 }
