@@ -94,7 +94,6 @@ namespace MaceEvolve.Mono.Desktop
         }
         protected override void Update(GameTime gameTime)
         {
-
             if (!IsInFastMode && SimulationRunning)
             {
                 UpdateSimulation();
@@ -182,7 +181,7 @@ namespace MaceEvolve.Mono.Desktop
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = new Color(64, 64, MaceRandom.Current.Next(256));
-            MainGameHost.NextStep(GatherStepInfoForAllCreatures);
+            MainGameHost.NextStep(true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 

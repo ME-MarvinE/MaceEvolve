@@ -17,10 +17,10 @@ namespace MaceEvolve.WinForms.Models
 
             return step;
         }
-        public override ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherInfoForAllCreatures = false)
+        public override ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
             CurrentStep.CreatureOffspringColor = CreatureOffspringColor;
-            return base.NextStep(gatherInfoForAllCreatures);
+            return base.NextStep(gatherBestCreatureInfo, gatherSelectedCreatureInfo, gatherDeadCreatureInfo, gatherAliveCreatureInfo);
         }
         public override TFood CreateFoodWithRandomLocation()
         {

@@ -233,7 +233,7 @@ namespace MaceEvolve.WinForms
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
-            ConcurrentDictionary<GraphicalCreature, List<NeuralNetworkStepNodeInfo>> creaturesBrainOutput = MainGameHost.NextStep(GatherStepInfoForAllCreatures);
+            ConcurrentDictionary<GraphicalCreature, List<NeuralNetworkStepNodeInfo>> creaturesBrainOutput = MainGameHost.NextStep(true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
             SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = creaturesBrainOutput;
             BestCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = creaturesBrainOutput;

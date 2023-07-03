@@ -115,7 +115,7 @@ namespace MaceEvolve.Core.Models
                 LoopWorldBounds = LoopWorldBounds
             };
         }
-        public virtual ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherInfoForAllCreatures = false)
+        public virtual ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => !x.IsDead));
             CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Energy > 0));
@@ -128,7 +128,10 @@ namespace MaceEvolve.Core.Models
 
             Parallel.ForEach(CurrentStep.Creatures, creature =>
             {
-                if (!creature.IsDead || creature == BestCreature || creature == SelectedCreature)
+                bool shouldTrackBrainOutput = (!creature.IsDead && gatherAliveCreatureInfo) || (creature.IsDead && gatherDeadCreatureInfo) || (creature == newBestCreature && gatherBestCreatureInfo) || (creature == SelectedCreature && gatherSelectedCreatureInfo);
+                bool shouldEvaluateCreature = !creature.IsDead || shouldTrackBrainOutput;
+                
+                if (shouldEvaluateCreature)
                 {
                     //Calculate the output values for the creature's nodes.
                     IEnumerable<CreatureInput> inputsRequiredForStep = creature.Brain.GetInputsRequiredForStep();
@@ -166,9 +169,7 @@ namespace MaceEvolve.Core.Models
                     CurrentStep.QueueAction(stepAction);
 
                     //Store properties of the creature's current status.
-                    bool trackBrainOutput = gatherInfoForAllCreatures || creature == BestCreature || creature == SelectedCreature;
-
-                    if (trackBrainOutput)
+                    if (shouldTrackBrainOutput)
                     {
                         List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
 
@@ -252,9 +253,9 @@ namespace MaceEvolve.Core.Models
             };
 
             newFood.Energy = MaceRandom.Current.NextFloat(MinFoodEnergy, MaxFoodEnergy);
-            newFood.Nutrients =  MaceRandom.Current.NextFloat(MinFoodNutrients, MaxFoodNutrients);
+            newFood.Nutrients = MaceRandom.Current.NextFloat(MinFoodNutrients, MaxFoodNutrients);
             newFood.Size = Globals.Map(newFood.Energy, 0, newFood.MaxEnergy, MinFoodSize, MaxFoodSize);
-            
+
             return newFood;
         }
         public virtual List<TFood> GenerateFood()

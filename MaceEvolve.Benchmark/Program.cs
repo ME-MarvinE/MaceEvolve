@@ -188,7 +188,7 @@ namespace MaceEvolve.Benchmark
         }
         public void UpdateSimulation()
         {
-            MainGameHost.NextStep(GatherStepInfoForAllCreatures);
+            MainGameHost.NextStep(true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 
