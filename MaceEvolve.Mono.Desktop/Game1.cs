@@ -182,7 +182,7 @@ namespace MaceEvolve.Mono.Desktop
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = new Color(64, 64, MaceRandom.Current.Next(256));
-            PreviousStepResult = MainGameHost.NextStep(PreviousStepResult?.CalculatedActions ?? new ConcurrentQueue<StepAction<GraphicalCreature>>(), true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
+            PreviousStepResult = MainGameHost.NextStep(PreviousStepResult.CalculatedActions, true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 
@@ -222,7 +222,7 @@ namespace MaceEvolve.Mono.Desktop
             Rectangle gameBounds = _graphics.GraphicsDevice.PresentationParameters.Bounds;
             MainGameHost.WorldBounds = new Core.Models.Rectangle(gameBounds.X, gameBounds.Y, gameBounds.Width, gameBounds.Height);
 
-            PreviousStepResult = null;
+            PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
             MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 
             FailedRunsUptimes.Clear();
@@ -230,7 +230,7 @@ namespace MaceEvolve.Mono.Desktop
         }
         public void FailRun()
         {
-            PreviousStepResult = null;
+            PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
             MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));

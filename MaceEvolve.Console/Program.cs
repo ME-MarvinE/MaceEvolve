@@ -190,7 +190,7 @@ namespace MaceEvolve.Console
         }
         public void UpdateSimulation()
         {
-            PreviousStepResult = MainGameHost.NextStep(PreviousStepResult?.CalculatedActions ?? new ConcurrentQueue<StepAction<Creature>>(), true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
+            PreviousStepResult = MainGameHost.NextStep(PreviousStepResult.CalculatedActions, true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 
@@ -201,7 +201,7 @@ namespace MaceEvolve.Console
         }
         public void FailRun()
         {
-            PreviousStepResult = null;
+            PreviousStepResult = new StepResult<Creature>(new ConcurrentQueue<StepAction<Creature>>());
             MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
@@ -210,7 +210,7 @@ namespace MaceEvolve.Console
         public void Reset()
         {
             MainGameHost.WorldBounds = new Rectangle(0, 0, 784, 661); //Same value as MaceEvolve.WinForms ClientRectangle
-            PreviousStepResult = null;
+            PreviousStepResult = new StepResult<Creature>(new ConcurrentQueue<StepAction<Creature>>());
             MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood());
 
             FailedRunsUptimes.Clear();
