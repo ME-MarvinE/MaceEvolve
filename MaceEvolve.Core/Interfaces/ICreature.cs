@@ -30,7 +30,6 @@ namespace MaceEvolve.Core.Interfaces
 
         #region Methods
         void Die();
-        bool IsWithinSight(IGameObject gameObject);
         #endregion
     }
 }

@@ -24,11 +24,11 @@ namespace MaceEvolve.Core.Models
         #region Methods
         public IEnumerable<TCreature> GetVisibleCreatures(TCreature creature)
         {
-            return Creatures.Where(x => creature.IsWithinSight(x) && x != creature);
+            return Creatures.Where(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y) <= creature.SightRange && x != creature);
         }
         public IEnumerable<TFood> GetVisibleFood(TCreature creature)
         {
-            return Food.Where(x => creature.IsWithinSight(x));
+            return Food.Where(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y) <= creature.SightRange);
         }
         public IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature, IEnumerable<TCreature> visibleCreatures = null)
         {

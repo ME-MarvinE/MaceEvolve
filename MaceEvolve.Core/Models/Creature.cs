@@ -81,10 +81,6 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public bool IsWithinSight(IGameObject gameObject)
-        {
-            return Globals.GetDistanceFrom(X, Y, gameObject.X, gameObject.Y) <= SightRange;
-        }
         public void Die()
         {
             IsDead = true;
