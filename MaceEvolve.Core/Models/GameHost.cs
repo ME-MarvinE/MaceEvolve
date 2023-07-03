@@ -115,13 +115,14 @@ namespace MaceEvolve.Core.Models
                 LoopWorldBounds = LoopWorldBounds
             };
         }
-        public virtual void NextStep(bool gatherInfoForAllCreatures = false)
+        public virtual ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherInfoForAllCreatures = false)
         {
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => !x.IsDead));
             CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Energy > 0));
             CurrentStep.ExecuteActions(CurrentStep.RequestedActions);
             CurrentStep.RequestedActions.Clear();
-            CurrentStep.CreaturesBrainOutput.Clear();
+
+            ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> creaturesBrainOutput = new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
 
             TCreature newBestCreature = BestCreature == null || BestCreature.IsDead ? null : BestCreature;
 
@@ -211,7 +212,7 @@ namespace MaceEvolve.Core.Models
                             currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
                         }
 
-                        CurrentStep.CreaturesBrainOutput[creature] = currentStepNodeInfo;
+                        creaturesBrainOutput[creature] = currentStepNodeInfo;
                     }
 
                     if (!creature.IsDead)
@@ -238,7 +239,7 @@ namespace MaceEvolve.Core.Models
                 CurrentStep.Food.Add(CreateFoodWithRandomLocation());
             }
 
-            CurrentStep = CurrentStep;
+            return creaturesBrainOutput;
         }
         public virtual TFood CreateFoodWithRandomLocation()
         {

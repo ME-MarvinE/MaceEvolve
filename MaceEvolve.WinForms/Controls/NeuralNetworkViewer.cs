@@ -18,24 +18,10 @@ namespace MaceEvolve.WinForms.Controls
     {
         #region Fields
         public NeuralNetwork _neuralNetwork;
-        public IStep<GraphicalCreature, GraphicalFood> _step;
         #endregion
 
         #region Properties
-        public IStep<GraphicalCreature, GraphicalFood> Step
-        {
-            get
-            {
-                return _step;
-            }
-            set
-            {
-                lock (_lock)
-                {
-                    _step = value;
-                }
-            }
-        }
+        public IDictionary<GraphicalCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; }
         public NeuralNetwork NeuralNetwork
         {
             get
@@ -172,9 +158,9 @@ namespace MaceEvolve.WinForms.Controls
         {
             lock (_lock)
             {
-                if (NeuralNetwork != null && Step != null)
+                if (NeuralNetwork != null && CreaturesBrainOutput != null)
                 {
-                    GraphicalCreature networkCreatureInStep = Step.CreaturesBrainOutput.FirstOrDefault(x => x.Key.Brain == NeuralNetwork).Key;
+                    GraphicalCreature networkCreatureInStep = CreaturesBrainOutput.FirstOrDefault(x => x.Key.Brain == NeuralNetwork).Key;
 
                     if (networkCreatureInStep == null)
                     {
@@ -201,7 +187,7 @@ namespace MaceEvolve.WinForms.Controls
                         }
                     }
 
-                    NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
+                    NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = CreaturesBrainOutput[networkCreatureInStep].Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
 
                     //Draw nodes and self referencing connections.
                     foreach (var keyValuePair in DrawnNodeIdsToGameObject)
@@ -234,7 +220,7 @@ namespace MaceEvolve.WinForms.Controls
                         }
 
                         //Draw the node.
-                        NeuralNetworkStepNodeInfo nodeNetworkStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == nodeId);
+                        NeuralNetworkStepNodeInfo nodeNetworkStepInfo = CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == nodeId);
 
                         string previousOutputString = nodeNetworkStepInfo == null ? "N/A" : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
                         int nodeIdFontSize = NodeFontSize - 4;
@@ -265,7 +251,7 @@ namespace MaceEvolve.WinForms.Controls
                     lblNodeInputOrAction.Visible = SelectedNodeId != null;
                     if (SelectedNodeId != null)
                     {
-                        NeuralNetworkStepNodeInfo selectedNodeStepInfo = Step.CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == SelectedNodeId);
+                        NeuralNetworkStepNodeInfo selectedNodeStepInfo = CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == SelectedNodeId);
 
                         lblSelectedNodeId.Text = $"Id: {SelectedNodeId}";
                         lblSelectedNodePreviousOutput.Text = $"Previous Output: {(selectedNodeStepInfo == null ? "N/A" : selectedNodeStepInfo.PreviousOutput)}";
@@ -297,7 +283,7 @@ namespace MaceEvolve.WinForms.Controls
         }
         private void NeuralNetworkViewer_MouseDown(object sender, MouseEventArgs e)
         {
-            if (NeuralNetwork != null && Step != null)
+            if (NeuralNetwork != null && CreaturesBrainOutput != null)
             {
                 Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
 
@@ -319,7 +305,7 @@ namespace MaceEvolve.WinForms.Controls
         }
         private void NeuralNetworkViewer_MouseUp(object sender, MouseEventArgs e)
         {
-            if (NeuralNetwork != null && Step != null)
+            if (NeuralNetwork != null && CreaturesBrainOutput != null)
             {
                 MovingNodeId = null;
             }
@@ -328,7 +314,7 @@ namespace MaceEvolve.WinForms.Controls
         {
             Point relativeMouseLocation = new Point(e.X - Bounds.Location.X, e.Y - Bounds.Location.Y);
 
-            if (MovingNodeId != null && NeuralNetwork != null && Step != null)
+            if (MovingNodeId != null && NeuralNetwork != null && CreaturesBrainOutput != null)
             {
                 GameObject movingNodeGameObject = DrawnNodeIdsToGameObject[MovingNodeId.Value];
 

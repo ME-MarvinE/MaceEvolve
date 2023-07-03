@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core;
 using MaceEvolve.Core.Models;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -16,10 +17,10 @@ namespace MaceEvolve.WinForms.Models
 
             return step;
         }
-        public override void NextStep(bool gatherInfoForAllCreatures = false)
+        public override ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherInfoForAllCreatures = false)
         {
             CurrentStep.CreatureOffspringColor = CreatureOffspringColor;
-            base.NextStep(gatherInfoForAllCreatures);
+            return base.NextStep(gatherInfoForAllCreatures);
         }
         public override TFood CreateFoodWithRandomLocation()
         {

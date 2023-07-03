@@ -9,7 +9,6 @@ namespace MaceEvolve.Core.Interfaces
     {
         #region Properties
         ConcurrentBag<TCreature> Creatures { get; set; }
-        ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; }
         ConcurrentBag<TFood> Food { get; set; }
         ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; }
         Rectangle WorldBounds { get; set; }

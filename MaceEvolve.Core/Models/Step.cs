@@ -14,8 +14,6 @@ namespace MaceEvolve.Core.Models
         #region Properties
         [JsonIgnore]
         public ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; } = new ConcurrentQueue<StepAction<TCreature>>();
-        [JsonIgnore]
-        public ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; } = new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
         public ConcurrentBag<TCreature> Creatures { get; set; }
         public ConcurrentBag<TFood> Food { get; set; }
         public Rectangle WorldBounds { get; set; }
