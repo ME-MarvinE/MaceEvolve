@@ -10,7 +10,6 @@ namespace MaceEvolve.Core.Interfaces
         #region Properties
         ConcurrentBag<TCreature> Creatures { get; set; }
         ConcurrentBag<TFood> Food { get; set; }
-        ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; }
         Rectangle WorldBounds { get; set; }
         float ConnectionWeightBound { get; set; }
         int MaxCreatureConnections { get; set; }
@@ -33,8 +32,6 @@ namespace MaceEvolve.Core.Interfaces
         IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature, IEnumerable<TCreature> visibleCreatures);
         IEnumerable<TFood> GetVisibleFood(TCreature creature);
         IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature, IEnumerable<TFood> visibleFood);
-        void QueueAction(StepAction<TCreature> stepAction);
-        void QueueAction(TCreature creature, CreatureAction creatureAction);
         #endregion
     }
 }

@@ -1,6 +1,5 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,8 +11,6 @@ namespace MaceEvolve.Core.Models
     public class Step<TCreature, TFood> : IStep<TCreature, TFood> where TCreature : class, ICreature, new() where TFood : class, IFood
     {
         #region Properties
-        [JsonIgnore]
-        public ConcurrentQueue<StepAction<TCreature>> RequestedActions { get; set; } = new ConcurrentQueue<StepAction<TCreature>>();
         public ConcurrentBag<TCreature> Creatures { get; set; }
         public ConcurrentBag<TFood> Food { get; set; }
         public Rectangle WorldBounds { get; set; }
@@ -25,18 +22,6 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public void QueueAction(StepAction<TCreature> stepAction)
-        {
-            RequestedActions.Enqueue(stepAction);
-        }
-        public void QueueAction(TCreature creature, CreatureAction creatureAction)
-        {
-            RequestedActions.Enqueue(new StepAction<TCreature>()
-            {
-                Creature = creature,
-                Action = creatureAction
-            });
-        }
         public IEnumerable<TCreature> GetVisibleCreatures(TCreature creature)
         {
             return Creatures.Where(x => creature.IsWithinSight(x) && x != creature);

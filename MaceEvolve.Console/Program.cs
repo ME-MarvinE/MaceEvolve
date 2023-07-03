@@ -1,6 +1,7 @@
 ﻿using MaceEvolve.Core.Models;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -32,6 +33,7 @@ namespace MaceEvolve.Console
         public bool AutoClearConsole { get; set; }
         public bool PeriodicInfo { get; set; } = true;
         public bool GameTimerElapsing { get; set; }
+        public StepResult<Creature> PreviousStepResult { get; set; }
         #endregion
 
         #region Constructors
@@ -188,7 +190,7 @@ namespace MaceEvolve.Console
         }
         public void UpdateSimulation()
         {
-            MainGameHost.NextStep(true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
+            PreviousStepResult = MainGameHost.NextStep(PreviousStepResult?.CalculatedActions ?? new ConcurrentQueue<StepAction<Creature>>(), true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 
@@ -199,6 +201,7 @@ namespace MaceEvolve.Console
         }
         public void FailRun()
         {
+            PreviousStepResult = null;
             MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
@@ -207,6 +210,7 @@ namespace MaceEvolve.Console
         public void Reset()
         {
             MainGameHost.WorldBounds = new Rectangle(0, 0, 784, 661); //Same value as MaceEvolve.WinForms ClientRectangle
+            PreviousStepResult = null;
             MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood());
 
             FailedRunsUptimes.Clear();

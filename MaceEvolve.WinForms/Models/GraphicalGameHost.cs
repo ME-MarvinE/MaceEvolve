@@ -1,6 +1,5 @@
 ﻿using MaceEvolve.Core;
 using MaceEvolve.Core.Models;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -17,10 +16,10 @@ namespace MaceEvolve.WinForms.Models
 
             return step;
         }
-        public override ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
+        public override StepResult<TCreature> NextStep(IEnumerable<StepAction<TCreature>> actionsToExecute, bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
             CurrentStep.CreatureOffspringColor = CreatureOffspringColor;
-            return base.NextStep(gatherBestCreatureInfo, gatherSelectedCreatureInfo, gatherDeadCreatureInfo, gatherAliveCreatureInfo);
+            return base.NextStep(actionsToExecute, gatherBestCreatureInfo, gatherSelectedCreatureInfo, gatherDeadCreatureInfo, gatherAliveCreatureInfo);
         }
         public override TFood CreateFoodWithRandomLocation()
         {

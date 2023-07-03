@@ -1,5 +1,4 @@
 using MaceEvolve.Core;
-using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.Models;
@@ -36,6 +35,7 @@ namespace MaceEvolve.WinForms
             }
         }
         public List<TimeSpan> FailedRunsUptimes { get; set; } = new List<TimeSpan>();
+        public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
         #endregion
 
         #region Constructors
@@ -58,6 +58,7 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = null;
             SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
+            PreviousStepResult = null;
             MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 
             FailedRunsUptimes.Clear();
@@ -71,6 +72,7 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = null;
             SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
+            PreviousStepResult = null;
             MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
@@ -233,10 +235,10 @@ namespace MaceEvolve.WinForms
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
-            ConcurrentDictionary<GraphicalCreature, List<NeuralNetworkStepNodeInfo>> creaturesBrainOutput = MainGameHost.NextStep(true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
+            PreviousStepResult = MainGameHost.NextStep(PreviousStepResult?.CalculatedActions ?? new ConcurrentQueue<StepAction<GraphicalCreature>>(), true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
-            SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = creaturesBrainOutput;
-            BestCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = creaturesBrainOutput;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = PreviousStepResult.CreaturesBrainOutputs;
+            BestCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = PreviousStepResult.CreaturesBrainOutputs;
 
             CurrentRunTicksElapsed += 1;
 

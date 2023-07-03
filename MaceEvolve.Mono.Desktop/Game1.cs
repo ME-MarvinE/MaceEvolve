@@ -1,11 +1,11 @@
-﻿using MaceEvolve.Core;
-using MaceEvolve.Core.Models;
+﻿using MaceEvolve.Core.Models;
 using MaceEvolve.Mono.Desktop.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,6 +40,7 @@ namespace MaceEvolve.Mono.Desktop
             }
         }
         public List<TimeSpan> FailedRunsUptimes { get; set; } = new List<TimeSpan>();
+        public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
         #endregion
 
         #region Constructors
@@ -181,7 +182,7 @@ namespace MaceEvolve.Mono.Desktop
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = new Color(64, 64, MaceRandom.Current.Next(256));
-            MainGameHost.NextStep(true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
+            PreviousStepResult = MainGameHost.NextStep(PreviousStepResult?.CalculatedActions ?? new ConcurrentQueue<StepAction<GraphicalCreature>>(), true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
 
             CurrentRunTicksElapsed += 1;
 
@@ -221,6 +222,7 @@ namespace MaceEvolve.Mono.Desktop
             Rectangle gameBounds = _graphics.GraphicsDevice.PresentationParameters.Bounds;
             MainGameHost.WorldBounds = new Core.Models.Rectangle(gameBounds.X, gameBounds.Y, gameBounds.Width, gameBounds.Height);
 
+            PreviousStepResult = null;
             MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 
             FailedRunsUptimes.Clear();
@@ -228,6 +230,7 @@ namespace MaceEvolve.Mono.Desktop
         }
         public void FailRun()
         {
+            PreviousStepResult = null;
             MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));

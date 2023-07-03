@@ -115,14 +115,13 @@ namespace MaceEvolve.Core.Models
                 LoopWorldBounds = LoopWorldBounds
             };
         }
-        public virtual ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> NextStep(bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
+        public virtual StepResult<TCreature> NextStep(IEnumerable<StepAction<TCreature>> actionsToExecute, bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => !x.IsDead));
             CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Energy > 0));
-            CurrentStep.ExecuteActions(CurrentStep.RequestedActions);
-            CurrentStep.RequestedActions.Clear();
+            CurrentStep.ExecuteActions(actionsToExecute);
 
-            ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>> creaturesBrainOutput = new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>();
+            StepResult<TCreature> stepResult = new StepResult<TCreature>(new ConcurrentQueue<StepAction<TCreature>>(), new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>());
 
             TCreature newBestCreature = BestCreature == null || BestCreature.IsDead ? null : BestCreature;
 
@@ -166,7 +165,7 @@ namespace MaceEvolve.Core.Models
                         stepAction.Action = CreatureAction.DoNothing;
                     }
 
-                    CurrentStep.QueueAction(stepAction);
+                    stepResult.CalculatedActions.Enqueue(stepAction);
 
                     //Store properties of the creature's current status.
                     if (shouldTrackBrainOutput)
@@ -213,7 +212,7 @@ namespace MaceEvolve.Core.Models
                             currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
                         }
 
-                        creaturesBrainOutput[creature] = currentStepNodeInfo;
+                        stepResult.CreaturesBrainOutputs[creature] = currentStepNodeInfo;
                     }
 
                     if (!creature.IsDead)
@@ -240,7 +239,7 @@ namespace MaceEvolve.Core.Models
                 CurrentStep.Food.Add(CreateFoodWithRandomLocation());
             }
 
-            return creaturesBrainOutput;
+            return stepResult;
         }
         public virtual TFood CreateFoodWithRandomLocation()
         {
