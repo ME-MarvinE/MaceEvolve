@@ -99,11 +99,7 @@ namespace MaceEvolve.Core.Models
         {
             BestCreature = null;
             SelectedCreature = null;
-            CurrentStep = CreateStep(creatures, food);
-        }
-        public virtual TStep CreateStep(IEnumerable<TCreature> creatures, IEnumerable<TFood> food)
-        {
-            return new TStep()
+            CurrentStep = new TStep()
             {
                 Creatures = new ConcurrentBag<TCreature>(creatures),
                 Food = new ConcurrentBag<TFood>(food),
