@@ -19,42 +19,14 @@ namespace MaceEvolve.Core.Models
         public int MaxCreatureProcessNodes { get; set; } = 3;
         public float ConnectionWeightBound { get; set; } = 4;
         public bool LoopWorldBounds { get; set; }
+        public ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; } = new ConcurrentDictionary<TCreature, List<TCreature>>();
+        public ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; } = new ConcurrentDictionary<TCreature, List<TFood>>();
         #endregion
 
         #region Methods
-        public IEnumerable<TCreature> GetVisibleCreatures(TCreature creature)
-        {
-            return Creatures.Where(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y) <= creature.SightRange && x != creature);
-        }
-        public IEnumerable<TFood> GetVisibleFood(TCreature creature)
-        {
-            return Food.Where(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y) <= creature.SightRange);
-        }
-        public IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature, IEnumerable<TCreature> visibleCreatures = null)
-        {
-            if (visibleCreatures == null)
-            {
-                return GetVisibleCreatures(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
-            }
-            else
-            {
-                return visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
-            }
-        }
-        public IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature, IEnumerable<TFood> visibleFood = null)
-        {
-            if (visibleFood == null)
-            {
-                return GetVisibleFood(creature).OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
-            }
-            else
-            {
-                return visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
-            }
-        }
         public bool CreatureTryEat(TCreature creature)
         {
-            IEnumerable<TFood> visibleFoodOrderedByDistance = GetVisibleFoodOrderedByDistance(creature);
+            IEnumerable<TFood> visibleFoodOrderedByDistance = VisibleFoodDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
 
             IFood closestFood = visibleFoodOrderedByDistance.FirstOrDefault();
 
@@ -265,51 +237,6 @@ namespace MaceEvolve.Core.Models
         {
 
         }
-        public void CreatureMoveTowardsClosestFood(TCreature creature)
-        {
-            IEnumerable<TFood> visibleFoodOrderedByDistance = GetVisibleFoodOrderedByDistance(creature);
-
-            if (visibleFoodOrderedByDistance.Any())
-            {
-                IFood closestFood = visibleFoodOrderedByDistance.First();
-
-                float xDifference = creature.X - closestFood.X;
-                float yDifference = creature.Y - closestFood.Y;
-
-                if (xDifference + yDifference <= creature.SightRange)
-                {
-                    if (yDifference > 0)
-                    {
-                        if (yDifference >= creature.Speed)
-                        {
-                            CreatureMoveForwards(creature);
-                        }
-                    }
-                    else if (yDifference < 0)
-                    {
-                        if (yDifference <= -creature.Speed)
-                        {
-                            CreatureMoveBackwards(creature);
-                        }
-                    }
-
-                    if (xDifference > 0)
-                    {
-                        if (xDifference >= creature.Speed)
-                        {
-                            CreatureMoveLeft(creature);
-                        }
-                    }
-                    else if (xDifference < 0)
-                    {
-                        if (xDifference <= -creature.Speed)
-                        {
-                            CreatureMoveRight(creature);
-                        }
-                    }
-                }
-            }
-        }
         public void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions)
         {
             foreach (var stepAction in stepActions)
@@ -370,10 +297,10 @@ namespace MaceEvolve.Core.Models
         {
             Dictionary<CreatureInput, float> creatureInputValues = new Dictionary<CreatureInput, float>();
 
-            List<TCreature> visibleCreatures = null;
-            List<TFood> visibleFood = null;
-            List<TCreature> visibleCreaturesOrderedByDistance = null;
-            List<TFood> visibleFoodOrderedByDistance = null;
+            List<TCreature> visibleCreatures = VisibleCreaturesDict[creature];
+            IEnumerable<TCreature> visibleCreaturesOrderedByDistance = visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
+            List<TFood> visibleFood = VisibleFoodDict[creature];
+            IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             TCreature closestCreatureToLeft = null;
             TCreature closestCreatureToRight = null;
             TCreature closestCreatureToFront = null;
@@ -396,9 +323,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.CreatureToLeftProximity:
-                            visibleCreatures ??= GetVisibleCreatures(creature).ToList();
-                            visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
-                            closestCreatureToLeft ??= visibleCreaturesOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestCreatureToLeft ??= visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestCreatureToLeft == null)
                             {
@@ -413,9 +338,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.CreatureToRightProximity:
-                            visibleCreatures ??= GetVisibleCreatures(creature).ToList();
-                            visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
-                            closestCreatureToRight ??= visibleCreaturesOrderedByDistance.Find(x => x.MX >= creature.MX);
+                            closestCreatureToRight ??= visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MX >= creature.MX);
 
                             if (closestCreatureToRight == null)
                             {
@@ -430,9 +353,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.CreatureToFrontProximity:
-                            visibleCreatures ??= GetVisibleCreatures(creature).ToList();
-                            visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
-                            closestCreatureToFront ??= visibleCreaturesOrderedByDistance.Find(x => x.MY <= creature.MY);
+                            closestCreatureToFront ??= visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY <= creature.MY);
 
                             if (closestCreatureToFront == null)
                             {
@@ -447,9 +368,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.CreatureToBackProximity:
-                            visibleCreatures ??= GetVisibleCreatures(creature).ToList();
-                            visibleCreaturesOrderedByDistance ??= GetVisibleCreaturesOrderedByDistance(creature, visibleCreatures).ToList();
-                            closestCreatureToBack ??= visibleCreaturesOrderedByDistance.Find(x => x.MY >= creature.MY);
+                            closestCreatureToBack ??= visibleCreaturesOrderedByDistance.FirstOrDefault(x => x.MY >= creature.MY);
 
                             if (closestCreatureToBack == null)
                             {
@@ -464,9 +383,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToLeftProximity:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToLeft ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToLeft ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToLeft == null)
                             {
@@ -481,9 +398,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToLeftPercentMaxEnergy:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToLeft ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToLeft ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToLeft == null)
                             {
@@ -496,9 +411,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToLeftPercentMaxNutrients:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToLeft ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToLeft ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToLeft == null)
                             {
@@ -511,9 +424,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToRightProximity:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToRight ??= visibleFoodOrderedByDistance.Find(x => x.MX >= creature.MX);
+                            closestFoodToRight ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX >= creature.MX);
 
                             if (closestFoodToRight == null)
                             {
@@ -528,9 +439,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToRightPercentMaxEnergy:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToRight ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToRight ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToRight == null)
                             {
@@ -543,9 +452,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToRightPercentMaxNutrients:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToRight ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToRight ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToRight == null)
                             {
@@ -558,9 +465,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToFrontProximity:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToFront ??= visibleFoodOrderedByDistance.Find(x => x.MY <= creature.MY);
+                            closestFoodToFront ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MY <= creature.MY);
 
                             if (closestFoodToFront == null)
                             {
@@ -575,9 +480,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToFrontPercentMaxEnergy:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToFront ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToFront ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToFront == null)
                             {
@@ -590,9 +493,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToFrontPercentMaxNutrients:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToFront ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToFront ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToFront == null)
                             {
@@ -605,9 +506,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToBackProximity:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToBack ??= visibleFoodOrderedByDistance.Find(x => x.MY >= creature.MY);
+                            closestFoodToBack ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MY >= creature.MY);
 
                             if (closestFoodToBack == null)
                             {
@@ -623,9 +522,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToBackPercentMaxEnergy:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToBack ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToBack ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToBack == null)
                             {
@@ -639,9 +536,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.FoodToBackPercentMaxNutrients:
-                            visibleFood ??= GetVisibleFood(creature).ToList();
-                            visibleFoodOrderedByDistance ??= GetVisibleFoodOrderedByDistance(creature, visibleFood).ToList();
-                            closestFoodToBack ??= visibleFoodOrderedByDistance.Find(x => x.MX <= creature.MX);
+                            closestFoodToBack ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
 
                             if (closestFoodToBack == null)
                             {

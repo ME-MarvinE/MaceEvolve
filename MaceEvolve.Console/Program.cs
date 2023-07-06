@@ -148,13 +148,15 @@ namespace MaceEvolve.Console
                             System.Console.WriteLine("Loading Step...");
                             Step<Creature, Food> savedStep = LoadSavedStep(savedStepFilePath);
 
+                            PreviousStepResult.CreaturesBrainOutputs.Clear();
+                            PreviousStepResult.CalculatedActions.Clear();
                             MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
                             MainGameHost.MinCreatureConnections = savedStep.MinCreatureConnections;
                             MainGameHost.MaxCreatureConnections = savedStep.MaxCreatureConnections;
                             MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
                             MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                             MainGameHost.WorldBounds = savedStep.WorldBounds;
-                            MainGameHost.CurrentStep = savedStep;
+                            MainGameHost.ResetStep(savedStep.Creatures, savedStep.Food);
 
                             System.Console.WriteLine("Step Loaded Successfully.");
                         }

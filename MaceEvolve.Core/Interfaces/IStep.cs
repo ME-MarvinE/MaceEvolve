@@ -16,6 +16,8 @@ namespace MaceEvolve.Core.Interfaces
         int MaxCreatureProcessNodes { get; set; }
         int MinCreatureConnections { get; set; }
         bool LoopWorldBounds { get; set; }
+        ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; }
+        ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; }
         #endregion
 
         #region Methods
@@ -23,15 +25,10 @@ namespace MaceEvolve.Core.Interfaces
         void CreatureMoveForwards(TCreature creature);
         void CreatureMoveLeft(TCreature creature);
         void CreatureMoveRight(TCreature creature);
-        void CreatureMoveTowardsClosestFood(TCreature creature);
         bool CreatureTryEat(TCreature creature);
         IList<TCreature> CreatureTryReproduce(TCreature creature);
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
         Dictionary<CreatureInput, float> GenerateCreatureInputValues(IEnumerable<CreatureInput> creatureInput, TCreature creature);
-        IEnumerable<TCreature> GetVisibleCreatures(TCreature creature);
-        IEnumerable<TCreature> GetVisibleCreaturesOrderedByDistance(TCreature creature, IEnumerable<TCreature> visibleCreatures);
-        IEnumerable<TFood> GetVisibleFood(TCreature creature);
-        IEnumerable<TFood> GetVisibleFoodOrderedByDistance(TCreature creature, IEnumerable<TFood> visibleFood);
         #endregion
     }
 }

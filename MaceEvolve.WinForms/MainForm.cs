@@ -371,6 +371,8 @@ namespace MaceEvolve.WinForms
             {
                 GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = LoadSavedStep(openFileDialog.FileName);
 
+                PreviousStepResult.CreaturesBrainOutputs.Clear();
+                PreviousStepResult.CalculatedActions.Clear();
                 MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
                 MainGameHost.MinCreatureConnections = savedStep.MinCreatureConnections;
                 MainGameHost.MaxCreatureConnections = savedStep.MaxCreatureConnections;

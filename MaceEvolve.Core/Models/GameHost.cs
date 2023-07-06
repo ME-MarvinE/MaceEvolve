@@ -111,11 +111,153 @@ namespace MaceEvolve.Core.Models
                 LoopWorldBounds = LoopWorldBounds
             };
         }
+        public List<T> GetCreatureVisibleGameObjects<T>(TCreature creature, List<T> gameObjectsToCheck) where T : IGameObject
+        {
+            List<T> visibleGameObjects = new List<T>();
+
+            foreach (var gameObject in gameObjectsToCheck)
+            {
+                if (((gameObject as TCreature) != creature) && Globals.GetDistanceFrom(creature.X, creature.Y, gameObject.X, gameObject.Y) <= creature.SightRange)
+                {
+                    visibleGameObjects.Add(gameObject);
+                }
+            }
+
+            return visibleGameObjects;
+        }
+        public List<T>[,] CreatePartitionedGrid<T>(IEnumerable<T> gameObjects, int gridRowCount, int gridColumnCount, double cellSize) where T : IGameObject
+        {
+            List<T>[,] gameObjectsGrid = new List<T>[gridRowCount, gridColumnCount];
+
+            for (int cellRow = 0; cellRow < gridRowCount; cellRow++)
+            {
+                for (int cellColumn = 0; cellColumn < gridColumnCount; cellColumn++)
+                {
+                    gameObjectsGrid[cellRow, cellColumn] = new List<T>();
+                }
+            }
+
+            foreach (var gameObject in gameObjects)
+            {
+                int? gameObjectCellRow = null;
+                int? gameObjectCellColumn = null;
+
+                for (int cellRowIndex = 0; cellRowIndex < gridRowCount && gameObjectCellRow == null; cellRowIndex++)
+                {
+                    double cellY = (cellRowIndex + 1) * cellSize;
+
+                    if (gameObject.MY < cellY)
+                    {
+                        gameObjectCellRow = cellRowIndex;
+                    }
+
+                    for (int cellColumnIndex = 0; cellColumnIndex < gridColumnCount && gameObjectCellColumn == null; cellColumnIndex++)
+                    {
+                        double cellX = (cellColumnIndex + 1) * cellSize;
+
+                        if (gameObject.MX < cellX)
+                        {
+                            gameObjectCellColumn = cellColumnIndex;
+                        }
+                    }
+                }
+
+                gameObjectsGrid[gameObjectCellRow.Value, gameObjectCellColumn.Value].Add(gameObject);
+            }
+
+            return gameObjectsGrid;
+        }
+        public void CalculateCreaturesVisibleGameObjects(int partitionRowCount, int partitionColumnCount, double cellSize)
+        {
+            List<TCreature>[,] partitionedCreatures = CreatePartitionedGrid(CurrentStep.Creatures, partitionRowCount, partitionColumnCount, cellSize);
+            List<TFood>[,] partitionedFood = CreatePartitionedGrid(CurrentStep.Food, partitionRowCount, partitionColumnCount, cellSize);
+
+            Parallel.For(0, Environment.ProcessorCount, i =>
+            {
+                int localPartitionRowCount;
+                int localPartitionRowStartIndex;
+                int localPartitionRowEnd;
+
+                localPartitionRowCount = Math.Max((int)Math.Ceiling(partitionRowCount / (double)Environment.ProcessorCount), 1);
+
+                localPartitionRowStartIndex = Math.Min(partitionRowCount - 1, i * localPartitionRowCount);
+
+                localPartitionRowEnd = Math.Min(partitionRowCount, localPartitionRowStartIndex + localPartitionRowCount);
+
+
+                for (int cellRowIndex = localPartitionRowStartIndex; cellRowIndex < localPartitionRowEnd; cellRowIndex++)
+                {
+                    for (int cellColumnIndex = 0; cellColumnIndex < partitionColumnCount; cellColumnIndex++)
+                    {
+                        //Check cells around the current cell.
+                        for (int rowOffset = -1; rowOffset <= 1; rowOffset++)
+                        {
+                            int otherCellRowIndex = cellRowIndex + rowOffset;
+
+                            if (otherCellRowIndex < 0)
+                            {
+                                continue;
+                            }
+                            else if (otherCellRowIndex >= localPartitionRowEnd)
+                            {
+                                break;
+                            }
+
+                            for (int columnOffset = -1; columnOffset <= 1; columnOffset++)
+                            {
+                                int otherCellColumnIndex = cellColumnIndex + columnOffset;
+
+                                if (otherCellColumnIndex < 0)
+                                {
+                                    continue;
+                                }
+                                else if (otherCellColumnIndex >= partitionColumnCount)
+                                {
+                                    break;
+                                }
+
+                                foreach (var creature in partitionedCreatures[otherCellRowIndex, otherCellColumnIndex])
+                                {
+                                    CurrentStep.VisibleCreaturesDict[creature] = GetCreatureVisibleGameObjects(creature, partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]);
+                                    CurrentStep.VisibleFoodDict[creature] = GetCreatureVisibleGameObjects(creature, partitionedFood[otherCellRowIndex, otherCellColumnIndex]);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
         public virtual StepResult<TCreature> NextStep(IEnumerable<StepAction<TCreature>> actionsToExecute, bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
+            CurrentStep.ExecuteActions(actionsToExecute);
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => !x.IsDead));
             CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Energy > 0));
-            CurrentStep.ExecuteActions(actionsToExecute);
+            CurrentStep.VisibleCreaturesDict.Clear();
+            CurrentStep.VisibleFoodDict.Clear();
+
+            double sightRangeSum = 0;
+            double? sightRangeAverage = null;
+            double iterations = 0;
+
+            foreach (var creature in CurrentStep.Creatures)
+            {
+                sightRangeSum += creature.SightRange;
+
+                iterations += 1;
+
+                if (iterations == 100 || sightRangeSum > 2000000000)
+                {
+                    break;
+                }
+            }
+
+            sightRangeAverage ??= iterations == 0 ? 0 : sightRangeSum / iterations;
+
+            double cellSize = Math.Max(sightRangeAverage.Value, 10);
+            int gridColumnCount = (int)Math.Ceiling(WorldBounds.Width / cellSize);
+            int gridRowCount = (int)Math.Ceiling(WorldBounds.Height / cellSize);
+
+            CalculateCreaturesVisibleGameObjects(gridRowCount, gridColumnCount, cellSize);
 
             StepResult<TCreature> stepResult = new StepResult<TCreature>(new ConcurrentQueue<StepAction<TCreature>>(), new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>());
 
@@ -125,7 +267,7 @@ namespace MaceEvolve.Core.Models
             {
                 bool shouldTrackBrainOutput = (!creature.IsDead && gatherAliveCreatureInfo) || (creature.IsDead && gatherDeadCreatureInfo) || (creature == newBestCreature && gatherBestCreatureInfo) || (creature == SelectedCreature && gatherSelectedCreatureInfo);
                 bool shouldEvaluateCreature = !creature.IsDead || shouldTrackBrainOutput;
-                
+
                 if (shouldEvaluateCreature)
                 {
                     //Calculate the output values for the creature's nodes.
