@@ -199,7 +199,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 continue;
                             }
-                            else if (otherCellRowIndex >= localPartitionRowEnd)
+                            else if (otherCellRowIndex >= partitionRowCount)
                             {
                                 break;
                             }
