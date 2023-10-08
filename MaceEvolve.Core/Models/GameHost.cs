@@ -50,6 +50,7 @@ namespace MaceEvolve.Core.Models
         public float CreatureNutrientsPerEat { get; set; } = 50;
         public float MaxCreatureNutrients { get; set; } = 200;
         public int CreatureMaxAge { get; set; } = 4000;
+        public int MinCreatureVisibilityPartitionSize { get; set; } = 100;
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
@@ -236,12 +237,18 @@ namespace MaceEvolve.Core.Models
             CurrentStep.VisibleFoodDict.Clear();
 
             double sightRangeSum = 0;
-            double? sightRangeAverage = null;
+            double? highestSightRange = null;
+            double? sightRangeAverage = 100;
             double iterations = 0;
 
             foreach (var creature in CurrentStep.Creatures)
             {
                 sightRangeSum += creature.SightRange;
+
+                if (creature.SightRange > highestSightRange || highestSightRange == null)
+                {
+                    highestSightRange = creature.SightRange;
+                }
 
                 iterations += 1;
 
@@ -251,13 +258,23 @@ namespace MaceEvolve.Core.Models
                 }
             }
 
-            sightRangeAverage ??= iterations == 0 ? 0 : sightRangeSum / iterations;
+            sightRangeAverage ??= sightRangeSum / iterations;
 
-            double cellSize = Math.Max(sightRangeAverage.Value, 10);
-            int gridColumnCount = (int)Math.Ceiling(WorldBounds.Width / cellSize);
-            int gridRowCount = (int)Math.Ceiling(WorldBounds.Height / cellSize);
+            double partitionSize;
 
-            CalculateCreaturesVisibleGameObjects(gridRowCount, gridColumnCount, cellSize);
+            if (highestSightRange == 0 || highestSightRange == null)
+            {
+                partitionSize = MinCreatureVisibilityPartitionSize;
+            }
+            else
+            {
+                partitionSize = Math.Max(sightRangeAverage.Value, highestSightRange.Value);
+            }
+
+            int gridColumnCount = (int)Math.Ceiling(WorldBounds.Width / partitionSize);
+            int gridRowCount = (int)Math.Ceiling(WorldBounds.Height / partitionSize);
+
+            CalculateCreaturesVisibleGameObjects(gridRowCount, gridColumnCount, partitionSize);
 
             StepResult<TCreature> stepResult = new StepResult<TCreature>(new ConcurrentQueue<StepAction<TCreature>>(), new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>());
 
