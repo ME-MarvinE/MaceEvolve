@@ -173,13 +173,15 @@ namespace MaceEvolve.Core.Models
             List<TFood>[,] partitionedFood = CreatePartitionedGrid(CurrentStep.Food, partitionRowCount, partitionColumnCount, cellSize);
 
             Parallel.For(0, Environment.ProcessorCount, i =>
+            int maxParallelismCount = Math.Min(Environment.ProcessorCount, partitionRowCount);
+
+            Parallel.For(0, maxParallelismCount, i =>
             {
                 int localPartitionRowCount;
                 int localPartitionRowStartIndex;
                 int localPartitionRowEnd;
 
-                localPartitionRowCount = Math.Max((int)Math.Ceiling(partitionRowCount / (double)Environment.ProcessorCount), 1);
-
+                localPartitionRowCount = Math.Max((int)Math.Ceiling(partitionRowCount / (double)maxParallelismCount), 1);
                 localPartitionRowStartIndex = Math.Min(partitionRowCount - 1, i * localPartitionRowCount);
 
                 localPartitionRowEnd = Math.Min(partitionRowCount, localPartitionRowStartIndex + localPartitionRowCount);
