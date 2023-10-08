@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Core.Models;
+using MaceEvolve.Console.JsonContractResolvers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -34,9 +35,18 @@ namespace MaceEvolve.Console
         public bool PeriodicInfo { get; set; } = true;
         public bool GameTimerElapsing { get; set; }
         public StepResult<Creature> PreviousStepResult { get; set; }
+        protected static JsonSerializerSettings SaveStepSerializerSettings { get; }
+        protected static JsonSerializerSettings LoadStepSerializerSettings { get; }
         #endregion
 
         #region Constructors
+        static Program()
+        {
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(Step<Creature, Food>.VisibleCreaturesDict), nameof(Step<Creature, Food>.VisibleFoodDict));
+
+            SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
+            LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
+        }
         public Program()
         {
             MainGameHost = new GameHost<Step<Creature, Food>, Creature, Food>
@@ -181,13 +191,13 @@ namespace MaceEvolve.Console
                 Directory.CreateDirectory(directoryName);
             }
 
-            string serializedStep = JsonConvert.SerializeObject(step, new JsonSerializerSettings() { Formatting = Formatting.Indented });
+            string serializedStep = JsonConvert.SerializeObject(step, SaveStepSerializerSettings);
             File.WriteAllText(filePath, serializedStep);
         }
         public Step<Creature, Food> LoadSavedStep(string filePath)
         {
             string serializedStep = File.ReadAllText(filePath);
-            Step<Creature, Food> savedStep = JsonConvert.DeserializeObject<Step<Creature, Food>>(serializedStep);
+            Step<Creature, Food> savedStep = JsonConvert.DeserializeObject<Step<Creature, Food>>(serializedStep, LoadStepSerializerSettings);
             return savedStep;
         }
         public void UpdateSimulation()

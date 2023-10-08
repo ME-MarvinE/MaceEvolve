@@ -1,6 +1,7 @@
 using MaceEvolve.Core;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
+using MaceEvolve.WinForms.JsonContractResolvers;
 using MaceEvolve.WinForms.Models;
 using Newtonsoft.Json;
 using System;
@@ -37,9 +38,18 @@ namespace MaceEvolve.WinForms
         }
         public List<TimeSpan> FailedRunsUptimes { get; set; } = new List<TimeSpan>();
         public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
+        protected static JsonSerializerSettings SaveStepSerializerSettings { get; }
+        protected static JsonSerializerSettings LoadStepSerializerSettings { get; }
         #endregion
 
         #region Constructors
+        static MainForm()
+        {
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleFoodDict));
+            
+            SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
+            LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
+        }
         public MainForm()
         {
             InitializeComponent();
@@ -71,7 +81,7 @@ namespace MaceEvolve.WinForms
         public GraphicalStep<GraphicalCreature, GraphicalFood> LoadSavedStep(string filePath)
         {
             string serializedStep = File.ReadAllText(filePath);
-            GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood>>(serializedStep);
+            GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood>>(serializedStep, LoadStepSerializerSettings);
             return savedStep;
         }
         public void Reset()
@@ -390,7 +400,7 @@ namespace MaceEvolve.WinForms
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                string serializedStep = JsonConvert.SerializeObject(MainGameHost.CurrentStep, new JsonSerializerSettings() { Formatting = Formatting.Indented });
+                string serializedStep = JsonConvert.SerializeObject(MainGameHost.CurrentStep, SaveStepSerializerSettings);
                 File.WriteAllText(saveFileDialog.FileName, serializedStep);
                 MessageBox.Show("Step Saved Successfully.");
             }
