@@ -185,7 +185,6 @@ namespace MaceEvolve.Core.Models
 
                 localPartitionRowEnd = Math.Min(partitionRowCount, localPartitionRowStartIndex + localPartitionRowCount);
 
-
                 for (int cellRowIndex = localPartitionRowStartIndex; cellRowIndex < localPartitionRowEnd; cellRowIndex++)
                 {
                     for (int cellColumnIndex = 0; cellColumnIndex < partitionColumnCount; cellColumnIndex++)
@@ -217,10 +216,24 @@ namespace MaceEvolve.Core.Models
                                     break;
                                 }
 
-                                foreach (var creature in partitionedCreatures[otherCellRowIndex, otherCellColumnIndex])
+                                foreach (var creature in partitionedCreatures[cellRowIndex, cellColumnIndex])
                                 {
-                                    CurrentStep.VisibleCreaturesDict[creature] = GetCreatureVisibleGameObjects(creature, partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]);
-                                    CurrentStep.VisibleFoodDict[creature] = GetCreatureVisibleGameObjects(creature, partitionedFood[otherCellRowIndex, otherCellColumnIndex]);
+                                    if (!CurrentStep.VisibleCreaturesDict.ContainsKey(creature))
+                                    {
+                                        CurrentStep.VisibleCreaturesDict[creature] = new List<TCreature>();
+                                    }
+
+                                    List<TCreature> visibleCreaturesInOtherCell = GetCreatureVisibleGameObjects(creature, partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]);
+
+                                    CurrentStep.VisibleCreaturesDict[creature].AddRange(visibleCreaturesInOtherCell);
+
+                                    if (!CurrentStep.VisibleFoodDict.ContainsKey(creature))
+                                    {
+                                        CurrentStep.VisibleFoodDict[creature] = new List<TFood>();
+                                    }
+
+                                    List<TFood> visibleFoodInOtherCell = GetCreatureVisibleGameObjects(creature, partitionedFood[otherCellRowIndex, otherCellColumnIndex]);
+                                    CurrentStep.VisibleFoodDict[creature].AddRange(visibleFoodInOtherCell);
                                 }
                             }
                         }
