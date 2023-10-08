@@ -247,7 +247,7 @@ namespace MaceEvolve.Core.Models
 
                 iterations += 1;
 
-                if (iterations == 100 || sightRangeSum > 2000000000)
+                if (iterations >= 100 || sightRangeSum >= 2000000000)
                 {
                     break;
                 }
