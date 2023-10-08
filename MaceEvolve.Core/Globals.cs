@@ -1,8 +1,8 @@
 ﻿using MaceEvolve.Core.Enums;
-using MaceEvolve.Core.Models;
+using MaceEvolve.Core.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
 using System.Linq;
 
 namespace MaceEvolve.Core
@@ -121,6 +121,20 @@ namespace MaceEvolve.Core
         public static float MiddleY(float y, float height)
         {
             return y + height / 2;
+        }
+        public static List<T> GetCreatureVisibleGameObjects<T>(ICreature creature, List<T> gameObjectsToCheck) where T : IGameObject
+        {
+            List<T> visibleGameObjects = new List<T>();
+
+            foreach (var gameObject in gameObjectsToCheck)
+            {
+                if (((gameObject as ICreature) != creature) && GetDistanceFrom(creature.X, creature.Y, gameObject.X, gameObject.Y) <= creature.SightRange)
+                {
+                    visibleGameObjects.Add(gameObject);
+                }
+            }
+
+            return visibleGameObjects;
         }
         #endregion
     }
