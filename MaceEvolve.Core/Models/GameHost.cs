@@ -172,7 +172,6 @@ namespace MaceEvolve.Core.Models
             List<TCreature>[,] partitionedCreatures = CreatePartitionedGrid(CurrentStep.Creatures, partitionRowCount, partitionColumnCount, cellSize);
             List<TFood>[,] partitionedFood = CreatePartitionedGrid(CurrentStep.Food, partitionRowCount, partitionColumnCount, cellSize);
 
-            Parallel.For(0, Environment.ProcessorCount, i =>
             int maxParallelismCount = Math.Min(Environment.ProcessorCount, partitionRowCount);
 
             Parallel.For(0, maxParallelismCount, i =>
