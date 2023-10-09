@@ -298,9 +298,9 @@ namespace MaceEvolve.Core.Models
             Dictionary<CreatureInput, float> creatureInputValues = new Dictionary<CreatureInput, float>();
 
             List<TCreature> visibleCreatures = VisibleCreaturesDict[creature];
-            IEnumerable<TCreature> visibleCreaturesOrderedByDistance = visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
+            IEnumerable<TCreature> visibleCreaturesOrderedByDistance = visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
             List<TFood> visibleFood = VisibleFoodDict[creature];
-            IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
+            IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
             TCreature closestCreatureToLeft = null;
             TCreature closestCreatureToRight = null;
             TCreature closestCreatureToFront = null;

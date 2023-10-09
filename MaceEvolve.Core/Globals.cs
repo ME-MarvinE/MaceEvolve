@@ -128,7 +128,7 @@ namespace MaceEvolve.Core
 
             foreach (var gameObject in gameObjectsToCheck)
             {
-                if (((gameObject as ICreature) != creature) && GetDistanceFrom(creature.X, creature.Y, gameObject.X, gameObject.Y) <= creature.SightRange)
+                if (((gameObject as ICreature) != creature) && GetDistanceFrom(creature.MX, creature.MY, gameObject.MX, gameObject.MY) <= creature.SightRange)
                 {
                     visibleGameObjects.Add(gameObject);
                 }
