@@ -210,7 +210,8 @@ namespace MaceEvolve.Core.Models
                                         CurrentStep.VisibleCreaturesDict[creature] = new List<TCreature>();
                                     }
 
-                                    List<TCreature> visibleCreaturesInOtherCell = Globals.GetCreatureVisibleGameObjects(creature, partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]);
+                                    IEnumerable<TCreature> visibleCreaturesInOtherCell = partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]
+                                        .Where(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != this);
 
                                     CurrentStep.VisibleCreaturesDict[creature].AddRange(visibleCreaturesInOtherCell);
 
@@ -219,7 +220,9 @@ namespace MaceEvolve.Core.Models
                                         CurrentStep.VisibleFoodDict[creature] = new List<TFood>();
                                     }
 
-                                    List<TFood> visibleFoodInOtherCell = Globals.GetCreatureVisibleGameObjects(creature, partitionedFood[otherCellRowIndex, otherCellColumnIndex]);
+                                    IEnumerable<TFood> visibleFoodInOtherCell = partitionedFood[otherCellRowIndex, otherCellColumnIndex]
+                                        .Where(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange);
+
                                     CurrentStep.VisibleFoodDict[creature].AddRange(visibleFoodInOtherCell);
                                 }
                             }

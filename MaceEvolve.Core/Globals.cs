@@ -122,20 +122,6 @@ namespace MaceEvolve.Core
         {
             return y + height / 2;
         }
-        public static List<T> GetCreatureVisibleGameObjects<T>(ICreature creature, List<T> gameObjectsToCheck) where T : IGameObject
-        {
-            List<T> visibleGameObjects = new List<T>();
-
-            foreach (var gameObject in gameObjectsToCheck)
-            {
-                if (((gameObject as ICreature) != creature) && GetDistanceFrom(creature.MX, creature.MY, gameObject.MX, gameObject.MY) <= creature.SightRange)
-                {
-                    visibleGameObjects.Add(gameObject);
-                }
-            }
-
-            return visibleGameObjects;
-        }
         #endregion
     }
 }
