@@ -30,7 +30,7 @@ namespace MaceEvolve.Core.Models
 
             IFood closestFood = visibleFoodOrderedByDistance.FirstOrDefault();
 
-            if (closestFood?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) < (closestFood.Size + creature.Size) / 2)
+            if (closestFood?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) <= (closestFood.Size + creature.Size) / 2)
             {
                 float energyToTake = Math.Min(creature.EnergyPerEat, closestFood.Energy);
                 float nutrientsToTake = Math.Min(creature.NutrientsPerEat, closestFood.Nutrients);
@@ -331,7 +331,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToLeft.MX, creature.MY);
+                                float distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToLeft.MX, closestCreatureToLeft.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestCreatureToLeft, 0, creature.SightRange, 1, 0);
                             }
@@ -346,7 +346,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToRight.MX, creature.MY);
+                                float distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToRight.MX, closestCreatureToRight.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestCreatureToRight, 0, creature.SightRange, 1, 0);
                             }
@@ -361,7 +361,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestCreatureToFront.MY);
+                                float distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToFront.MX, closestCreatureToFront.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestCreatureToFront, 0, creature.SightRange, 1, 0);
                             }
@@ -376,7 +376,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestCreatureToBack.MY);
+                                float distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToBack.MX, closestCreatureToBack.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestCreatureToBack, 0, creature.SightRange, 1, 0);
                             }
@@ -391,7 +391,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToLeft.MX, creature.MY);
+                                float distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToLeft.MX, closestFoodToLeft.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestFoodToLeft, 0, creature.SightRange, 1, 0);
                             }
@@ -432,7 +432,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestFoodToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToRight.MX, creature.MY);
+                                float distanceFromClosestFoodToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToRight.MX, closestFoodToRight.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestFoodToRight, 0, creature.SightRange, 1, 0);
                             }
@@ -473,7 +473,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestFoodToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestFoodToFront.MY);
+                                float distanceFromClosestFoodToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToFront.MX, closestFoodToFront.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestFoodToFront, 0, creature.SightRange, 1, 0);
                             }
@@ -514,7 +514,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                float distanceFromClosestFoodToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, creature.MX, closestFoodToBack.MY);
+                                float distanceFromClosestFoodToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToBack.MX, closestFoodToBack.MY);
 
                                 creatureInputValue = Globals.Map(distanceFromClosestFoodToBack, 0, creature.SightRange, 1, 0);
                             }
