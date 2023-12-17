@@ -403,8 +403,6 @@ namespace MaceEvolve.Core.Models
         {
             TFood newFood = new TFood()
             {
-                X = MaceRandom.Current.NextFloat(0, WorldBounds.X + WorldBounds.Width),
-                Y = MaceRandom.Current.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                 MaxEnergy = MaxFoodEnergy,
                 MaxNutrients = MaxFoodNutrients
             };
@@ -412,6 +410,8 @@ namespace MaceEvolve.Core.Models
             newFood.Energy = MaceRandom.Current.NextFloat(MinFoodEnergy, MaxFoodEnergy);
             newFood.Nutrients = MaceRandom.Current.NextFloat(MinFoodNutrients, MaxFoodNutrients);
             newFood.Size = Globals.Map(newFood.Energy, 0, newFood.MaxEnergy, MinFoodSize, MaxFoodSize);
+            newFood.X = MaceRandom.Current.NextFloat(0, (WorldBounds.X + WorldBounds.Width) - newFood.Size / 2);
+            newFood.Y = MaceRandom.Current.NextFloat(0, (WorldBounds.Y + WorldBounds.Height) - newFood.Size / 2);
 
             return newFood;
         }
@@ -434,8 +434,6 @@ namespace MaceEvolve.Core.Models
             {
                 TCreature newCreature = new TCreature()
                 {
-                    X = MaceRandom.Current.NextFloat(0, WorldBounds.X + WorldBounds.Width),
-                    Y = MaceRandom.Current.NextFloat(0, WorldBounds.Y + WorldBounds.Height),
                     Size = CreatureSize,
                     Speed = CreatureSpeed,
                     Metabolism = CreatureMetabolism,
@@ -454,6 +452,9 @@ namespace MaceEvolve.Core.Models
                     NutrientsPerEat = CreatureNutrientsPerEat,
                     MoveCost = 0.25f
                 };
+
+                newCreature.X = MaceRandom.Current.NextFloat(0, (WorldBounds.X + WorldBounds.Width) - newCreature.Size / 2);
+                newCreature.Y = MaceRandom.Current.NextFloat(0, (WorldBounds.Y + WorldBounds.Height) - newCreature.Size / 2);
 
                 newCreature.Brain = new NeuralNetwork(NeuralNetwork.GenerateInputNodes(PossibleCreatureInputs)
                     .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes, 0.75f))
