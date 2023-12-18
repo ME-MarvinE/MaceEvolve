@@ -133,7 +133,7 @@ namespace MaceEvolve.Core.Models
                 {
                     double cellY = (cellRowIndex + 1) * cellSize;
 
-                    if (gameObject.MY < cellY)
+                    if (gameObject.MY <= cellY)
                     {
                         gameObjectCellRow = cellRowIndex;
                     }
@@ -142,7 +142,7 @@ namespace MaceEvolve.Core.Models
                     {
                         double cellX = (cellColumnIndex + 1) * cellSize;
 
-                        if (gameObject.MX < cellX)
+                        if (gameObject.MX <= cellX)
                         {
                             gameObjectCellColumn = cellColumnIndex;
                         }
