@@ -3,7 +3,7 @@ using BenchmarkDotNet.Running;
 
 namespace MaceEvolve.Console.Benchmark
 {
-    [SimpleJob(iterationCount: 100)]
+    [SimpleJob(iterationCount: 10)]
     public class Program
     {
         static void Main(string[] args)
@@ -17,7 +17,7 @@ namespace MaceEvolve.Console.Benchmark
             {
                 var program = new Console.Program();
 
-                for (int i = 0; i < 100; i++)
+                for (int i = 0; i < 1000; i++)
                 {
                     program.UpdateSimulation();
                 }
