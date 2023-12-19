@@ -343,6 +343,9 @@ namespace MaceEvolve.WinForms
             GatherStepInfoForAllCreaturesButton.Visible = isControlMenuVisible;
             btnTrackBestCreature.Visible = isControlMenuVisible;
             btnFastFoward.Visible = isControlMenuVisible;
+            btnBenchmark.Visible = isControlMenuVisible;
+            btnSaveCurrentStep.Visible = isControlMenuVisible;
+            btnLoadStep.Visible = isControlMenuVisible;
         }
         private void UpdateUIText()
         {
