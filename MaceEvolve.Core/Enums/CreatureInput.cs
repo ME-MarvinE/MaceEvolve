@@ -24,6 +24,8 @@
         RandomInput,
         PercentNutrientsRequiredToReproduce,
         PercentEnergyRequiredToReproduce,
-        PercentMaxAge
+        PercentMaxAge,
+        PercentMaxHealth,
+        WillNaturallyHeal
     }
 }

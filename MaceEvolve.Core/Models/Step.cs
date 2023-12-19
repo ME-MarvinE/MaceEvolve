@@ -83,6 +83,12 @@ namespace MaceEvolve.Core.Models
                 newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
                 newCreature.EnergyPerEat = creature.EnergyPerEat;
                 newCreature.NutrientsPerEat = creature.NutrientsPerEat;
+                newCreature.HealthPoints = creature.MaxHealthPoints * 0.9f;
+                newCreature.MaxHealthPoints = creature.MaxHealthPoints;
+                newCreature.NaturalHealInterval = creature.NaturalHealInterval;
+                newCreature.NaturalHealHealthPoints = creature.MaxHealthPoints * 0.05f;
+                newCreature.StepsSinceLastNaturalHeal = 0;
+
                 newCreature.X = creature.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
                 newCreature.Y = creature.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
 
@@ -286,7 +292,7 @@ namespace MaceEvolve.Core.Models
 
                     stepAction.Creature.Energy -= stepAction.Creature.Metabolism;
 
-                    if (stepAction.Creature.Energy <= 0)
+                    if (stepAction.Creature.Energy <= 0 || stepAction.Creature.HealthPoints <= 0)
                     {
                         stepAction.Creature.Die();
                     }
@@ -571,6 +577,13 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureInput.PercentMaxAge:
                             creatureInputValue = Globals.Map((float)creature.Age, 0, creature.MaxAge, 0, 1);
+                            break;
+                        case CreatureInput.PercentMaxHealth:
+                            creatureInputValue = Globals.Map(creature.HealthPoints, 0, creature.MaxHealthPoints, 0, 1);
+                            break;
+
+                        case CreatureInput.WillNaturallyHeal:
+                            creatureInputValue = Globals.Map((float)creature.StepsSinceLastNaturalHeal, 0, creature.NaturalHealInterval, 0, 1);
                             break;
 
                         default:

@@ -7,6 +7,7 @@ namespace MaceEvolve.Core.Models
         #region Fields
         private float _energy = 100;
         private float _nutrients = 30;
+        private float _healthPoints = 90;
         #endregion
 
         #region Properties
@@ -73,7 +74,32 @@ namespace MaceEvolve.Core.Models
         public float NutrientsPerEat { get; set; }
         public int MaxAge { get; set; } = 4000;
         public int Age { get; set; }
-
+        public float HealthPoints
+        {
+            get
+            {
+                return _healthPoints;
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    _healthPoints = 0;
+                }
+                else if (value > MaxHealthPoints)
+                {
+                    _healthPoints = MaxHealthPoints;
+                }
+                else
+                {
+                    _healthPoints = value;
+                }
+            }
+        }
+        public float MaxHealthPoints { get; set; } = 100;
+        public int NaturalHealInterval { get; set; }
+        public float NaturalHealHealthPoints { get; set; }
+        public int StepsSinceLastNaturalHeal { get; set; }
 
         //public int StomachSize { get; set; } = 5;
         //public List<food> StomachContents { get; set; } = 5;
@@ -85,6 +111,7 @@ namespace MaceEvolve.Core.Models
         {
             IsDead = true;
             Energy = 0;
+            HealthPoints = 0;
         }
         #endregion
     }

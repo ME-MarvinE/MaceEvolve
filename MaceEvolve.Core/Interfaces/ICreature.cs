@@ -26,6 +26,11 @@ namespace MaceEvolve.Core.Interfaces
         public float NutrientsPerEat { get; set; }
         public int Age { get; set; }
         public int MaxAge { get; set; }
+        public float HealthPoints { get; set; }
+        public float MaxHealthPoints { get; set; }
+        public int NaturalHealInterval { get; set; }
+        public float NaturalHealHealthPoints { get; set; }
+        public int StepsSinceLastNaturalHeal { get; set; }
         #endregion
 
         #region Methods

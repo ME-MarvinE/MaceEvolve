@@ -51,6 +51,8 @@ namespace MaceEvolve.Core.Models
         public float MaxCreatureNutrients { get; set; } = 200;
         public int CreatureMaxAge { get; set; } = 4000;
         public int MinCreatureVisibilityPartitionSize { get; set; } = 100;
+        public float CreatureMaxHealthPoints { get; set; } = 100;
+        public int CreatureNaturalHealInterval { get; set; } = 100;
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
@@ -235,6 +237,19 @@ namespace MaceEvolve.Core.Models
         {
             CurrentStep.ExecuteActions(actionsToExecute);
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => !x.IsDead));
+
+            Parallel.ForEach(CurrentStep.Creatures, creature => {
+                if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
+                {
+                    creature.StepsSinceLastNaturalHeal = 0;
+                    creature.HealthPoints += creature.NaturalHealHealthPoints;
+                }
+                else
+                {
+                    creature.StepsSinceLastNaturalHeal += 1;
+                }
+            });
+
             CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Energy > 0));
             CurrentStep.VisibleCreaturesDict.Clear();
             CurrentStep.VisibleFoodDict.Clear();
@@ -450,7 +465,12 @@ namespace MaceEvolve.Core.Models
                     OffspringBrainMutationChance = CreatureOffspringBrainMutationChance,
                     EnergyPerEat = CreatureEnergyPerEat,
                     NutrientsPerEat = CreatureNutrientsPerEat,
-                    MoveCost = 0.25f
+                    MoveCost = 0.25f,
+                    HealthPoints = MaxCreatureEnergy * 0.9f,
+                    MaxHealthPoints = CreatureMaxHealthPoints,
+                    NaturalHealInterval = CreatureNaturalHealInterval,
+                    NaturalHealHealthPoints = CreatureMaxHealthPoints * 0.05f,
+                    StepsSinceLastNaturalHeal = 0
                 };
 
                 newCreature.X = MaceRandom.Current.NextFloat(-newCreature.Size / 2, (WorldBounds.X + WorldBounds.Width) - newCreature.Size / 2);
