@@ -325,7 +325,7 @@ namespace MaceEvolve.Core.Models
                     switch (creatureInput)
                     {
                         case CreatureInput.PercentMaxEnergy:
-                            creatureInputValue = Globals.Map(creature.Energy, 0, creature.MaxEnergy, 0, 1);
+                            creatureInputValue = creature.Energy / creature.MaxEnergy;
                             break;
 
                         case CreatureInput.CreatureToLeftProximity:
@@ -339,7 +339,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestCreatureToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToLeft.MX, closestCreatureToLeft.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToLeft, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestCreatureToLeft / creature.SightRange);
                             }
                             break;
 
@@ -354,7 +354,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestCreatureToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToRight.MX, closestCreatureToRight.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToRight, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestCreatureToRight / creature.SightRange);
                             }
                             break;
 
@@ -369,7 +369,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestCreatureToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToFront.MX, closestCreatureToFront.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToFront, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestCreatureToFront / creature.SightRange);
                             }
                             break;
 
@@ -384,7 +384,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestCreatureToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreatureToBack.MX, closestCreatureToBack.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestCreatureToBack, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestCreatureToBack / creature.SightRange);
                             }
                             break;
 
@@ -399,7 +399,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestFoodToLeft = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToLeft.MX, closestFoodToLeft.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestFoodToLeft, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestFoodToLeft / creature.SightRange);
                             }
                             break;
 
@@ -412,7 +412,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToLeft.Energy, 0, closestFoodToLeft.MaxEnergy, 0, 1);
+                                creatureInputValue = closestFoodToLeft.Energy / closestFoodToLeft.MaxEnergy;
                             }
                             break;
 
@@ -425,7 +425,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToLeft.Nutrients, 0, closestFoodToLeft.MaxNutrients, 0, 1);
+                                creatureInputValue = closestFoodToLeft.Nutrients / closestFoodToLeft.MaxNutrients;
                             }
                             break;
 
@@ -440,7 +440,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestFoodToRight = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToRight.MX, closestFoodToRight.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestFoodToRight, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestFoodToRight / creature.SightRange);
                             }
                             break;
 
@@ -453,7 +453,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToRight.Energy, 0, closestFoodToRight.MaxEnergy, 0, 1);
+                                creatureInputValue = closestFoodToRight.Energy / closestFoodToRight.MaxEnergy;
                             }
                             break;
 
@@ -466,7 +466,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToRight.Nutrients, 0, closestFoodToRight.MaxNutrients, 0, 1);
+                                creatureInputValue = closestFoodToRight.Nutrients / closestFoodToRight.MaxNutrients;
                             }
                             break;
 
@@ -481,7 +481,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestFoodToFront = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToFront.MX, closestFoodToFront.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestFoodToFront, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestFoodToFront / creature.SightRange);
                             }
                             break;
 
@@ -494,7 +494,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToFront.Energy, 0, closestFoodToFront.MaxEnergy, 0, 1);
+                                creatureInputValue = closestFoodToFront.Energy / closestFoodToFront.MaxEnergy;
                             }
                             break;
 
@@ -507,7 +507,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToFront.Nutrients, 0, closestFoodToFront.MaxNutrients, 0, 1);
+                                creatureInputValue = closestFoodToFront.Nutrients / closestFoodToFront.MaxNutrients;
                             }
                             break;
 
@@ -522,7 +522,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestFoodToBack = Globals.GetDistanceFrom(creature.MX, creature.MY, closestFoodToBack.MX, closestFoodToBack.MY);
 
-                                creatureInputValue = Globals.Map(distanceFromClosestFoodToBack, 0, creature.SightRange, 1, 0);
+                                creatureInputValue = 1 - (distanceFromClosestFoodToBack / creature.SightRange);
                             }
 
                             break;
@@ -536,7 +536,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToBack.Energy, 0, closestFoodToBack.MaxEnergy, 0, 1);
+                                creatureInputValue = closestFoodToBack.Energy / closestFoodToBack.MaxEnergy;
                             }
 
                             break;
@@ -550,7 +550,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(closestFoodToBack.Nutrients, 0, closestFoodToBack.MaxNutrients, 0, 1);
+                                creatureInputValue = closestFoodToBack.Nutrients / closestFoodToBack.MaxNutrients;
                             }
 
                             break;
@@ -568,22 +568,22 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.PercentNutrientsRequiredToReproduce:
-                            creatureInputValue = Globals.Map(creature.Nutrients, 0, creature.NutrientsRequiredToReproduce, 0, 1);
+                            creatureInputValue = creature.Nutrients / creature.NutrientsRequiredToReproduce;
                             break;
 
                         case CreatureInput.PercentEnergyRequiredToReproduce:
-                            creatureInputValue = Globals.Map(creature.Energy, 0, creature.EnergyRequiredToReproduce, 0, 1);
+                            creatureInputValue = creature.Energy / creature.EnergyRequiredToReproduce;
                             break;
 
                         case CreatureInput.PercentMaxAge:
-                            creatureInputValue = Globals.Map((float)creature.Age, 0, creature.MaxAge, 0, 1);
+                            creatureInputValue = (float)creature.Age / creature.MaxAge;
                             break;
                         case CreatureInput.PercentMaxHealth:
-                            creatureInputValue = Globals.Map(creature.HealthPoints, 0, creature.MaxHealthPoints, 0, 1);
+                            creatureInputValue = creature.HealthPoints / creature.MaxHealthPoints;
                             break;
 
                         case CreatureInput.WillNaturallyHeal:
-                            creatureInputValue = Globals.Map((float)creature.StepsSinceLastNaturalHeal, 0, creature.NaturalHealInterval, 0, 1);
+                            creatureInputValue = (float)creature.StepsSinceLastNaturalHeal / creature.NaturalHealInterval;
                             break;
 
                         default:
