@@ -213,7 +213,7 @@ namespace MaceEvolve.Core.Models
                                     }
 
                                     IEnumerable<TCreature> visibleCreaturesInOtherCell = partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]
-                                        .Where(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != this);
+                                        .Where(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != creature);
 
                                     CurrentStep.VisibleCreaturesDict[creature].AddRange(visibleCreaturesInOtherCell);
 
