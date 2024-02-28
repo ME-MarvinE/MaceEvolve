@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Collections.Generic;
 using System;
+using MaceEvolve.Core;
 
 namespace MaceEvolve.SilkGL.Models
 {
@@ -16,11 +17,12 @@ namespace MaceEvolve.SilkGL.Models
         {
             IList<TCreature> offspring = base.CreatureTryReproduce(creature);
 
-            int offSpringRed = Math.Clamp(creature.Color.R + (creature.TimesAttackedSuccessfully - creature.FoodEaten), 0, 255);
+            int offSpringRed = (int)Globals.Clamp(CreatureOffspringColor.R * (creature.FoodEaten == 0 ? 1 : (double)creature.TimesAttackedSuccessfully / creature.FoodEaten), 0, 175);
+            int offSpringBlue = (int)Globals.Clamp(CreatureOffspringColor.B * (creature.TimesAttackedSuccessfully == 0 ? 1 : (double)creature.FoodEaten / creature.TimesAttackedSuccessfully), 0, 200);
 
             foreach (var creatureOffSpring in offspring)
             {
-                creatureOffSpring.Color = Color.FromArgb(offSpringRed, creature.Color.G, 255 - offSpringRed);
+                creatureOffSpring.Color = Color.FromArgb(offSpringRed, 50, offSpringBlue);
             }
 
             return offspring;

@@ -1,4 +1,5 @@
-﻿using MaceEvolve.Core.Models;
+﻿using MaceEvolve.Core;
+using MaceEvolve.Core.Models;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -16,12 +17,13 @@ namespace MaceEvolve.Mono.Desktop.Models
         {
             IList<TCreature> offspring = base.CreatureTryReproduce(creature);
 
-            int offSpringRed = Math.Clamp(creature.Color.R + (creature.TimesAttackedSuccessfully - creature.FoodEaten), 0, 255);
+            int offSpringRed = (int)Globals.Clamp(CreatureOffspringColor.R * (creature.FoodEaten == 0 ? 1 : (double)creature.TimesAttackedSuccessfully / creature.FoodEaten), 0, 175);
+            int offSpringBlue = (int)Globals.Clamp(CreatureOffspringColor.B * (creature.TimesAttackedSuccessfully == 0 ? 1 : (double)creature.FoodEaten / creature.TimesAttackedSuccessfully), 0, 200);
 
             foreach (var creatureOffSpring in offspring)
             {
 
-                creatureOffSpring.Color = new Color(offSpringRed, creature.Color.G, 255 - offSpringRed);
+                creatureOffSpring.Color = new Color(offSpringRed, 50, offSpringBlue);
             }
 
             return offspring;
