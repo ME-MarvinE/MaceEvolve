@@ -80,9 +80,9 @@ namespace MaceEvolve.Core.Models
                 newCreature.MaxAge = creature.MaxAge;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
-                newCreature.Energy = creature.EnergyRequiredToReproduce / 2;
+                newCreature.Energy = creature.EnergyRequiredToReproduce;
                 newCreature.MaxNutrients = creature.MaxNutrients;
-                newCreature.Nutrients = creature.NutrientsRequiredToReproduce / 2;
+                newCreature.Nutrients = creature.NutrientsRequiredToReproduce ;
                 newCreature.NutrientsRequiredToReproduce = creature.NutrientsRequiredToReproduce;
                 newCreature.EnergyRequiredToReproduce = creature.EnergyRequiredToReproduce;
                 newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
