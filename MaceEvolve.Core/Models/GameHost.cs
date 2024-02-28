@@ -54,7 +54,7 @@ namespace MaceEvolve.Core.Models
         public float CreatureEnergyPerEat { get; set; } = 150;
         public float CreatureNutrientsPerEat { get; set; } = 50;
         public float MaxCreatureNutrients { get; set; } = 200;
-        public int CreatureMaxAge { get; set; } = 4000;
+        public int CreatureMaxAge { get; set; } = 20000;
         public int MinCreatureVisibilityPartitionSize { get; set; } = 100;
         public float CreatureMaxHealthPoints { get; set; } = 100;
         public int CreatureNaturalHealInterval { get; set; } = 100;
@@ -404,7 +404,7 @@ namespace MaceEvolve.Core.Models
                     }
 
                     //Identify the best creature in the step.
-                    if (newBestCreature == null || (creature.FoodEaten > newBestCreature.FoodEaten && creature.TimesReproduced > newBestCreature.TimesReproduced))
+                    if (newBestCreature == null || (creature.TimesReproduced > newBestCreature.TimesReproduced))
                     {
                         newBestCreature = creature;
                     }
@@ -472,7 +472,8 @@ namespace MaceEvolve.Core.Models
                     OffspringBrainMutationChance = CreatureOffspringBrainMutationChance,
                     EnergyPerEat = CreatureEnergyPerEat,
                     NutrientsPerEat = CreatureNutrientsPerEat,
-                    MoveCost = 0.25f,
+                    MoveCost = 0.05f,
+                    AttackCost = 5f,
                     HealthPoints = MaxGeneratedCreatureMass * 0.9f,
                     MaxHealthPoints = CreatureMaxHealthPoints,
                     NaturalHealInterval = CreatureNaturalHealInterval,

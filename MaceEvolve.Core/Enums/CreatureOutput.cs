@@ -8,6 +8,7 @@
         MoveRight,
         TryEat,
         TryReproduce,
-        DoNothing
+        DoNothing,
+        TryAttack
     }
 }

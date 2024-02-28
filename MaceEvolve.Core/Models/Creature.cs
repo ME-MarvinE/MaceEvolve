@@ -12,7 +12,8 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public NeuralNetwork Brain { get; set; }
-        public float MoveCost { get; set; } = 0.5f;
+        public float MoveCost { get; set; } = 0.25f;
+        public float AttackCost { get; set; } = 0.25f;
         public float Energy
         {
             get
@@ -40,6 +41,7 @@ namespace MaceEvolve.Core.Models
         public float SightRange { get; set; } = 200;
         public float Metabolism { get; set; } = 0.1f;
         public int FoodEaten { get; set; }
+        public int TimesAttackedSuccessfully { get; set; }
         public bool IsDead { get; set; }
         public float Nutrients
         {
@@ -72,7 +74,7 @@ namespace MaceEvolve.Core.Models
         public float OffspringBrainMutationChance { get; set; } = 1 / 3f;
         public float EnergyPerEat { get; set; }
         public float NutrientsPerEat { get; set; }
-        public int MaxAge { get; set; } = 4000;
+        public int MaxAge { get; set; } = 8000;
         public int Age { get; set; }
         public float HealthPoints
         {

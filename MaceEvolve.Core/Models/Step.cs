@@ -77,6 +77,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.Speed = creature.Speed;
                 newCreature.Metabolism = creature.Metabolism;
                 newCreature.MoveCost = creature.MoveCost;
+                newCreature.AttackCost = creature.AttackCost;
                 newCreature.MaxAge = creature.MaxAge;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
@@ -249,6 +250,85 @@ namespace MaceEvolve.Core.Models
         {
 
         }
+        public bool CreatureTryAttack(TCreature creature)
+        {
+            IEnumerable<TCreature> visibleCreaturesOrderedByDistance = VisibleCreaturesDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
+            TCreature closestCreature = visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+            bool creatureSuccessfullyAttacked;
+
+            if (closestCreature?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
+            {
+                float energyToTake = closestCreature.Energy / 8;
+                float massToTake =  closestCreature.Mass / 8;
+                float healthToTake = Math.Min(closestCreature.HealthPoints, creature.Mass / 8);
+                float nutrientsToTake = closestCreature.IsDead ? closestCreature.Nutrients / 16 : closestCreature.Nutrients / 8;
+
+                closestCreature.Energy -= energyToTake;
+                creature.Energy += energyToTake;
+                closestCreature.Nutrients -= nutrientsToTake;
+                creature.Nutrients += nutrientsToTake;
+                closestCreature.Mass -= massToTake;
+                creature.Mass += massToTake;
+                closestCreature.HealthPoints -= healthToTake;
+                creature.TimesAttackedSuccessfully += 1;
+
+                creatureSuccessfullyAttacked = true;
+            }
+            else
+            {
+                creatureSuccessfullyAttacked = false;
+            }
+
+            creature.Energy -= creature.AttackCost;
+
+            return creatureSuccessfullyAttacked;
+        }
+        public void CreatureMoveTowardsClosestFood(TCreature creature)
+        {
+            IEnumerable<TFood> visibleFoodOrderedByDistance = VisibleFoodDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
+
+            if (visibleFoodOrderedByDistance.Any())
+            {
+                IFood closestFood = visibleFoodOrderedByDistance.First();
+
+                float xDifference = creature.X - closestFood.X;
+                float yDifference = creature.Y - closestFood.Y;
+
+                if (xDifference + yDifference <= creature.SightRange)
+                {
+                    if (yDifference > 0)
+                    {
+                        if (yDifference >= creature.Speed)
+                        {
+                            CreatureMoveForwards(creature);
+                        }
+                    }
+                    else if (yDifference < 0)
+                    {
+                        if (yDifference <= -creature.Speed)
+                        {
+                            CreatureMoveBackwards(creature);
+                        }
+                    }
+
+                    if (xDifference > 0)
+                    {
+                        if (xDifference >= creature.Speed)
+                        {
+                            CreatureMoveLeft(creature);
+                        }
+                    }
+                    else if (xDifference < 0)
+                    {
+                        if (xDifference <= -creature.Speed)
+                        {
+                            CreatureMoveRight(creature);
+                        }
+                    }
+                }
+            }
+        }
         public void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions)
         {
             foreach (var stepAction in stepActions)
@@ -290,6 +370,10 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureAction.DoNothing:
                             CreatureDoNothing();
+                            break;
+
+                        case CreatureAction.TryAttack:
+                            CreatureTryAttack(stepAction.Creature);
                             break;
 
                         default:
