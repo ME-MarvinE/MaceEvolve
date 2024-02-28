@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core.Models;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 
 namespace MaceEvolve.Mono.Desktop.Models
@@ -17,7 +18,7 @@ namespace MaceEvolve.Mono.Desktop.Models
 
             foreach (var creatureOffSpring in offspring)
             {
-                creatureOffSpring.Color = CreatureOffspringColor;
+                creatureOffSpring.Color = new Color(Math.Clamp(creature.Color.R + (creature.TimesAttackedSuccessfully - creature.FoodEaten), 0, 255), creature.Color.G, creature.Color.B); ;
             }
 
             return offspring;

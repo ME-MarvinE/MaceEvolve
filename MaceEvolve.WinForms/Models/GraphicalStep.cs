@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Core.Models;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -17,7 +18,7 @@ namespace MaceEvolve.WinForms.Models
 
             foreach (var creatureOffSpring in offspring)
             {
-                creatureOffSpring.Color = CreatureOffspringColor;
+                creatureOffSpring.Color = Color.FromArgb(Math.Clamp(creature.Color.R + (creature.TimesAttackedSuccessfully - creature.FoodEaten), 0, 255), creature.Color.G, creature.Color.B);
             }
 
             return offspring;
