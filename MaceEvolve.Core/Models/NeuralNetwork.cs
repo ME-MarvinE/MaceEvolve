@@ -232,7 +232,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else if (nodesBeingEvaluated.Contains(connection.SourceId))
                             {
-                                sourceNodeOutput = defaultNodeOutputValue;
+                                sourceNodeOutput = Globals.ReLU(defaultNodeOutputValue + connectionSourceNode.Bias);
                             }
                             else
                             {
