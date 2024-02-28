@@ -288,11 +288,6 @@ namespace MaceEvolve.WinForms
             SimulationTPS = 60;
 
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
-            MainGameHost.CreatureSize = 10;
-            float baseFoodSize = MainGameHost.CreatureSize;
-            MainGameHost.MinFoodSize = baseFoodSize * 0.2f;
-            MainGameHost.MaxFoodSize = baseFoodSize * 1.2f;
-            MainGameHost.CreatureSpeed = 2.75f;
 
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;

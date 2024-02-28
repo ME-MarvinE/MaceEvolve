@@ -26,6 +26,7 @@
         PercentEnergyRequiredToReproduce,
         PercentMaxAge,
         PercentMaxHealth,
-        WillNaturallyHeal
+        WillNaturallyHeal,
+        PercentMassRequiredToReproduce
     }
 }

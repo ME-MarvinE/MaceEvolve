@@ -49,15 +49,7 @@ namespace MaceEvolve.Console
         }
         public Program()
         {
-            MainGameHost = new GameHost<Step<Creature, Food>, Creature, Food>
-            {
-                CreatureSize = 10,
-                CreatureSpeed = 2.75f
-            };
-
-            float baseFoodSize = MainGameHost.CreatureSize;
-            MainGameHost.MinFoodSize = baseFoodSize * 0.2f;
-            MainGameHost.MaxFoodSize = baseFoodSize * 1.2f;
+            MainGameHost = new GameHost<Step<Creature, Food>, Creature, Food>();
 
             SimulationTPS = 60;
 

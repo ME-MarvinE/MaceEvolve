@@ -44,6 +44,7 @@ namespace MaceEvolve.Core.Models
             }
         }
         public float Size { get; set; }
+        public float Mass { get; set; }
         #endregion
     }
 }

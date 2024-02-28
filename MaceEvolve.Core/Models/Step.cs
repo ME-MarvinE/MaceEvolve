@@ -30,15 +30,18 @@ namespace MaceEvolve.Core.Models
 
             IFood closestFood = visibleFoodOrderedByDistance.FirstOrDefault();
 
-            if (closestFood?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) <= (closestFood.Size + creature.Size) / 2)
+            if (closestFood?.Mass > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) <= (closestFood.Size + creature.Size) / 2)
             {
                 float energyToTake = Math.Min(creature.EnergyPerEat, closestFood.Energy);
                 float nutrientsToTake = Math.Min(creature.NutrientsPerEat, closestFood.Nutrients);
+                float massToTake = closestFood.Mass;
 
                 closestFood.Energy -= energyToTake;
                 creature.Energy += energyToTake;
                 closestFood.Nutrients -= nutrientsToTake;
                 creature.Nutrients += nutrientsToTake;
+                creature.Mass += massToTake;
+                closestFood.Mass -= massToTake;
                 creature.FoodEaten += 1;
 
                 return true;
@@ -67,6 +70,9 @@ namespace MaceEvolve.Core.Models
             {
                 TCreature newCreature = new TCreature();
                 newCreature.Brain = NeuralNetwork.CombineNetworks(new List<NeuralNetwork>() { creature.Brain });
+                newCreature.Mass = creature.MassRequiredToReproduce;
+                newCreature.MassRequiredToReproduce = creature.MassRequiredToReproduce;
+                newCreature.MaxEnergy = creature.MaxEnergy;
                 newCreature.Size = creature.Size;
                 newCreature.Speed = creature.Speed;
                 newCreature.Metabolism = creature.Metabolism;
@@ -74,7 +80,6 @@ namespace MaceEvolve.Core.Models
                 newCreature.MaxAge = creature.MaxAge;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
-                newCreature.MaxEnergy = creature.MaxEnergy;
                 newCreature.Energy = creature.EnergyRequiredToReproduce / 2;
                 newCreature.MaxNutrients = creature.MaxNutrients;
                 newCreature.Nutrients = creature.NutrientsRequiredToReproduce / 2;
@@ -87,7 +92,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.MaxHealthPoints = creature.MaxHealthPoints;
                 newCreature.NaturalHealInterval = creature.NaturalHealInterval;
                 newCreature.NaturalHealHealthPoints = creature.MaxHealthPoints * 0.05f;
-                newCreature.StepsSinceLastNaturalHeal = 0;
+
 
                 newCreature.X = creature.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
                 newCreature.Y = creature.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
@@ -159,6 +164,7 @@ namespace MaceEvolve.Core.Models
 
                 creature.Energy -= creature.EnergyRequiredToReproduce;
                 creature.Nutrients -= creature.NutrientsRequiredToReproduce;
+                creature.Mass -= creature.MassRequiredToReproduce;
                 creature.TimesReproduced += 1;
 
                 offSpring.Add(newCreature);
@@ -292,7 +298,7 @@ namespace MaceEvolve.Core.Models
 
                     stepAction.Creature.Energy -= stepAction.Creature.Metabolism;
 
-                    if (stepAction.Creature.Energy <= 0 || stepAction.Creature.HealthPoints <= 0)
+                    if (stepAction.Creature.Energy <= 0 || stepAction.Creature.HealthPoints <= 0 || stepAction.Creature.Mass <= 0)
                     {
                         stepAction.Creature.Die();
                     }
@@ -584,6 +590,10 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureInput.WillNaturallyHeal:
                             creatureInputValue = (float)creature.StepsSinceLastNaturalHeal / creature.NaturalHealInterval;
+                            break;
+
+                        case CreatureInput.PercentMassRequiredToReproduce:
+                            creatureInputValue = creature.Mass / creature.MassRequiredToReproduce;
                             break;
 
                         default:

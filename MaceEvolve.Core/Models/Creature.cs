@@ -100,6 +100,7 @@ namespace MaceEvolve.Core.Models
         public int NaturalHealInterval { get; set; }
         public float NaturalHealHealthPoints { get; set; }
         public int StepsSinceLastNaturalHeal { get; set; }
+        public float MassRequiredToReproduce { get; set; }
 
         //public int StomachSize { get; set; } = 5;
         //public List<food> StomachContents { get; set; } = 5;

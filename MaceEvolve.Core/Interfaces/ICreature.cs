@@ -31,6 +31,7 @@ namespace MaceEvolve.Core.Interfaces
         public int NaturalHealInterval { get; set; }
         public float NaturalHealHealthPoints { get; set; }
         public int StepsSinceLastNaturalHeal { get; set; }
+        public float MassRequiredToReproduce { get; set; }
         #endregion
 
         #region Methods
