@@ -23,7 +23,7 @@ namespace MaceEvolve.Mono.Desktop.Models
             foreach (var creatureOffSpring in offspring)
             {
 
-                creatureOffSpring.Color = new Color(offSpringRed, 50, offSpringBlue);
+                creatureOffSpring.Color = new Color(offSpringRed, Globals.Map(offSpringRed + offSpringBlue, 0, 375, 100, 50), offSpringBlue);
             }
 
             return offspring;

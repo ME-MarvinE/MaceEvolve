@@ -22,7 +22,7 @@ namespace MaceEvolve.WinForms.Models
 
             foreach (var creatureOffSpring in offspring)
             {
-                creatureOffSpring.Color = Color.FromArgb(offSpringRed, 50, offSpringBlue);
+                creatureOffSpring.Color = Color.FromArgb(offSpringRed, Globals.Map(offSpringRed + offSpringBlue, 0, 375, 100, 50), offSpringBlue);
             }
 
             return offspring;
