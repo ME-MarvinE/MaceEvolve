@@ -249,14 +249,17 @@ namespace MaceEvolve.Core.Models
 
             Parallel.ForEach(CurrentStep.Creatures, creature =>
             {
-                if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
+                if (!creature.IsDead)
                 {
-                    creature.StepsSinceLastNaturalHeal = 0;
-                    creature.HealthPoints += creature.NaturalHealHealthPoints;
-                }
-                else
-                {
-                    creature.StepsSinceLastNaturalHeal += 1;
+                    if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
+                    {
+                        creature.StepsSinceLastNaturalHeal = 0;
+                        creature.HealthPoints += creature.NaturalHealHealthPoints;
+                    }
+                    else
+                    {
+                        creature.StepsSinceLastNaturalHeal += 1;
+                    }
                 }
             });
 
