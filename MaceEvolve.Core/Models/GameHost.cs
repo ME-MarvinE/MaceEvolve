@@ -249,6 +249,7 @@ namespace MaceEvolve.Core.Models
                 {
                     creature.Mass -= 1;
                     creature.Age += 1;
+                    creature.Nutrients *= 0.99f;
                 }
                 else
                 {
