@@ -110,7 +110,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public void Die()
+        public virtual void Die()
         {
             IsDead = true;
             Energy = 0;

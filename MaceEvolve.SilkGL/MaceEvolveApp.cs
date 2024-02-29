@@ -122,17 +122,7 @@ namespace MaceEvolve.SilkGL
 
             foreach (var creature in MainGameHost.CurrentStep.Creatures)
             {
-                Color creatureColor;
-
-                if (creature.IsDead)
-                {
-                    creatureColor = Color.FromArgb(165, 41, 41);
-                }
-                else
-                {
-                    creatureColor = Color.FromArgb(creature.Color.A, creature.Color.R, creature.Color.G, creature.Color.B);
-                }
-
+                Color creatureColor = creature.Color;
                 Color? creatureRingColor;
 
                 if (creature == MainGameHost.SelectedCreature)
