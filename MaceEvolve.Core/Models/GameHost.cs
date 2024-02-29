@@ -312,11 +312,6 @@ namespace MaceEvolve.Core.Models
                 bool shouldTrackBrainOutput = (!creature.IsDead && gatherAliveCreatureInfo) || (creature.IsDead && gatherDeadCreatureInfo) || (creature == newBestCreature && gatherBestCreatureInfo) || (creature == SelectedCreature && gatherSelectedCreatureInfo);
                 bool shouldEvaluateCreature = !creature.IsDead || shouldTrackBrainOutput;
 
-                if (creature.IsDead)
-                {
-                    creature.Mass -= 1;
-                }
-
                 if (shouldEvaluateCreature)
                 {
                     //Calculate the output values for the creature's nodes.
@@ -405,7 +400,11 @@ namespace MaceEvolve.Core.Models
                         stepResult.CreaturesBrainOutputs[creature] = currentStepNodeInfo;
                     }
 
-                    if (!creature.IsDead)
+                    if (creature.IsDead)
+                    {
+                        creature.Mass -= 1;
+                    }
+                    else
                     {
                         creature.Age += 1;
                         if (creature.Age > CreatureMaxAge)
