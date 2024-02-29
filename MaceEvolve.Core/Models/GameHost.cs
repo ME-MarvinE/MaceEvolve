@@ -248,11 +248,10 @@ namespace MaceEvolve.Core.Models
                 if (creature.IsDead)
                 {
                     creature.Mass -= 1;
+                    creature.Age += 1;
                 }
                 else
                 {
-                    creature.Age += 1;
-
                     if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
                     {
                         creature.StepsSinceLastNaturalHeal = 0;
