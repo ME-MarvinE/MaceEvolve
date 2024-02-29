@@ -407,7 +407,8 @@ namespace MaceEvolve.Core.Models
                     else
                     {
                         creature.Age += 1;
-                        if (creature.Age > CreatureMaxAge)
+
+                        if (Globals.ShouldCreatureBeDead(creature))
                         {
                             creature.Die();
                         }

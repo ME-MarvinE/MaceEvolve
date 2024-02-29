@@ -383,7 +383,7 @@ namespace MaceEvolve.Core.Models
 
                     stepAction.Creature.Energy -= stepAction.Creature.Metabolism;
 
-                    if (stepAction.Creature.Energy <= 0 || stepAction.Creature.HealthPoints <= 0 || stepAction.Creature.Mass <= 0)
+                    if (Globals.ShouldCreatureBeDead(stepAction.Creature))
                     {
                         stepAction.Creature.Die();
                     }

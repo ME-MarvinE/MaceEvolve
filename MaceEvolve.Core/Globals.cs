@@ -1,7 +1,6 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -121,6 +120,15 @@ namespace MaceEvolve.Core
         public static float MiddleY(float y, float height)
         {
             return y + height / 2;
+        }
+        public static bool ShouldCreatureBeDead(ICreature creature)
+        {
+            if (creature.Energy <= 0 || creature.HealthPoints <= 0 || creature.Mass <= 0 || creature.Age > creature.MaxAge)
+            {
+                return true;
+            }
+
+            return false;
         }
         #endregion
     }
