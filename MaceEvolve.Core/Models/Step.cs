@@ -263,7 +263,7 @@ namespace MaceEvolve.Core.Models
                 float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize);
                 float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize);
                 float healthToTake = Math.Min(closestCreature.HealthPoints, closestCreature.MaxHealthPoints * percentOfTargetSize);
-                float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.IsDead ? closestCreature.Nutrients / 16 : closestCreature.Nutrients / 8) * percentOfTargetSize);
+                float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.Nutrients / 8) * percentOfTargetSize);
 
                 closestCreature.Energy -= energyToTake;
                 creature.Energy += energyToTake;
