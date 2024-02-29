@@ -267,20 +267,20 @@ namespace MaceEvolve.Core.Models
 
             foreach (var creature in CurrentStep.Creatures)
             {
-                sightRangeSum += creature.SightRange;
+                    sightRangeSum += creature.SightRange;
 
-                if (creature.SightRange > highestSightRange || highestSightRange == null)
-                {
-                    highestSightRange = creature.SightRange;
+                    if (creature.SightRange > highestSightRange || highestSightRange == null)
+                    {
+                        highestSightRange = creature.SightRange;
+                    }
+
+                    iterations += 1;
+
+                    if (iterations >= 100 || sightRangeSum >= 2000000000)
+                    {
+                        break;
+                    }
                 }
-
-                iterations += 1;
-
-                if (iterations >= 100 || sightRangeSum >= 2000000000)
-                {
-                    break;
-                }
-            }
 
             sightRangeAverage ??= sightRangeSum / iterations;
 
@@ -349,7 +349,10 @@ namespace MaceEvolve.Core.Models
                         stepAction.Action = CreatureAction.DoNothing;
                     }
 
-                    stepResult.CalculatedActions.Enqueue(stepAction);
+                    if (!creature.IsDead)
+                    {
+                        stepResult.CalculatedActions.Enqueue(stepAction);
+                    }
 
                     //Store properties of the creature's current status.
                     if (shouldTrackBrainOutput)
