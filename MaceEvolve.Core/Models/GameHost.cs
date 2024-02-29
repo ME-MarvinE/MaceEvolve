@@ -267,6 +267,8 @@ namespace MaceEvolve.Core.Models
 
             foreach (var creature in CurrentStep.Creatures)
             {
+                if (!creature.IsDead)
+                {
                     sightRangeSum += creature.SightRange;
 
                     if (creature.SightRange > highestSightRange || highestSightRange == null)
@@ -281,6 +283,7 @@ namespace MaceEvolve.Core.Models
                         break;
                     }
                 }
+            }
 
             sightRangeAverage ??= sightRangeSum / iterations;
 
