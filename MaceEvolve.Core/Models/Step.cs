@@ -259,10 +259,11 @@ namespace MaceEvolve.Core.Models
 
             if (closestCreature?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
-                float energyToTake = closestCreature.Energy / 8;
-                float massToTake =  closestCreature.Mass / 8;
-                float healthToTake = Math.Min(closestCreature.HealthPoints, creature.Mass / 8);
-                float nutrientsToTake = closestCreature.IsDead ? closestCreature.Nutrients / 16 : closestCreature.Nutrients / 8;
+                float percentOfTargetSize = closestCreature.Size == 0 ? 1 : creature.Size / closestCreature.Size;
+                float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize);
+                float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize);
+                float healthToTake = Math.Min(closestCreature.HealthPoints, closestCreature.MaxHealthPoints * percentOfTargetSize);
+                float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.IsDead ? closestCreature.Nutrients / 16 : closestCreature.Nutrients / 8) * percentOfTargetSize);
 
                 closestCreature.Energy -= energyToTake;
                 creature.Energy += energyToTake;
