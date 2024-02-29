@@ -242,15 +242,17 @@ namespace MaceEvolve.Core.Models
         public virtual StepResult<TCreature> NextStep(IEnumerable<StepAction<TCreature>> actionsToExecute, bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
             CurrentStep.ExecuteActions(actionsToExecute);
-            CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Mass > 0));
-            CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => x.Mass > 0));
-            CurrentStep.VisibleCreaturesDict.Clear();
-            CurrentStep.VisibleFoodDict.Clear();
 
             Parallel.ForEach(CurrentStep.Creatures, creature =>
             {
-                if (!creature.IsDead)
+                if (creature.IsDead)
                 {
+                    creature.Mass -= 1;
+                }
+                else
+                {
+                    creature.Age += 1;
+
                     if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
                     {
                         creature.StepsSinceLastNaturalHeal = 0;
@@ -260,8 +262,18 @@ namespace MaceEvolve.Core.Models
                     {
                         creature.StepsSinceLastNaturalHeal += 1;
                     }
+
+                    if (Globals.ShouldCreatureBeDead(creature))
+                    {
+                        creature.Die();
+                    }
                 }
             });
+
+            CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Mass > 0));
+            CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => x.Mass > 0));
+            CurrentStep.VisibleCreaturesDict.Clear();
+            CurrentStep.VisibleFoodDict.Clear();
 
             double sightRangeSum = 0;
             double? highestSightRange = null;
@@ -401,20 +413,6 @@ namespace MaceEvolve.Core.Models
                         }
 
                         stepResult.CreaturesBrainOutputs[creature] = currentStepNodeInfo;
-                    }
-
-                    if (creature.IsDead)
-                    {
-                        creature.Mass -= 1;
-                    }
-                    else
-                    {
-                        creature.Age += 1;
-
-                        if (Globals.ShouldCreatureBeDead(creature))
-                        {
-                            creature.Die();
-                        }
                     }
 
                     //Identify the best creature in the step.
