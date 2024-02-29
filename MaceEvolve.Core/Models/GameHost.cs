@@ -21,10 +21,10 @@ namespace MaceEvolve.Core.Models
         public int MaxCreatureAmount { get; set; } = 1000;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
-        public int MinCreatureConnections { get; set; } = 4;
+        public int MinCreatureConnections { get; set; } = 0;
         public int MaxCreatureConnections { get; set; } = 64;
         public float CreatureSpeed { get; set; } = 2.75f;
-        public int MaxCreatureProcessNodes { get; set; } = 2;
+        public int MaxCreatureProcessNodes { get; set; } = 5;
         public float CreatureOffspringBrainMutationChance { get; set; } = 1 / 3f;
         public int CreatureOffspringBrainMutationAttempts { get; set; } = 1;
         public float ConnectionWeightBound { get; set; } = 4;
@@ -486,7 +486,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.Y = MaceRandom.Current.NextFloat(-newCreature.Size / 2, (WorldBounds.Y + WorldBounds.Height) - newCreature.Size / 2);
 
                 newCreature.Brain = new NeuralNetwork(NeuralNetwork.GenerateInputNodes(PossibleCreatureInputs)
-                    .Concat(NeuralNetwork.GenerateProcessNodes(MaxCreatureProcessNodes, 0.75f))
+                    .Concat(NeuralNetwork.GenerateProcessNodes(0, MaxCreatureProcessNodes))
                     .Concat(NeuralNetwork.GenerateOutputNodes(PossibleCreatureActions)));
 
                 newCreature.Brain.Connections.Clear();
