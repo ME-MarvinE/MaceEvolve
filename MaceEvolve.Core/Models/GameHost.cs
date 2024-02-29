@@ -242,9 +242,13 @@ namespace MaceEvolve.Core.Models
         public virtual StepResult<TCreature> NextStep(IEnumerable<StepAction<TCreature>> actionsToExecute, bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
             CurrentStep.ExecuteActions(actionsToExecute);
-            CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => !x.IsDead));
+            CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Mass > 0));
+            CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => x.Mass > 0));
+            CurrentStep.VisibleCreaturesDict.Clear();
+            CurrentStep.VisibleFoodDict.Clear();
 
-            Parallel.ForEach(CurrentStep.Creatures, creature => {
+            Parallel.ForEach(CurrentStep.Creatures, creature =>
+            {
                 if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
                 {
                     creature.StepsSinceLastNaturalHeal = 0;
@@ -255,10 +259,6 @@ namespace MaceEvolve.Core.Models
                     creature.StepsSinceLastNaturalHeal += 1;
                 }
             });
-
-            CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Mass > 0));
-            CurrentStep.VisibleCreaturesDict.Clear();
-            CurrentStep.VisibleFoodDict.Clear();
 
             double sightRangeSum = 0;
             double? highestSightRange = null;
