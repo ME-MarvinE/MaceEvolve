@@ -188,8 +188,6 @@ namespace MaceEvolve.Core.Models
                 {
                     creature.Y += creature.Speed;
                 }
-
-                //Y += WorldBounds.WorldBounds.Height;
             }
             else if (creature.MY > worldBoundsBottom)
             {
@@ -201,8 +199,6 @@ namespace MaceEvolve.Core.Models
                 {
                     creature.Y -= creature.Speed;
                 }
-
-                //Y -= WorldBounds.WorldBounds.Height;
             }
 
             if (creature.MX < worldBounds.X)
@@ -215,8 +211,6 @@ namespace MaceEvolve.Core.Models
                 {
                     creature.X += creature.Speed;
                 }
-
-                //X += WorldBounds.WorldBounds.Width;
             }
             else if (creature.MX > worldBoundsRight)
             {
@@ -228,31 +222,28 @@ namespace MaceEvolve.Core.Models
                 {
                     creature.X -= creature.Speed;
                 }
-
-                //X -= WorldBounds.WorldBounds.Width;
             }
         }
         public void CreatureMoveForwards(TCreature creature)
         {
-            creature.Y -= creature.Speed;
-            LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
-            creature.Energy -= creature.MoveCost;
+            CreatureMove(creature, creature.ForwardAngle);
         }
         public void CreatureMoveBackwards(TCreature creature)
         {
-            creature.Y += creature.Speed;
-            LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
-            creature.Energy -= creature.MoveCost;
+            CreatureMove(creature, creature.ForwardAngle + 180);
         }
         public void CreatureMoveLeft(TCreature creature)
         {
-            creature.X -= creature.Speed;
-            LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
-            creature.Energy -= creature.MoveCost;
+            CreatureMove(creature, creature.ForwardAngle - 90);
         }
         public void CreatureMoveRight(TCreature creature)
         {
-            creature.X += creature.Speed;
+            CreatureMove(creature, creature.ForwardAngle + 90);
+        }
+        private void CreatureMove(TCreature creature, float angle)
+        {
+            creature.X += MathF.Sin(Globals.GetRadians(angle)) * creature.Speed;
+            creature.Y += MathF.Cos(Globals.GetRadians(angle)) * creature.Speed;
             LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
             creature.Energy -= creature.MoveCost;
         }

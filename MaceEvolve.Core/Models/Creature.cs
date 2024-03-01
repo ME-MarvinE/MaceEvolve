@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Core.Interfaces;
+using System;
 
 namespace MaceEvolve.Core.Models
 {
@@ -8,6 +9,7 @@ namespace MaceEvolve.Core.Models
         private float _energy = 100;
         private float _nutrients = 30;
         private float _healthPoints = 90;
+        private float _forwardAngle;
         #endregion
 
         #region Properties
@@ -103,6 +105,28 @@ namespace MaceEvolve.Core.Models
         public float NaturalHealHealthPoints { get; set; }
         public int StepsSinceLastNaturalHeal { get; set; }
         public float MassRequiredToReproduce { get; set; }
+        public float ForwardAngle
+        {
+            get
+            {
+                return _forwardAngle;
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    _forwardAngle = Math.Abs(value) % 360;
+                }
+                else if (value > 359)
+                {
+                    _forwardAngle = value % 360;
+                }
+                else
+                {
+                    _forwardAngle = value;
+                }
+            }
+        }
 
         //public int StomachSize { get; set; } = 5;
         //public List<food> StomachContents { get; set; } = 5;

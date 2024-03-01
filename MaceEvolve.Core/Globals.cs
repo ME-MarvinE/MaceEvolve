@@ -130,6 +130,14 @@ namespace MaceEvolve.Core
 
             return false;
         }
+        public static double GetRadians(double angle)
+        {
+            return (Math.PI / 180) * angle;
+        }
+        public static float GetRadians(float angle)
+        {
+            return (MathF.PI / 180) * angle;
+        }
         #endregion
     }
 }
