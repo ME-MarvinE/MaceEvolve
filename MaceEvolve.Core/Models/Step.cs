@@ -83,7 +83,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
                 newCreature.Energy = creature.EnergyRequiredToReproduce;
                 newCreature.MaxNutrients = creature.MaxNutrients;
-                newCreature.Nutrients = creature.NutrientsRequiredToReproduce ;
+                newCreature.Nutrients = creature.NutrientsRequiredToReproduce;
                 newCreature.NutrientsRequiredToReproduce = creature.NutrientsRequiredToReproduce;
                 newCreature.EnergyRequiredToReproduce = creature.EnergyRequiredToReproduce;
                 newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
@@ -173,14 +173,16 @@ namespace MaceEvolve.Core.Models
 
             return offSpring;
         }
-        public void CreatureMoveForwards(TCreature creature)
+        private static void LimitCreatureBounds(TCreature creature, Rectangle worldBounds, bool loopWorldBounds)
         {
-            creature.Y -= creature.Speed;
-            if (creature.MY < WorldBounds.Y)
+            float worldBoundsBottom = worldBounds.Y + worldBounds.Height;
+            float worldBoundsRight = worldBounds.X + worldBounds.Width;
+
+            if (creature.MY < worldBounds.Y)
             {
-                if (LoopWorldBounds)
+                if (loopWorldBounds)
                 {
-                    creature.Y = ((WorldBounds.Y + WorldBounds.Height) - creature.Size / 2) - (WorldBounds.Y - creature.MY);
+                    creature.Y = ((worldBounds.Y + worldBounds.Height) - creature.Size / 2) - (worldBounds.Y - creature.MY);
                 }
                 else
                 {
@@ -189,17 +191,11 @@ namespace MaceEvolve.Core.Models
 
                 //Y += WorldBounds.WorldBounds.Height;
             }
-            creature.Energy -= creature.MoveCost;
-        }
-        public void CreatureMoveBackwards(TCreature creature)
-        {
-            creature.Y += creature.Speed;
-            float worldBoundsBottom = WorldBounds.Y + WorldBounds.Height;
-            if (creature.MY > worldBoundsBottom)
+            else if (creature.MY > worldBoundsBottom)
             {
-                if (LoopWorldBounds)
+                if (loopWorldBounds)
                 {
-                    creature.Y = (WorldBounds.Y - creature.Size / 2) + (creature.MY - worldBoundsBottom);
+                    creature.Y = (worldBounds.Y - creature.Size / 2) + (creature.MY - worldBoundsBottom);
                 }
                 else
                 {
@@ -208,16 +204,12 @@ namespace MaceEvolve.Core.Models
 
                 //Y -= WorldBounds.WorldBounds.Height;
             }
-            creature.Energy -= creature.MoveCost;
-        }
-        public void CreatureMoveLeft(TCreature creature)
-        {
-            creature.X -= creature.Speed;
-            if (creature.MX < WorldBounds.X)
+
+            if (creature.MX < worldBounds.X)
             {
-                if (LoopWorldBounds)
+                if (loopWorldBounds)
                 {
-                    creature.X = ((WorldBounds.X + WorldBounds.Width) - creature.Size / 2) - (WorldBounds.X - creature.MX);
+                    creature.X = ((worldBounds.X + worldBounds.Width) - creature.Size / 2) - (worldBounds.X - creature.MX);
                 }
                 else
                 {
@@ -226,24 +218,42 @@ namespace MaceEvolve.Core.Models
 
                 //X += WorldBounds.WorldBounds.Width;
             }
-            creature.Energy -= creature.MoveCost;
-        }
-        public void CreatureMoveRight(TCreature creature)
-        {
-            creature.X += creature.Speed;
-            float worldBoundsRight = WorldBounds.X + WorldBounds.Width;
-            if (creature.MX > worldBoundsRight)
+            else if (creature.MX > worldBoundsRight)
             {
-                if (LoopWorldBounds)
+                if (loopWorldBounds)
                 {
-                    creature.X = (WorldBounds.X - creature.Size / 2) + (creature.MX - worldBoundsRight);
+                    creature.X = (worldBounds.X - creature.Size / 2) + (creature.MX - worldBoundsRight);
                 }
                 else
                 {
                     creature.X -= creature.Speed;
                 }
+
                 //X -= WorldBounds.WorldBounds.Width;
             }
+        }
+        public void CreatureMoveForwards(TCreature creature)
+        {
+            creature.Y -= creature.Speed;
+            LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
+            creature.Energy -= creature.MoveCost;
+        }
+        public void CreatureMoveBackwards(TCreature creature)
+        {
+            creature.Y += creature.Speed;
+            LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
+            creature.Energy -= creature.MoveCost;
+        }
+        public void CreatureMoveLeft(TCreature creature)
+        {
+            creature.X -= creature.Speed;
+            LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
+            creature.Energy -= creature.MoveCost;
+        }
+        public void CreatureMoveRight(TCreature creature)
+        {
+            creature.X += creature.Speed;
+            LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
             creature.Energy -= creature.MoveCost;
         }
         public void CreatureDoNothing()
