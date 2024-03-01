@@ -2,6 +2,7 @@
 using MaceEvolve.Core.Interfaces;
 using System;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 
 namespace MaceEvolve.Core
@@ -9,7 +10,9 @@ namespace MaceEvolve.Core
     public static class Globals
     {
         #region Fields
+        private const double Rad2Deg = 180 / Math.PI;
         private const double Deg2Rad = Math.PI / 180;
+        private const float Rad2DegF = 180 / MathF.PI;
         private const float Deg2RadF = MathF.PI / 180;
         #endregion
 
@@ -135,13 +138,21 @@ namespace MaceEvolve.Core
 
             return false;
         }
-        public static double GetRadians(double angle)
+        public static double AngleToRadians(double angle)
         {
             return Deg2Rad * angle;
         }
-        public static float GetRadians(float angle)
+        public static float AngleToRadians(float angle)
         {
             return Deg2RadF * angle;
+        }
+        public static double RadiansToAngle(double radians)
+        {
+            return Rad2Deg * radians;
+        }
+        public static float RadiansToAngle(float radians)
+        {
+            return Rad2DegF * radians;
         }
         #endregion
     }
