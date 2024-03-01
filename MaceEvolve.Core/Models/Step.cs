@@ -242,8 +242,8 @@ namespace MaceEvolve.Core.Models
         }
         private void CreatureMove(TCreature creature, float angle)
         {
-            creature.X += MathF.Sin(Globals.AngleToRadians(angle)) * creature.Speed;
-            creature.Y += MathF.Cos(Globals.AngleToRadians(angle)) * creature.Speed;
+            creature.X += MathF.Cos(Globals.AngleToRadians(angle)) * creature.Speed;
+            creature.Y += MathF.Sin(Globals.AngleToRadians(angle)) * creature.Speed;
             LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
             creature.Energy -= creature.MoveCost;
         }
