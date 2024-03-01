@@ -8,6 +8,11 @@ namespace MaceEvolve.Core
 {
     public static class Globals
     {
+        #region Fields
+        private const double Deg2Rad = Math.PI / 180;
+        private const float Deg2RadF = MathF.PI / 180;
+        #endregion
+
         #region Properties
         public static ReadOnlyCollection<CreatureInput> AllCreatureInputs { get; } = Enum.GetValues(typeof(CreatureInput)).Cast<CreatureInput>().ToList().AsReadOnly();
         public static ReadOnlyCollection<CreatureAction> AllCreatureActions { get; } = Enum.GetValues(typeof(CreatureAction)).Cast<CreatureAction>().ToList().AsReadOnly();
@@ -132,11 +137,11 @@ namespace MaceEvolve.Core
         }
         public static double GetRadians(double angle)
         {
-            return (Math.PI / 180) * angle;
+            return Deg2Rad * angle;
         }
         public static float GetRadians(float angle)
         {
-            return (MathF.PI / 180) * angle;
+            return Deg2RadF * angle;
         }
         #endregion
     }
