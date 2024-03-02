@@ -35,6 +35,7 @@ namespace MaceEvolve.Core.Interfaces
         public int StepsSinceLastNaturalHeal { get; set; }
         public float MassRequiredToReproduce { get; set; }
         public float ForwardAngle { get; set; }
+        public float FieldOfView { get; set; }
         #endregion
 
         #region Methods

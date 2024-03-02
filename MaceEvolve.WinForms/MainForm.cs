@@ -40,13 +40,15 @@ namespace MaceEvolve.WinForms
         public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
         protected static JsonSerializerSettings SaveStepSerializerSettings { get; }
         protected static JsonSerializerSettings LoadStepSerializerSettings { get; }
+        Pen FieldOfViewPen { get; set; } = new Pen(Color.FromArgb(255, 20, 20, 255), 1);
+        SolidBrush FieldOfViewBrush { get; set; } = new SolidBrush(Color.FromArgb(50, 20, 175, 200));
         #endregion
 
         #region Constructors
         static MainForm()
         {
             IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleFoodDict));
-            
+
             SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
             LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
         }
@@ -240,6 +242,42 @@ namespace MaceEvolve.WinForms
                     e.Graphics.FillEllipse(brush, food.X, food.Y, food.Size, food.Size);
                 }
             }
+
+            foreach (var creature in MainGameHost.CurrentStep.Creatures)
+            {
+                bool drawFieldOfView = creature == MainGameHost.SelectedCreature || (creature == MainGameHost.BestCreature && BestCreatureNetworkViewerForm?.Visible == true);
+
+                if (drawFieldOfView)
+                {
+                    e.Graphics.FillPath(FieldOfViewBrush, CreateFieldOfViewPath(creature.MX, creature.MY, creature.FieldOfView, creature.SightRange, creature.ForwardAngle));
+
+                    PointF forwardDirectionLineTarget = GetAngledLineTarget(creature.MX, creature.MY, creature.SightRange / 4, creature.ForwardAngle);
+                    e.Graphics.DrawLine(FieldOfViewPen, creature.MX, creature.MY, forwardDirectionLineTarget.X, forwardDirectionLineTarget.Y);
+
+                    //IEnumerable<GraphicalCreature> visibleCreatures = MainGameHost.CurrentStep.Creatures.Where(x =>
+                    //{
+                    //    if (Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != creature)
+                    //    {
+                    //        float angleFromSourceToTarget = Globals.GetAngleBetweenF(creature.MX, creature.MY, x.MX, x.MY);
+
+                    //        if (Math.Abs(Globals.AngleDifference(-creature.ForwardAngle, angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
+                    //        {
+                    //            return true;
+                    //        }
+                    //    }
+
+                    //    return false;
+                    //});
+
+                    //foreach (var seenCreature in visibleCreatures)
+                    //{
+                    //    using (Pen pen = new Pen(Color.FromArgb(200, 32, 32), 2))
+                    //    {
+                    //        e.Graphics.DrawEllipse(pen, seenCreature.X, seenCreature.Y, seenCreature.Size, seenCreature.Size);
+                    //    }
+                    //}
+                }
+            }
         }
         private void MainForm_MouseClick(object sender, MouseEventArgs e)
         {
@@ -396,6 +434,22 @@ namespace MaceEvolve.WinForms
         private async void btnBenchmark_Click(object sender, EventArgs e)
         {
             await BenchmarkSteps(200);
+        }
+        private static GraphicsPath CreateFieldOfViewPath(float locationX, float locationY, float fieldOfView, float distance, float angle)
+        {
+            GraphicsPath path = new GraphicsPath();
+            PointF leftLineTarget = GetAngledLineTarget(locationX, locationY, distance, angle - fieldOfView / 2);
+            //PointF rightLineTarget = GetAngledLineTarget(locationX, locationY, distance, angle + fieldOfView / 2);
+            path.AddLine(locationX, locationY, leftLineTarget.X, leftLineTarget.Y);
+            path.AddArc(locationX - distance, locationY - distance, distance * 2, distance * 2, angle - fieldOfView / 2, fieldOfView);
+            //path.AddLine(locationX, locationY, rightLineTarget.X, rightLineTarget.Y);
+            path.CloseFigure();
+
+            return path;
+        }
+        private static PointF GetAngledLineTarget(float locationX, float locationY, float distance, float angle)
+        {
+            return new PointF(locationX + MathF.Cos(Globals.AngleToRadians(angle)) * distance, locationY + MathF.Sin(Globals.AngleToRadians(angle)) * distance);
         }
         #endregion
     }

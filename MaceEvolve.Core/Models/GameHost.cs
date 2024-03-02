@@ -219,7 +219,20 @@ namespace MaceEvolve.Core.Models
                                     }
 
                                     IEnumerable<TCreature> visibleCreaturesInOtherCell = partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]
-                                        .Where(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != creature);
+                                        .Where(x =>
+                                        {
+                                            if (Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != creature)
+                                            {
+                                                float angleFromSourceToTarget = Globals.GetAngleBetweenF(creature.MX, creature.MY, x.MX, x.MY);
+
+                                                if (Math.Abs(Globals.AngleDifference(-creature.ForwardAngle, angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
+                                                {
+                                                    return true;
+                                                }
+                                            }
+
+                                            return false;
+                                        });
 
                                     CurrentStep.VisibleCreaturesDict[creature].AddRange(visibleCreaturesInOtherCell);
 
@@ -229,7 +242,20 @@ namespace MaceEvolve.Core.Models
                                     }
 
                                     IEnumerable<TFood> visibleFoodInOtherCell = partitionedFood[otherCellRowIndex, otherCellColumnIndex]
-                                        .Where(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange);
+                                        .Where(x =>
+                                        {
+                                            if (Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != creature)
+                                            {
+                                                float angleFromSourceToTarget = Globals.GetAngleBetweenF(creature.MX, creature.MY, x.MX, x.MY);
+
+                                                if (Math.Abs(Globals.AngleDifference(-creature.ForwardAngle, angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
+                                                {
+                                                    return true;
+                                                }
+                                            }
+
+                                            return false;
+                                        });
 
                                     CurrentStep.VisibleFoodDict[creature].AddRange(visibleFoodInOtherCell);
                                 }

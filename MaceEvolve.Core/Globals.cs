@@ -154,6 +154,34 @@ namespace MaceEvolve.Core
         {
             return Rad2DegF * radians;
         }
+        public static double GetAngleBetween(Point start, Point end)
+        {
+            return Math.Atan2(start.Y - end.Y, end.X - start.X) * Rad2Deg;
+        }
+        public static double GetAngleBetween(PointF start, PointF end)
+        {
+            return Math.Atan2(start.Y - end.Y, end.X - start.X) * Rad2Deg;
+        }
+        public static float GetAngleBetweenF(Point start, Point end)
+        {
+            return MathF.Atan2(start.Y - end.Y, end.X - start.X) * Rad2DegF;
+        }
+        public static float GetAngleBetweenF(PointF start, PointF end)
+        {
+            return MathF.Atan2(start.Y - end.Y, end.X - start.X) * Rad2DegF;
+        }
+        public static float GetAngleBetweenF(float x1, float y1, float x2, float y2)
+        {
+            return GetAngleBetweenF(new PointF(x1, y1), new PointF(x2, y2));
+        }
+        public static double AngleDifference(double angle1, double angle2)
+        {
+            return 180 - Math.Abs(Math.Abs(angle1 - angle2) - 180);
+        }
+        public static float AngleDifference(float angle1, float angle2)
+        {
+            return 180 - MathF.Abs(MathF.Abs(angle1 - angle2) - 180);
+        }
         #endregion
     }
 }

@@ -10,6 +10,7 @@ namespace MaceEvolve.Core.Models
         private float _nutrients = 30;
         private float _healthPoints = 90;
         private float _forwardAngle;
+        private float _fieldOfView = 360;
         #endregion
 
         #region Properties
@@ -124,6 +125,28 @@ namespace MaceEvolve.Core.Models
                 else
                 {
                     _forwardAngle = value;
+                }
+            }
+        }
+        public float FieldOfView
+        {
+            get
+            {
+                return _fieldOfView;
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    _fieldOfView = Math.Abs(value) % 360;
+                }
+                else if (value > 359)
+                {
+                    _fieldOfView = value % 360;
+                }
+                else
+                {
+                    _fieldOfView = value;
                 }
             }
         }
