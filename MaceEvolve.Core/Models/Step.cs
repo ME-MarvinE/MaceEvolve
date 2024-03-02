@@ -290,15 +290,11 @@ namespace MaceEvolve.Core.Models
         }
         public void CreatureTurnLeft(TCreature creature)
         {
-            CreatureTurn(creature, -90);
+            CreatureTurn(creature, -30);
         }
         public void CreatureTurnRight(TCreature creature)
         {
-            CreatureTurn(creature, 90);
-        }
-        public void CreatureTurnBackwards(TCreature creature)
-        {
-            CreatureTurn(creature, 180);
+            CreatureTurn(creature, 30);
         }
         private void CreatureTurn(TCreature creature, float angle)
         {
@@ -402,10 +398,6 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureAction.TurnRight:
                             CreatureTurnRight(stepAction.Creature);
-                            break;
-
-                        case CreatureAction.TurnBackwards:
-                            CreatureTurnBackwards(stepAction.Creature);
                             break;
 
                         default:

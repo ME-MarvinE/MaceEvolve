@@ -11,7 +11,6 @@
         DoNothing,
         TryAttack,
         TurnLeft,
-        TurnRight,
-        TurnBackwards
+        TurnRight
     }
 }
