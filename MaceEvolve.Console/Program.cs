@@ -42,7 +42,7 @@ namespace MaceEvolve.Console
         #region Constructors
         static Program()
         {
-            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(Step<Creature, Food>.VisibleCreaturesDict), nameof(Step<Creature, Food>.VisibleFoodDict));
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(Step<Creature, Food>.VisibleCreaturesDict), nameof(Step<Creature, Food>.VisibleFoodDict), nameof(Step<Creature, Food>.CreatureToCachedAreaDict), nameof(Step<Creature, Food>.FoodToCachedAreaDict));
 
             SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
             LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };

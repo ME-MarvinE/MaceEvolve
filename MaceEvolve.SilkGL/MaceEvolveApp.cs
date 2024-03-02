@@ -54,7 +54,7 @@ namespace MaceEvolve.SilkGL
         #region Constructors
         static MaceEvolveApp()
         {
-            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(Step<Creature, Food>.VisibleCreaturesDict), nameof(Step<Creature, Food>.VisibleFoodDict));
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleFoodDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.CreatureToCachedAreaDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.FoodToCachedAreaDict));
 
             SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
             LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
