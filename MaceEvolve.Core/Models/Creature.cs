@@ -115,7 +115,7 @@ namespace MaceEvolve.Core.Models
             {
                 if (value < 0)
                 {
-                    _forwardAngle = Math.Abs(value) % 360;
+                    _forwardAngle = 360 + value % 360;
                 }
                 else if (value > 359)
                 {
