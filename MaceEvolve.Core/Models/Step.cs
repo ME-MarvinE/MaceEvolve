@@ -407,7 +407,7 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         default:
-                            throw new NotImplementedException();
+                            throw new NotImplementedException($"{nameof(CreatureAction)} '{stepAction.Action}' has not been implemented.");
                     }
 
                     stepAction.Creature.Energy -= stepAction.Creature.Metabolism;
