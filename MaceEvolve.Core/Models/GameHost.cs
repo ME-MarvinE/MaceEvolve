@@ -306,6 +306,7 @@ namespace MaceEvolve.Core.Models
             CurrentStep.VisibleCreaturesDict.Clear();
             CurrentStep.VisibleFoodDict.Clear();
             CurrentStep.CreatureToCachedAreaDict.Clear();
+            CurrentStep.FoodToCachedAreaDict.Clear();
 
             double sightRangeSum = 0;
             double? highestSightRange = null;

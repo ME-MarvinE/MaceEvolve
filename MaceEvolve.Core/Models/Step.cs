@@ -22,6 +22,7 @@ namespace MaceEvolve.Core.Models
         public ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; } = new ConcurrentDictionary<TCreature, List<TCreature>>();
         public ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; } = new ConcurrentDictionary<TCreature, List<TFood>>();
         public ConcurrentDictionary<TCreature, float> CreatureToCachedAreaDict { get; } = new ConcurrentDictionary<TCreature, float>();
+        public ConcurrentDictionary<TFood, float> FoodToCachedAreaDict { get; } = new ConcurrentDictionary<TFood, float>();
         #endregion
 
         #region Methods
@@ -429,6 +430,7 @@ namespace MaceEvolve.Core.Models
             List<TCreature> visibleCreaturesOrderedByDistanceList = null;
             List<TFood> visibleFood = VisibleFoodDict[creature];
             IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
+            List<TFood> visibleFoodOrderedByDistanceList = null;
             TCreature closestCreatureToLeft = null;
             TCreature closestCreatureToRight = null;
             TCreature closestCreatureToFront = null;
@@ -437,6 +439,7 @@ namespace MaceEvolve.Core.Models
             TFood closestFoodToRight = null;
             TFood closestFoodToFront = null;
             TFood closestFoodToBack = null;
+            float? visibleArea = null;
 
             foreach (var creatureInput in creatureInputs)
             {
@@ -714,7 +717,7 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureInput.VisibleAreaCreatureDensity:
                             visibleCreaturesOrderedByDistanceList ??= visibleCreaturesOrderedByDistance.ToList();
-                            float visibleArea = (MathF.PI * creature.SightRange * creature.SightRange) * (creature.FieldOfView / 360);
+                            visibleArea ??= GetCreatureVisibleArea(creature);
 
                             if (visibleArea == 0)
                             {
@@ -726,19 +729,34 @@ namespace MaceEvolve.Core.Models
 
                                 foreach (var visibleCreature in visibleCreaturesOrderedByDistanceList)
                                 {
-                                    float visibleCreatureArea = CreatureToCachedAreaDict.GetOrAdd(visibleCreature, (x) =>
-                                    {
-                                        float radius = x.Size / 2;
-
-                                        return MathF.PI * radius * radius;
-                                    });
-
+                                    float visibleCreatureArea = CreatureToCachedAreaDict.GetOrAdd(visibleCreature, (x) => GetCircleArea(x.Size / 2));
                                     creaturesArea += visibleCreatureArea;
                                 }
 
-                                creatureInputValue = creaturesArea >= visibleArea ? 1 : creaturesArea / visibleArea;
+                                creatureInputValue = creaturesArea >= visibleArea ? 1 : creaturesArea / visibleArea.Value;
                             }
+                            break;
 
+                        case CreatureInput.VisibleAreaFoodDensity:
+                            visibleFoodOrderedByDistanceList ??= visibleFoodOrderedByDistance.ToList();
+                            visibleArea ??= GetCreatureVisibleArea(creature);
+
+                            if (visibleArea == 0)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float foodArea = 0;
+
+                                foreach (var vFood in visibleFoodOrderedByDistanceList)
+                                {
+                                    float visibleFoodArea = FoodToCachedAreaDict.GetOrAdd(vFood, (x) => GetCircleArea(x.Size / 2));
+                                    foodArea += visibleFoodArea;
+                                }
+
+                                creatureInputValue = foodArea >= visibleArea ? 1 : foodArea / visibleArea.Value;
+                            }
                             break;
 
                         default:
@@ -751,10 +769,23 @@ namespace MaceEvolve.Core.Models
                     visibleCreaturesOrderedByDistance = visibleCreaturesOrderedByDistanceList;
                 }
 
+                if (visibleFoodOrderedByDistanceList != null)
+                {
+                    visibleFoodOrderedByDistance = visibleFoodOrderedByDistanceList;
+                }
+
                 creatureInputValues[creatureInput] = creatureInputValue;
             }
 
             return creatureInputValues;
+        }
+        private float GetCreatureVisibleArea(TCreature creature)
+        {
+            return (MathF.PI * creature.SightRange * creature.SightRange) * (creature.FieldOfView / 360);
+        }
+        private float GetCircleArea(float radius)
+        {
+            return MathF.PI * radius * radius;
         }
         #endregion
     }

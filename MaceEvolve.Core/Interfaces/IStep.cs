@@ -19,6 +19,7 @@ namespace MaceEvolve.Core.Interfaces
         ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; }
         ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; }
         ConcurrentDictionary<TCreature, float> CreatureToCachedAreaDict { get; }
+        ConcurrentDictionary<TFood, float> FoodToCachedAreaDict { get; }
         #endregion
 
         #region Methods

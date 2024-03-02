@@ -28,6 +28,7 @@
         PercentMaxHealth,
         WillNaturallyHeal,
         PercentMassRequiredToReproduce,
-        VisibleAreaCreatureDensity
+        VisibleAreaCreatureDensity,
+        VisibleAreaFoodDensity
     }
 }
