@@ -245,11 +245,12 @@ namespace MaceEvolve.Core.Models
 
             Parallel.ForEach(CurrentStep.Creatures, creature =>
             {
+                creature.Age += 1;
+
                 if (creature.IsDead)
                 {
                     creature.Mass *= 0.98f;
                     creature.Mass -= 0.01f;
-                    creature.Age += 1;
                     creature.Nutrients *= 0.98f;
                     creature.Nutrients -= 0.01f;
                     creature.Energy *= 0.98f;
