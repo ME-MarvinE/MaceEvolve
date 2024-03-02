@@ -290,11 +290,11 @@ namespace MaceEvolve.Core.Models
         }
         public void CreatureTurnLeft(TCreature creature)
         {
-            CreatureTurn(creature, -30);
+            CreatureTurn(creature, -90);
         }
         public void CreatureTurnRight(TCreature creature)
         {
-            CreatureTurn(creature, 30);
+            CreatureTurn(creature, 90);
         }
         private void CreatureTurn(TCreature creature, float angle)
         {
