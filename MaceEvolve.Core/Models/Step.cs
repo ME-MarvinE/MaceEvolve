@@ -286,6 +286,22 @@ namespace MaceEvolve.Core.Models
 
             return creatureSuccessfullyAttacked;
         }
+        public void CreatureTurnLeft(TCreature creature)
+        {
+            CreatureTurn(creature, -90);
+        }
+        public void CreatureTurnRight(TCreature creature)
+        {
+            CreatureTurn(creature, 90);
+        }
+        public void CreatureTurnBackwards(TCreature creature)
+        {
+            CreatureTurn(creature, 180);
+        }
+        private void CreatureTurn(TCreature creature, float angle)
+        {
+            creature.ForwardAngle += angle;
+        }
         public void CreatureMoveTowardsClosestFood(TCreature creature)
         {
             IEnumerable<TFood> visibleFoodOrderedByDistance = VisibleFoodDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
@@ -376,6 +392,18 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureAction.TryAttack:
                             CreatureTryAttack(stepAction.Creature);
+                            break;
+
+                        case CreatureAction.TurnLeft:
+                            CreatureTurnLeft(stepAction.Creature);
+                            break;
+
+                        case CreatureAction.TurnRight:
+                            CreatureTurnRight(stepAction.Creature);
+                            break;
+
+                        case CreatureAction.TurnBackwards:
+                            CreatureTurnBackwards(stepAction.Creature);
                             break;
 
                         default:

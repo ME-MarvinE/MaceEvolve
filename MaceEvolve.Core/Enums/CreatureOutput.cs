@@ -9,6 +9,9 @@
         TryEat,
         TryReproduce,
         DoNothing,
-        TryAttack
+        TryAttack,
+        TurnLeft,
+        TurnRight,
+        TurnBackwards
     }
 }
