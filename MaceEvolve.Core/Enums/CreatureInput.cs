@@ -27,6 +27,7 @@
         PercentMaxAge,
         PercentMaxHealth,
         WillNaturallyHeal,
-        PercentMassRequiredToReproduce
+        PercentMassRequiredToReproduce,
+        VisibleAreaCreatureDensity
     }
 }

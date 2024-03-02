@@ -21,6 +21,7 @@ namespace MaceEvolve.Core.Models
         public bool LoopWorldBounds { get; set; }
         public ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; } = new ConcurrentDictionary<TCreature, List<TCreature>>();
         public ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; } = new ConcurrentDictionary<TCreature, List<TFood>>();
+        public ConcurrentDictionary<TCreature, float> CreatureToCachedAreaDict { get; } = new ConcurrentDictionary<TCreature, float>();
         #endregion
 
         #region Methods
@@ -425,6 +426,7 @@ namespace MaceEvolve.Core.Models
 
             List<TCreature> visibleCreatures = VisibleCreaturesDict[creature];
             IEnumerable<TCreature> visibleCreaturesOrderedByDistance = visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
+            List<TCreature> visibleCreaturesOrderedByDistanceList = null;
             List<TFood> visibleFood = VisibleFoodDict[creature];
             IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
             TCreature closestCreatureToLeft = null;
@@ -710,9 +712,43 @@ namespace MaceEvolve.Core.Models
                             creatureInputValue = creature.Mass / creature.MassRequiredToReproduce;
                             break;
 
+                        case CreatureInput.VisibleAreaCreatureDensity:
+                            visibleCreaturesOrderedByDistanceList ??= visibleCreaturesOrderedByDistance.ToList();
+                            float visibleArea = (MathF.PI * creature.SightRange * creature.SightRange) * (creature.FieldOfView / 360);
+
+                            if (visibleArea == 0)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float creaturesArea = 0;
+
+                                foreach (var visibleCreature in visibleCreaturesOrderedByDistanceList)
+                                {
+                                    float visibleCreatureArea = CreatureToCachedAreaDict.GetOrAdd(visibleCreature, (x) =>
+                                    {
+                                        float radius = x.Size / 2;
+
+                                        return MathF.PI * radius * radius;
+                                    });
+
+                                    creaturesArea += visibleCreatureArea;
+                                }
+
+                                creatureInputValue = creaturesArea >= visibleArea ? 1 : creaturesArea / visibleArea;
+                            }
+
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }
+                }
+
+                if (visibleCreaturesOrderedByDistanceList != null)
+                {
+                    visibleCreaturesOrderedByDistance = visibleCreaturesOrderedByDistanceList;
                 }
 
                 creatureInputValues[creatureInput] = creatureInputValue;

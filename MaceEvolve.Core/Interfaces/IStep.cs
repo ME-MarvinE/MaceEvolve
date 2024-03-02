@@ -18,6 +18,7 @@ namespace MaceEvolve.Core.Interfaces
         bool LoopWorldBounds { get; set; }
         ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; }
         ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; }
+        ConcurrentDictionary<TCreature, float> CreatureToCachedAreaDict { get; }
         #endregion
 
         #region Methods

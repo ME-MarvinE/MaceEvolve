@@ -305,6 +305,7 @@ namespace MaceEvolve.Core.Models
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => x.Mass > 0));
             CurrentStep.VisibleCreaturesDict.Clear();
             CurrentStep.VisibleFoodDict.Clear();
+            CurrentStep.CreatureToCachedAreaDict.Clear();
 
             double sightRangeSum = 0;
             double? highestSightRange = null;
