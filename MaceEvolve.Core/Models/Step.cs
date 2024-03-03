@@ -681,7 +681,16 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
-                        case CreatureInput.ClosestVisibleCreatureAggression:
+                        case CreatureInput.AggressionPercentage:
+                            int attemptedAttacksAndEats = creature.AttemptedAttacksCount + creature.AttemptedEatsCount;
+                            creatureInputValue = attemptedAttacksAndEats == 0 ? 0 : creature.AttemptedAttacksCount / attemptedAttacksAndEats;
+                            break;
+
+                        case CreatureInput.SuccessfulAttackPercentage:
+                            creatureInputValue = creature.InitiatedAttacksCount == 0 ? 0 : creature.SuccessfulAttacksCount / creature.InitiatedAttacksCount;
+                            break;
+
+                        case CreatureInput.ClosestVisibleCreatureAggressionPercentage:
                             closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
                             if (closestVisibleCreature == null)
@@ -690,8 +699,21 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                int attemptedAttacksAndEats = closestVisibleCreature.AttemptedAttacksCount + closestVisibleCreature.AttemptedEatsCount;
-                                creatureInputValue = attemptedAttacksAndEats == 0 ? 0 : closestVisibleCreature.AttemptedAttacksCount / attemptedAttacksAndEats;
+                                int closestVisibleCreatureAttemptedAttacksAndEats = closestVisibleCreature.AttemptedAttacksCount + closestVisibleCreature.AttemptedEatsCount;
+                                creatureInputValue = closestVisibleCreatureAttemptedAttacksAndEats == 0 ? 0 : closestVisibleCreature.AttemptedAttacksCount / closestVisibleCreatureAttemptedAttacksAndEats;
+                            }
+                            break;
+
+                        case CreatureInput.ClosestVisibleCreatureSuccessfulAttackPercentage:
+                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleCreature == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                creatureInputValue = closestVisibleCreature.InitiatedAttacksCount == 0 ? 0 : closestVisibleCreature.SuccessfulAttacksCount / closestVisibleCreature.InitiatedAttacksCount;
                             }
                             break;
 

@@ -18,11 +18,14 @@
         AngleToClosestVisibleFood,
         ProximityToClosestVisibleCreature,
         ProximityToClosestVisibleFood,
+        AggressionPercentage,
+        SuccessfulAttackPercentage,
         ClosestVisibleFoodEnergyPercentage,
         ClosestVisibleFoodNutrientPercentage,
         ClosestVisibleCreatureEnergyPercentage,
         ClosestVisibleCreatureAgePercentage,
         ClosestVisibleCreatureHealthPercentage,
-        ClosestVisibleCreatureAggression
+        ClosestVisibleCreatureAggressionPercentage,
+        ClosestVisibleCreatureSuccessfulAttackPercentage,
     }
 }
