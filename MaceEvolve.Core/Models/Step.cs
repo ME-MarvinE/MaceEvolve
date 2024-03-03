@@ -319,6 +319,7 @@ namespace MaceEvolve.Core.Models
         {
             float totalAttackScore = winnerAttackScore + loserAttackScore;
             float winningCreatureEffort = totalAttackScore == 0 ? 0 : totalAttackScore / winnerAttackScore;
+            float losingCreatureEffort = totalAttackScore == 0 ? 0 : totalAttackScore / loserAttackScore;
 
             if (winningCreatureWasInitiator)
             {
@@ -338,10 +339,12 @@ namespace MaceEvolve.Core.Models
                 losingCreature.HealthPoints -= healthToTake;
 
                 winningCreature.Energy -= winningCreature.AttackCost * winningCreatureEffort;
+                losingCreature.Energy -= losingCreature.DefendCost * losingCreatureEffort;
             }
             else
             {
                 winningCreature.Energy -= winningCreature.DefendCost * winningCreatureEffort;
+                losingCreature.Energy -= losingCreature.AttackCost * losingCreatureEffort;
             }
         }
         public void CreatureTurnLeft(TCreature creature)
