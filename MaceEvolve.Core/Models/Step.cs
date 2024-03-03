@@ -263,6 +263,11 @@ namespace MaceEvolve.Core.Models
             IEnumerable<TCreature> visibleCreaturesOrderedByDistance = VisibleCreaturesDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             TCreature closestCreature = visibleCreaturesOrderedByDistance.FirstOrDefault();
 
+            if (closestCreature == null)
+            {
+                return null;
+            }
+
             bool? creatureSuccessfullyAttacked;
 
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
