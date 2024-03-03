@@ -275,11 +275,11 @@ namespace MaceEvolve.Core.Models
 
                 if (creature.IsDead)
                 {
-                    creature.Mass *= 0.98f;
+                    creature.Mass *= 0.99f;
                     creature.Mass -= 0.01f;
                     creature.Nutrients *= 0.98f;
                     creature.Nutrients -= 0.01f;
-                    creature.Energy *= 0.98f;
+                    creature.Energy *= 0.99f;
                     creature.Energy -= 0.01f;
                 }
                 else
