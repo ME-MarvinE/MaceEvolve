@@ -48,6 +48,7 @@ namespace MaceEvolve.Core.Models
         public int InitiatedAttacksCount { get; set; }
         public int SuccessfulAttacksCount { get; set; }
         public int AttacksEvadedCount { get; set; }
+        public int AttemptedEatsCount { get; set; }
         public bool IsDead { get; set; }
         public float Nutrients
         {

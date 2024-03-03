@@ -34,10 +34,16 @@ namespace MaceEvolve.Core.Models
         public bool? CreatureTryEat(TCreature creature)
         {
             IEnumerable<TFood> visibleFoodOrderedByDistance = VisibleFoodDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
-
             IFood closestFood = visibleFoodOrderedByDistance.FirstOrDefault();
 
-            if (closestFood?.Mass > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) <= (closestFood.Size + creature.Size) / 2)
+            creature.AttemptedEatsCount += 1;
+
+            if (closestFood == null)
+            {
+                return null;
+            }
+
+            if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestFood.MX, closestFood.MY) <= (closestFood.Size + creature.Size) / 2)
             {
                 float energyToTake = Math.Min(creature.EnergyPerEat, closestFood.Energy);
                 float nutrientsToTake = Math.Min(creature.NutrientsPerEat, closestFood.Nutrients);
@@ -263,14 +269,14 @@ namespace MaceEvolve.Core.Models
             IEnumerable<TCreature> visibleCreaturesOrderedByDistance = VisibleCreaturesDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             TCreature closestCreature = visibleCreaturesOrderedByDistance.FirstOrDefault();
 
+            creature.AttemptedAttacksCount += 1;
+
             if (closestCreature == null)
             {
                 return null;
             }
 
             bool? creatureAttackWasSuccessful;
-
-            creature.AttemptedAttacksCount += 1;
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
                 creature.InitiatedAttacksCount += 1;

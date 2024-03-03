@@ -18,6 +18,7 @@ namespace MaceEvolve.Core.Interfaces
         int InitiatedAttacksCount { get; set; }
         int SuccessfulAttacksCount { get; set; }
         int AttacksEvadedCount { get; set; }
+        int AttemptedEatsCount { get; set; }
         bool IsDead { get; set; }
         public float Nutrients { get; set; }
         public float MaxNutrients { get; set; }
