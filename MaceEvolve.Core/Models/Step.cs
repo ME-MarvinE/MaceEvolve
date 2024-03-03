@@ -12,6 +12,7 @@ namespace MaceEvolve.Core.Models
     {
         #region Fields
         private static float _creatureTurnSpeed = 25;
+        private static float _AttackInitiatorScoreModifier = 1.25f;
         #endregion
 
         #region Properties
@@ -373,19 +374,29 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        bool WouldCreatureLandAttack(TCreature initiator, TCreature target)
+        bool WouldCreatureLandAttack(TCreature initiator, TCreature defender)
         {
             if (initiator.IsDead)
             {
                 return false;
             }
 
-            if (target.IsDead)
+            if (defender.IsDead)
             {
                 return true;
             }
 
-            return true;
+            float initiatorScore = initiator.Mass * initiator.Energy * _AttackInitiatorScoreModifier;
+            float defenderScore = defender.Mass * defender.Energy;
+            float totalScore = initiatorScore + defenderScore;
+
+            if (totalScore == 0)
+            {
+                return false;
+            }
+
+            float ChanceForInitiatorToWin = initiatorScore / totalScore;
+            return MaceRandom.Current.NextFloat() <= ChanceForInitiatorToWin;
         }
         public void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions)
         {
