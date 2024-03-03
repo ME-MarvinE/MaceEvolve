@@ -3,13 +3,9 @@
     public enum CreatureInput
     {
         PercentMaxEnergy,
-        FoodToLeftPercentMaxEnergy,
         FoodToLeftPercentMaxNutrients,
-        FoodToRightPercentMaxEnergy,
         FoodToRightPercentMaxNutrients,
-        FoodToFrontPercentMaxEnergy,
         FoodToFrontPercentMaxNutrients,
-        FoodToBackPercentMaxEnergy,
         FoodToBackPercentMaxNutrients,
         DistanceFromTopWorldBound,
         DistanceFromLeftWorldBound,
@@ -25,6 +21,7 @@
         AngleToClosestVisibleCreature,
         AngleToClosestVisibleFood,
         ProximityToClosestVisibleCreature,
-        ProximityToClosestVisibleFood
+        ProximityToClosestVisibleFood,
+        ClosestVisibleFoodEnergyPercentage
     }
 }
