@@ -30,6 +30,7 @@
         PercentMassRequiredToReproduce,
         VisibleAreaCreatureDensity,
         VisibleAreaFoodDensity,
-        AngleToClosestVisibleCreature
+        AngleToClosestVisibleCreature,
+        AngleToClosestVisibleFood
     }
 }

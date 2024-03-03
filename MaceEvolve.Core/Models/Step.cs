@@ -427,11 +427,12 @@ namespace MaceEvolve.Core.Models
             TCreature closestCreatureToRight = null;
             TCreature closestCreatureToFront = null;
             TCreature closestCreatureToBack = null;
-            TCreature closestCreature = null;
+            TCreature closestVisibleCreature = null;
             TFood closestFoodToLeft = null;
             TFood closestFoodToRight = null;
             TFood closestFoodToFront = null;
             TFood closestFoodToBack = null;
+            TFood closestVisibleFood = null;
             float? visibleArea = null;
 
             foreach (var creatureInput in creatureInputs)
@@ -753,15 +754,28 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.AngleToClosestVisibleCreature:
-                            closestCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                            if (closestCreature == null)
+                            if (closestVisibleCreature == null)
                             {
                                 creatureInputValue = 0;
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(Globals.GetAngleBetweenF(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY), -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
+                                creatureInputValue = Globals.Map(Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY), -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
+                            }
+                            break;
+
+                        case CreatureInput.AngleToClosestVisibleFood:
+                            closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleFood == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                creatureInputValue = Globals.Map(Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY), -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
                             }
                             break;
 
