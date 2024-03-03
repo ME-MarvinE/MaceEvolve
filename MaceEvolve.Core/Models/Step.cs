@@ -290,7 +290,7 @@ namespace MaceEvolve.Core.Models
 
             return creatureAttackWasSuccessful;
         }
-        public bool InitiateAttack(TCreature initiatingCreature, TCreature defendingCreature)
+        public static bool InitiateAttack(TCreature initiatingCreature, TCreature defendingCreature)
         {
             initiatingCreature.InitiatedAttacksCount += 1;
             float initiatorAttackScore = GetAttackScore(initiatingCreature, true);
@@ -315,7 +315,7 @@ namespace MaceEvolve.Core.Models
 
             return wasAttackSuccessful;
         }
-        public void TransferAttackValues(TCreature winningCreature, float winnerAttackScore, bool winningCreatureWasInitiator, TCreature losingCreature, float loserAttackScore)
+        public static void TransferAttackValues(TCreature winningCreature, float winnerAttackScore, bool winningCreatureWasInitiator, TCreature losingCreature, float loserAttackScore)
         {
             float totalAttackScore = winnerAttackScore + loserAttackScore;
 
@@ -394,7 +394,7 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        float GetAttackScore(TCreature creature, bool isInitiator)
+        public static float GetAttackScore(TCreature creature, bool isInitiator)
         {
             if (creature.IsDead)
             {
