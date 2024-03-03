@@ -799,6 +799,21 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
+                        case CreatureInput.ProximityToClosestVisibleFood:
+                            closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleFood == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                float distanceFromClosestVisibleFood = Globals.GetDistanceFrom(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
+
+                                creatureInputValue = 1 - (distanceFromClosestVisibleFood / creature.SightRange);
+                            }
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }

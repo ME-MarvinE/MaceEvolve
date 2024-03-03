@@ -32,6 +32,7 @@
         VisibleAreaFoodDensity,
         AngleToClosestVisibleCreature,
         AngleToClosestVisibleFood,
-        ProximityToClosestVisibleCreature
+        ProximityToClosestVisibleCreature,
+        ProximityToClosestVisibleFood
     }
 }
