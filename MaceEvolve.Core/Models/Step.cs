@@ -429,10 +429,6 @@ namespace MaceEvolve.Core.Models
             IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
             List<TFood> visibleFoodOrderedByDistanceList = null;
             TCreature closestVisibleCreature = null;
-            TFood closestFoodToLeft = null;
-            TFood closestFoodToRight = null;
-            TFood closestFoodToFront = null;
-            TFood closestFoodToBack = null;
             TFood closestVisibleFood = null;
             float? visibleArea = null;
 
@@ -446,59 +442,6 @@ namespace MaceEvolve.Core.Models
                     {
                         case CreatureInput.PercentMaxEnergy:
                             creatureInputValue = creature.Energy / creature.MaxEnergy;
-                            break;
-
-                        case CreatureInput.FoodToLeftPercentMaxNutrients:
-                            closestFoodToLeft ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX <= creature.MX);
-
-                            if (closestFoodToLeft == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestFoodToLeft.Nutrients / closestFoodToLeft.MaxNutrients;
-                            }
-                            break;
-
-                        case CreatureInput.FoodToRightPercentMaxNutrients:
-                            closestFoodToRight ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MX >= creature.MX);
-
-                            if (closestFoodToRight == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestFoodToRight.Nutrients / closestFoodToRight.MaxNutrients;
-                            }
-                            break;
-
-                        case CreatureInput.FoodToFrontPercentMaxNutrients:
-                            closestFoodToFront ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MY <= creature.MY);
-
-                            if (closestFoodToFront == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestFoodToFront.Nutrients / closestFoodToFront.MaxNutrients;
-                            }
-                            break;
-
-                        case CreatureInput.FoodToBackPercentMaxNutrients:
-                            closestFoodToBack ??= visibleFoodOrderedByDistance.FirstOrDefault(x => x.MY >= creature.MY);
-
-                            if (closestFoodToBack == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestFoodToBack.Nutrients / closestFoodToBack.MaxNutrients;
-                            }
-
                             break;
 
                         case CreatureInput.DistanceFromTopWorldBound:

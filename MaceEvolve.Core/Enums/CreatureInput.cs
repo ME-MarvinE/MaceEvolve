@@ -3,10 +3,6 @@
     public enum CreatureInput
     {
         PercentMaxEnergy,
-        FoodToLeftPercentMaxNutrients,
-        FoodToRightPercentMaxNutrients,
-        FoodToFrontPercentMaxNutrients,
-        FoodToBackPercentMaxNutrients,
         DistanceFromTopWorldBound,
         DistanceFromLeftWorldBound,
         RandomInput,
