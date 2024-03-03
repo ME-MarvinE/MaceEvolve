@@ -140,7 +140,7 @@ namespace MaceEvolve.Core
         }
         public static bool ShouldGameObjectExist(IGameObject gameObject)
         {
-            return gameObject.Mass > 0;
+            return gameObject.Mass > 0 && gameObject.Size > 0;
         }
         public static double AngleToRadians(double angle)
         {
