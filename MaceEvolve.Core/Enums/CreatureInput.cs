@@ -29,6 +29,7 @@
         WillNaturallyHeal,
         PercentMassRequiredToReproduce,
         VisibleAreaCreatureDensity,
-        VisibleAreaFoodDensity
+        VisibleAreaFoodDensity,
+        AngleToClosestVisibleCreature
     }
 }

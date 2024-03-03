@@ -427,6 +427,7 @@ namespace MaceEvolve.Core.Models
             TCreature closestCreatureToRight = null;
             TCreature closestCreatureToFront = null;
             TCreature closestCreatureToBack = null;
+            TCreature closestCreature = null;
             TFood closestFoodToLeft = null;
             TFood closestFoodToRight = null;
             TFood closestFoodToFront = null;
@@ -748,6 +749,19 @@ namespace MaceEvolve.Core.Models
                                 }
 
                                 creatureInputValue = foodArea >= visibleArea ? 1 : foodArea / visibleArea.Value;
+                            }
+                            break;
+
+                        case CreatureInput.AngleToClosestVisibleCreature:
+                            closestCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                            if (closestCreature == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                creatureInputValue = Globals.Map(Globals.GetAngleBetweenF(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY), -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
                             }
                             break;
 
