@@ -649,6 +649,19 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
+                        case CreatureInput.ClosestVisibleFoodNutrientPercentage:
+                            closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleFood == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                creatureInputValue = closestVisibleFood.MaxNutrients == 0 ? 0 : closestVisibleFood.Nutrients / closestVisibleFood.MaxNutrients;
+                            }
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }

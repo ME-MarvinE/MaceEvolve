@@ -22,6 +22,7 @@
         AngleToClosestVisibleFood,
         ProximityToClosestVisibleCreature,
         ProximityToClosestVisibleFood,
-        ClosestVisibleFoodEnergyPercentage
+        ClosestVisibleFoodEnergyPercentage,
+        ClosestVisibleFoodNutrientPercentage
     }
 }
