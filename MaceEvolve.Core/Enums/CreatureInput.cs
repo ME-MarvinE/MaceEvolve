@@ -29,5 +29,7 @@
         ClosestVisibleCreatureSuccessfulAttackPercentage,
         SizeToClosestVisibleCreatureSize,
         ClosestVisibleCreatureSizeToSize,
+        AnyVisibleCreatures,
+        AnyVisibleFood,
     }
 }

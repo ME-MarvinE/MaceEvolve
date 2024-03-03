@@ -751,6 +751,14 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
+                        case CreatureInput.AnyVisibleCreatures:
+                            creatureInputValue = visibleCreatures.Count == 0 ? 0 : 1;
+                            break;
+
+                        case CreatureInput.AnyVisibleFood:
+                            creatureInputValue = visibleFood.Count == 0 ? 0 : 1;
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }
