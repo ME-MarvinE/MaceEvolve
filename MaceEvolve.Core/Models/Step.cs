@@ -281,16 +281,21 @@ namespace MaceEvolve.Core.Models
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
                 creature.InitiatedAttacksCount += 1;
-                bool wouldCreatureLandAttack = WouldCreatureLandAttack(creature, closestCreature);
+                float creatureAttackScore = GetAttackScore(creature, true);
+                float closestCreatureAttackScore = GetAttackScore(closestCreature, false);
+                float totalAttackScore = creatureAttackScore + closestCreatureAttackScore;
+                float chanceToLandAttack = totalAttackScore == 0 ? 0 : creatureAttackScore / totalAttackScore;
 
-                if (wouldCreatureLandAttack)
+                bool creatureLandedAttack = chanceToLandAttack != 0 && MaceRandom.Current.NextFloat() <= chanceToLandAttack;
+
+                if (creatureLandedAttack)
                 {
                     creature.SuccessfulAttacksCount += 1;
                     float percentOfTargetSize = closestCreature.Size == 0 ? 1 : creature.Size / closestCreature.Size;
-                    float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize);
-                    float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize);
-                    float healthToTake = Math.Min(closestCreature.HealthPoints, closestCreature.MaxHealthPoints * percentOfTargetSize);
-                    float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.Nutrients / 8) * percentOfTargetSize);
+                    float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize * chanceToLandAttack);
+                    float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize * chanceToLandAttack);
+                    float healthToTake = Math.Min(closestCreature.HealthPoints, closestCreature.MaxHealthPoints * percentOfTargetSize * chanceToLandAttack);
+                    float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.Nutrients / 8) * percentOfTargetSize * chanceToLandAttack);
 
                     closestCreature.Energy -= energyToTake;
                     creature.Energy += energyToTake;
@@ -299,13 +304,11 @@ namespace MaceEvolve.Core.Models
                     closestCreature.Mass -= massToTake;
                     creature.Mass += massToTake;
                     closestCreature.HealthPoints -= healthToTake;
-
                     creatureAttackWasSuccessful = true;
                 }
                 else
                 {
                     closestCreature.AttacksEvadedCount += 1;
-
                     creatureAttackWasSuccessful = false;
                 }
             }
@@ -374,29 +377,21 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        bool WouldCreatureLandAttack(TCreature initiator, TCreature defender)
+        float GetAttackScore(TCreature creature, bool isInitiator)
         {
-            if (initiator.IsDead)
+            if (creature.IsDead)
             {
-                return false;
+                return 0;
             }
 
-            if (defender.IsDead)
+            float attackScore = creature.Mass * creature.Energy;
+
+            if (isInitiator)
             {
-                return true;
+                attackScore *= _AttackInitiatorScoreModifier;
             }
 
-            float initiatorScore = initiator.Mass * initiator.Energy * _AttackInitiatorScoreModifier;
-            float defenderScore = defender.Mass * defender.Energy;
-            float totalScore = initiatorScore + defenderScore;
-
-            if (totalScore == 0)
-            {
-                return false;
-            }
-
-            float ChanceForInitiatorToWin = initiatorScore / totalScore;
-            return MaceRandom.Current.NextFloat() <= ChanceForInitiatorToWin;
+            return attackScore;
         }
         public void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions)
         {
