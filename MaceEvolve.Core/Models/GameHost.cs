@@ -519,6 +519,7 @@ namespace MaceEvolve.Core.Models
                     NutrientsPerEat = CreatureNutrientsPerEat,
                     MoveCost = 0.05f,
                     AttackCost = 5f,
+                    DefendCost = 4f,
                     HealthPoints = MaxGeneratedCreatureMass * 0.9f,
                     MaxHealthPoints = CreatureMaxHealthPoints,
                     NaturalHealInterval = CreatureNaturalHealInterval,

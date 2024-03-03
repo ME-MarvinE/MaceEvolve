@@ -8,6 +8,7 @@ namespace MaceEvolve.Core.Interfaces
         NeuralNetwork Brain { get; set; }
         float MoveCost { get; set; }
         float AttackCost { get; set; }
+        float DefendCost { get; set; }
         float Energy { get; set; }
         float MaxEnergy { get; set; }
         float Speed { get; set; }

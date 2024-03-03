@@ -92,6 +92,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.Metabolism = creature.Metabolism;
                 newCreature.MoveCost = creature.MoveCost;
                 newCreature.AttackCost = creature.AttackCost;
+                newCreature.DefendCost = creature.DefendCost;
                 newCreature.MaxAge = creature.MaxAge;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
@@ -340,7 +341,7 @@ namespace MaceEvolve.Core.Models
             }
             else
             {
-                winningCreature.Energy -= winningCreature.AttackCost * 0.8f * winningCreatureEffort;
+                winningCreature.Energy -= winningCreature.DefendCost * winningCreatureEffort;
             }
         }
         public void CreatureTurnLeft(TCreature creature)

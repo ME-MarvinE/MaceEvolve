@@ -17,6 +17,7 @@ namespace MaceEvolve.Core.Models
         public NeuralNetwork Brain { get; set; }
         public float MoveCost { get; set; } = 0.25f;
         public float AttackCost { get; set; } = 0.25f;
+        public float DefendCost { get; set; } = 0.2f;
         public float Energy
         {
             get
