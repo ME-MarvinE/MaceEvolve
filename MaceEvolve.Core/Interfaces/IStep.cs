@@ -30,6 +30,7 @@ namespace MaceEvolve.Core.Interfaces
         bool? CreatureTryEat(TCreature creature);
         bool? CreatureTryAttack(TCreature creature);
         IList<TCreature> CreatureTryReproduce(TCreature creature);
+        void CreatureDoNothing();
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
         Dictionary<CreatureInput, float> GenerateCreatureInputValues(IEnumerable<CreatureInput> creatureInput, TCreature creature);
         #endregion
