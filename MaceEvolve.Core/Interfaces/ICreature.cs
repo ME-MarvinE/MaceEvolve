@@ -14,7 +14,7 @@ namespace MaceEvolve.Core.Interfaces
         float SightRange { get; set; }
         float Metabolism { get; set; }
         int FoodEaten { get; set; }
-        int SuccessfulAttackCount { get; set; }
+        int AttackCount { get; set; }
         bool IsDead { get; set; }
         public float Nutrients { get; set; }
         public float MaxNutrients { get; set; }

@@ -267,6 +267,8 @@ namespace MaceEvolve.Core.Models
 
             if (closestCreature?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
+                creature.AttackCount += 1;
+
                 float percentOfTargetSize = closestCreature.Size == 0 ? 1 : creature.Size / closestCreature.Size;
                 float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize);
                 float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize);
@@ -280,8 +282,6 @@ namespace MaceEvolve.Core.Models
                 closestCreature.Mass -= massToTake;
                 creature.Mass += massToTake;
                 closestCreature.HealthPoints -= healthToTake;
-                creature.SuccessfulAttackCount += 1;
-
                 creatureSuccessfullyAttacked = true;
             }
             else
