@@ -20,6 +20,7 @@
         ProximityToClosestVisibleFood,
         ClosestVisibleFoodEnergyPercentage,
         ClosestVisibleFoodNutrientPercentage,
-        ClosestVisibleCreatureEnergyPercentage
+        ClosestVisibleCreatureEnergyPercentage,
+        ClosestVisibleCreatureAgePercentage
     }
 }

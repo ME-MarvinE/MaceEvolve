@@ -618,6 +618,19 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
+                        case CreatureInput.ClosestVisibleCreatureAgePercentage:
+                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleCreature == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                creatureInputValue = closestVisibleCreature.MaxAge == 0 ? 0 : closestVisibleCreature.Age / closestVisibleCreature.MaxAge;
+                            }
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }
