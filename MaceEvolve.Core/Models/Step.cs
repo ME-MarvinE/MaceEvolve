@@ -31,7 +31,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public bool CreatureTryEat(TCreature creature)
+        public bool? CreatureTryEat(TCreature creature)
         {
             IEnumerable<TFood> visibleFoodOrderedByDistance = VisibleFoodDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
 
@@ -55,7 +55,7 @@ namespace MaceEvolve.Core.Models
             }
             else
             {
-                return false;
+                return null;
             }
         }
         public virtual IList<TCreature> CreatureTryReproduce(TCreature creature)
