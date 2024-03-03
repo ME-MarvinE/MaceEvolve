@@ -478,7 +478,7 @@ namespace MaceEvolve.Core.Models
                     switch (creatureInput)
                     {
                         case CreatureInput.PercentMaxEnergy:
-                            creatureInputValue = creature.Energy / creature.MaxEnergy;
+                            creatureInputValue = creature.MaxEnergy == 0 ? 1 : creature.Energy / creature.MaxEnergy;
                             break;
 
                         case CreatureInput.DistanceFromTopWorldBound:
@@ -494,26 +494,26 @@ namespace MaceEvolve.Core.Models
                             break;
 
                         case CreatureInput.PercentNutrientsRequiredToReproduce:
-                            creatureInputValue = creature.Nutrients / creature.NutrientsRequiredToReproduce;
+                            creatureInputValue = creature.NutrientsRequiredToReproduce == 0 ? 1 : creature.Nutrients / creature.NutrientsRequiredToReproduce;
                             break;
 
                         case CreatureInput.PercentEnergyRequiredToReproduce:
-                            creatureInputValue = creature.Energy / creature.EnergyRequiredToReproduce;
+                            creatureInputValue = creature.EnergyRequiredToReproduce == 0 ? 1 : creature.Energy / creature.EnergyRequiredToReproduce;
                             break;
 
                         case CreatureInput.PercentMaxAge:
-                            creatureInputValue = (float)creature.Age / creature.MaxAge;
+                            creatureInputValue = creature.MaxAge == 0 ? 1 : (float)creature.Age / creature.MaxAge;
                             break;
                         case CreatureInput.PercentMaxHealth:
-                            creatureInputValue = creature.HealthPoints / creature.MaxHealthPoints;
+                            creatureInputValue = creature.MaxHealthPoints == 0 ? 1 : creature.HealthPoints / creature.MaxHealthPoints;
                             break;
 
                         case CreatureInput.WillNaturallyHeal:
-                            creatureInputValue = (float)creature.StepsSinceLastNaturalHeal / creature.NaturalHealInterval;
+                            creatureInputValue = creature.NaturalHealInterval == 0 ? 1 : (float)creature.StepsSinceLastNaturalHeal / creature.NaturalHealInterval;
                             break;
 
                         case CreatureInput.PercentMassRequiredToReproduce:
-                            creatureInputValue = creature.Mass / creature.MassRequiredToReproduce;
+                            creatureInputValue = creature.MassRequiredToReproduce == 0 ? 1 : creature.Mass / creature.MassRequiredToReproduce;
                             break;
 
                         case CreatureInput.VisibleAreaCreatureDensity:
@@ -595,7 +595,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestVisibleCreature = Globals.GetDistanceFrom(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
 
-                                creatureInputValue = 1 - (distanceFromClosestVisibleCreature / creature.SightRange);
+                                creatureInputValue = creature.SightRange == 0 ? 1 : 1 - (distanceFromClosestVisibleCreature / creature.SightRange);
                             }
                             break;
 
@@ -610,7 +610,7 @@ namespace MaceEvolve.Core.Models
                             {
                                 float distanceFromClosestVisibleFood = Globals.GetDistanceFrom(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
 
-                                creatureInputValue = 1 - (distanceFromClosestVisibleFood / creature.SightRange);
+                                creatureInputValue = creature.SightRange == 0 ? 1 : 1 - (distanceFromClosestVisibleFood / creature.SightRange);
                             }
                             break;
 
