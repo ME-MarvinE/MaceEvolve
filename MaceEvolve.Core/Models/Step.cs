@@ -664,7 +664,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = closestVisibleCreature.MaxAge == 0 ? 0 : closestVisibleCreature.Age / closestVisibleCreature.MaxAge;
+                                creatureInputValue = closestVisibleCreature.MaxAge == 0 ? 0 : (float)closestVisibleCreature.Age / closestVisibleCreature.MaxAge;
                             }
                             break;
 
