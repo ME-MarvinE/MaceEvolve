@@ -258,12 +258,12 @@ namespace MaceEvolve.Core.Models
         {
 
         }
-        public bool CreatureTryAttack(TCreature creature)
+        public bool? CreatureTryAttack(TCreature creature)
         {
             IEnumerable<TCreature> visibleCreaturesOrderedByDistance = VisibleCreaturesDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             TCreature closestCreature = visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-            bool creatureSuccessfullyAttacked;
+            bool? creatureSuccessfullyAttacked;
 
             if (closestCreature?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
@@ -286,7 +286,7 @@ namespace MaceEvolve.Core.Models
             }
             else
             {
-                creatureSuccessfullyAttacked = false;
+                creatureSuccessfullyAttacked = null;
             }
 
             creature.Energy -= creature.AttackCost;
