@@ -19,6 +19,7 @@ namespace MaceEvolve.Core.Models
         public int MaxCreatureProcessNodes { get; set; } = 3;
         public float ConnectionWeightBound { get; set; } = 4;
         public bool LoopWorldBounds { get; set; }
+        private static float _creatureTurnSpeed = 25;
         public ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; } = new ConcurrentDictionary<TCreature, List<TCreature>>();
         public ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; } = new ConcurrentDictionary<TCreature, List<TFood>>();
         public ConcurrentDictionary<TCreature, float> CreatureToCachedAreaDict { get; } = new ConcurrentDictionary<TCreature, float>();
@@ -290,11 +291,11 @@ namespace MaceEvolve.Core.Models
         }
         public void CreatureTurnLeft(TCreature creature)
         {
-            CreatureTurn(creature, -90);
+            CreatureTurn(creature, -_creatureTurnSpeed);
         }
         public void CreatureTurnRight(TCreature creature)
         {
-            CreatureTurn(creature, 90);
+            CreatureTurn(creature, _creatureTurnSpeed);
         }
         private void CreatureTurn(TCreature creature, float angle)
         {
