@@ -17,8 +17,8 @@ namespace MaceEvolve.WinForms.Models
         {
             IList<TCreature> offspring = base.CreatureTryReproduce(creature);
 
-            int offSpringRed = (int)Globals.Clamp(CreatureOffspringColor.R * (creature.FoodEaten == 0 ? 1 : (double)creature.TimesAttackedSuccessfully / creature.FoodEaten), 0, 175);
-            int offSpringBlue = (int)Globals.Clamp(CreatureOffspringColor.B * (creature.TimesAttackedSuccessfully == 0 ? 1 : (double)creature.FoodEaten / creature.TimesAttackedSuccessfully), 0, 200);
+            int offSpringRed = (int)Globals.Clamp(CreatureOffspringColor.R * (creature.FoodEaten == 0 ? 1 : (double)creature.SuccessfulAttackCount / creature.FoodEaten), 0, 175);
+            int offSpringBlue = (int)Globals.Clamp(CreatureOffspringColor.B * (creature.SuccessfulAttackCount == 0 ? 1 : (double)creature.FoodEaten / creature.SuccessfulAttackCount), 0, 200);
 
             foreach (var creatureOffSpring in offspring)
             {

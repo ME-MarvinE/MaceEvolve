@@ -280,7 +280,7 @@ namespace MaceEvolve.Core.Models
                 closestCreature.Mass -= massToTake;
                 creature.Mass += massToTake;
                 closestCreature.HealthPoints -= healthToTake;
-                creature.TimesAttackedSuccessfully += 1;
+                creature.SuccessfulAttackCount += 1;
 
                 creatureSuccessfullyAttacked = true;
             }
