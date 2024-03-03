@@ -683,11 +683,11 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureInput.AggressionPercentage:
                             int attemptedAttacksAndEats = creature.AttemptedAttacksCount + creature.AttemptedEatsCount;
-                            creatureInputValue = attemptedAttacksAndEats == 0 ? 0 : creature.AttemptedAttacksCount / attemptedAttacksAndEats;
+                            creatureInputValue = attemptedAttacksAndEats == 0 ? 0 : (float)creature.AttemptedAttacksCount / attemptedAttacksAndEats;
                             break;
 
                         case CreatureInput.SuccessfulAttackPercentage:
-                            creatureInputValue = creature.InitiatedAttacksCount == 0 ? 0 : creature.SuccessfulAttacksCount / creature.InitiatedAttacksCount;
+                            creatureInputValue = creature.InitiatedAttacksCount == 0 ? 0 : (float)creature.SuccessfulAttacksCount / creature.InitiatedAttacksCount;
                             break;
 
                         case CreatureInput.ClosestVisibleCreatureAggressionPercentage:
@@ -700,7 +700,7 @@ namespace MaceEvolve.Core.Models
                             else
                             {
                                 int closestVisibleCreatureAttemptedAttacksAndEats = closestVisibleCreature.AttemptedAttacksCount + closestVisibleCreature.AttemptedEatsCount;
-                                creatureInputValue = closestVisibleCreatureAttemptedAttacksAndEats == 0 ? 0 : closestVisibleCreature.AttemptedAttacksCount / closestVisibleCreatureAttemptedAttacksAndEats;
+                                creatureInputValue = closestVisibleCreatureAttemptedAttacksAndEats == 0 ? 0 : (float)closestVisibleCreature.AttemptedAttacksCount / closestVisibleCreatureAttemptedAttacksAndEats;
                             }
                             break;
 
@@ -713,7 +713,7 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = closestVisibleCreature.InitiatedAttacksCount == 0 ? 0 : closestVisibleCreature.SuccessfulAttacksCount / closestVisibleCreature.InitiatedAttacksCount;
+                                creatureInputValue = closestVisibleCreature.InitiatedAttacksCount == 0 ? 0 : (float)closestVisibleCreature.SuccessfulAttacksCount / closestVisibleCreature.InitiatedAttacksCount;
                             }
                             break;
 
