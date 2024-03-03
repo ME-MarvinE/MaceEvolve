@@ -280,6 +280,11 @@ namespace MaceEvolve.Core.Models
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
                creatureAttackWasSuccessful = InitiateAttack(creature, closestCreature);
+
+                if (!creatureAttackWasSuccessful.Value)
+                {
+                    closestCreature.Energy -= closestCreature.AttackCost * 0.5f;
+                }
             }
             else
             {
