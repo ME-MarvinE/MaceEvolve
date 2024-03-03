@@ -301,8 +301,8 @@ namespace MaceEvolve.Core.Models
                 }
             });
 
-            CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => x.Mass > 0));
-            CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => x.Mass > 0));
+            CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => Globals.ShouldGameObjectExist(x)));
+            CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => Globals.ShouldGameObjectExist(x)));
             CurrentStep.VisibleCreaturesDict.Clear();
             CurrentStep.VisibleFoodDict.Clear();
             CurrentStep.CreatureToCachedAreaDict.Clear();

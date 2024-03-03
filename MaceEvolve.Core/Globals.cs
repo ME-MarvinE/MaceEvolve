@@ -131,12 +131,16 @@ namespace MaceEvolve.Core
         }
         public static bool ShouldCreatureBeDead(ICreature creature)
         {
-            if (creature.Energy <= 0 || creature.HealthPoints <= 0 || creature.Mass <= 0 || creature.Age > creature.MaxAge)
+            if (creature.Energy <= 0 || creature.HealthPoints <= 0 || creature.Age > creature.MaxAge || !ShouldGameObjectExist(creature))
             {
                 return true;
             }
 
             return false;
+        }
+        public static bool ShouldGameObjectExist(IGameObject gameObject)
+        {
+            return gameObject.Mass > 0;
         }
         public static double AngleToRadians(double angle)
         {
