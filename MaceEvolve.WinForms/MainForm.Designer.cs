@@ -44,6 +44,10 @@ namespace MaceEvolve.WinForms
             btnLoadStep = new Button();
             btnSaveCurrentStep = new Button();
             btnBenchmark = new Button();
+            nudSimulationTPS = new NumericUpDown();
+            lblSimulationTPS = new Label();
+            btnHideUI = new Button();
+            ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).BeginInit();
             SuspendLayout();
             // 
             // StartButton
@@ -213,13 +217,52 @@ namespace MaceEvolve.WinForms
             btnBenchmark.UseVisualStyleBackColor = false;
             btnBenchmark.Click += btnBenchmark_Click;
             // 
+            // nudSimulationTPS
+            // 
+            nudSimulationTPS.Location = new System.Drawing.Point(724, 204);
+            nudSimulationTPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
+            nudSimulationTPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            nudSimulationTPS.Name = "nudSimulationTPS";
+            nudSimulationTPS.Size = new System.Drawing.Size(48, 23);
+            nudSimulationTPS.TabIndex = 7;
+            nudSimulationTPS.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            nudSimulationTPS.ValueChanged += nudSimulationTPS_ValueChanged;
+            // 
+            // lblSimulationTPS
+            // 
+            lblSimulationTPS.AutoSize = true;
+            lblSimulationTPS.BackColor = System.Drawing.Color.Transparent;
+            lblSimulationTPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblSimulationTPS.ForeColor = System.Drawing.Color.White;
+            lblSimulationTPS.Location = new System.Drawing.Point(682, 204);
+            lblSimulationTPS.Name = "lblSimulationTPS";
+            lblSimulationTPS.Size = new System.Drawing.Size(36, 21);
+            lblSimulationTPS.TabIndex = 4;
+            lblSimulationTPS.Text = "TPS";
+            // 
+            // btnHideUI
+            // 
+            btnHideUI.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnHideUI.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnHideUI.Cursor = Cursors.Hand;
+            btnHideUI.FlatStyle = FlatStyle.Flat;
+            btnHideUI.Location = new System.Drawing.Point(12, 622);
+            btnHideUI.Name = "btnHideUI";
+            btnHideUI.Size = new System.Drawing.Size(32, 27);
+            btnHideUI.TabIndex = 1;
+            btnHideUI.Text = "UI";
+            btnHideUI.UseVisualStyleBackColor = false;
+            btnHideUI.Click += btnHideUI_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = System.Drawing.Color.FromArgb(32, 32, 32);
             ClientSize = new System.Drawing.Size(784, 661);
+            Controls.Add(nudSimulationTPS);
             Controls.Add(lblSimulationRunning);
+            Controls.Add(lblSimulationTPS);
             Controls.Add(lblGenEndsIn);
             Controls.Add(lblGenerationCount);
             Controls.Add(btnTrackBestCreature);
@@ -227,18 +270,19 @@ namespace MaceEvolve.WinForms
             Controls.Add(ResetButton);
             Controls.Add(StopButton);
             Controls.Add(btnSaveCurrentStep);
+            Controls.Add(btnHideUI);
             Controls.Add(btnBenchmark);
             Controls.Add(btnLoadStep);
             Controls.Add(btnFastFoward);
             Controls.Add(StartButton);
-            KeyPreview = true;
+            DoubleBuffered = true;
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Mace Evolution";
             Load += MainForm_Load;
             Paint += MainForm_Paint;
-            KeyDown += MainForm_KeyDown;
             MouseClick += MainForm_MouseClick;
+            ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -258,5 +302,8 @@ namespace MaceEvolve.WinForms
         private Button btnLoadStep;
         private Button btnSaveCurrentStep;
         private Button btnBenchmark;
+        private NumericUpDown nudSimulationTPS;
+        private Label lblSimulationTPS;
+        private Button btnHideUI;
     }
 }

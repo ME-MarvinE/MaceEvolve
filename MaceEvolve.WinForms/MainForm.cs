@@ -20,8 +20,24 @@ namespace MaceEvolve.WinForms
 {
     public partial class MainForm : Form
     {
+        #region Fields
+        private int _simulationTPS;
+        #endregion
+
         #region Properties
-        public int SimulationTPS { get; set; }
+        public int SimulationTPS
+        {
+            get
+            {
+                return _simulationTPS;
+            }
+            set
+            {
+                _simulationTPS = value;
+                nudSimulationTPS.Value = value;
+                GameTimer.Interval = Math.Max((int)SimulationMspt, 1);
+            }
+        }
         public bool SimulationRunning { get; set; }
         public int CurrentRunTicksElapsed { get; set; }
         public long AllRunsElapsed { get; set; }
@@ -340,7 +356,7 @@ namespace MaceEvolve.WinForms
 
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
-            GameTimer.Interval = (int)SimulationMspt;
+            GameTimer.Interval = Math.Max((int)SimulationMspt, 1);
 
             BestCreatureNetworkViewerForm = new NetworkViewerForm();
             BestCreatureNetworkViewerForm.NetworkViewer = new NeuralNetworkViewer();
@@ -372,14 +388,9 @@ namespace MaceEvolve.WinForms
         {
             GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
         }
-        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        private void ToggleUI(bool? isVisible = null)
         {
-            bool isControlMenuVisible = StartButton.Visible;
-
-            if (e.KeyCode == Keys.D0)
-            {
-                isControlMenuVisible = !isControlMenuVisible;
-            }
+            bool isControlMenuVisible = isVisible ?? !StartButton.Visible;
 
             StartButton.Visible = isControlMenuVisible;
             StopButton.Visible = isControlMenuVisible;
@@ -390,6 +401,8 @@ namespace MaceEvolve.WinForms
             btnBenchmark.Visible = isControlMenuVisible;
             btnSaveCurrentStep.Visible = isControlMenuVisible;
             btnLoadStep.Visible = isControlMenuVisible;
+            nudSimulationTPS.Visible = isControlMenuVisible;
+            lblSimulationTPS.Visible = isControlMenuVisible;
         }
         private void UpdateUIText()
         {
@@ -471,6 +484,14 @@ namespace MaceEvolve.WinForms
         private static PointF GetAngledLineTarget(float locationX, float locationY, float distance, float angle)
         {
             return new PointF(locationX + MathF.Cos(Globals.AngleToRadians(angle)) * distance, locationY + MathF.Sin(Globals.AngleToRadians(angle)) * distance);
+        }
+        private void nudSimulationTPS_ValueChanged(object sender, EventArgs e)
+        {
+            SimulationTPS = (int)nudSimulationTPS.Value;
+        }
+        private void btnHideUI_Click(object sender, EventArgs e)
+        {
+            ToggleUI();
         }
         #endregion
     }
