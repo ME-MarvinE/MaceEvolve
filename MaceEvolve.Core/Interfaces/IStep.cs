@@ -28,6 +28,7 @@ namespace MaceEvolve.Core.Interfaces
         void CreatureMoveLeft(TCreature creature);
         void CreatureMoveRight(TCreature creature);
         bool? CreatureTryEat(TCreature creature);
+        bool? CreatureTryAttack(TCreature creature);
         IList<TCreature> CreatureTryReproduce(TCreature creature);
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
         Dictionary<CreatureInput, float> GenerateCreatureInputValues(IEnumerable<CreatureInput> creatureInput, TCreature creature);
