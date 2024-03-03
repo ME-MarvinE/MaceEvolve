@@ -631,6 +631,19 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
+                        case CreatureInput.ClosestVisibleCreatureHealthPercentage:
+                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleCreature == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                creatureInputValue = closestVisibleCreature.MaxHealthPoints == 0 ? 0 : closestVisibleCreature.HealthPoints / closestVisibleCreature.MaxHealthPoints;
+                            }
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }
