@@ -17,8 +17,8 @@ namespace MaceEvolve.SilkGL.Models
         {
             IList<TCreature> offspring = base.CreatureTryReproduce(creature);
 
-            int offSpringRed = (int)Globals.Clamp(CreatureOffspringColor.R * (creature.FoodEaten == 0 ? 1 : (double)creature.AttackCount / creature.FoodEaten), 0, 175);
-            int offSpringBlue = (int)Globals.Clamp(CreatureOffspringColor.B * (creature.AttackCount == 0 ? 1 : (double)creature.FoodEaten / creature.AttackCount), 0, 200);
+            int offSpringRed = (int)Globals.Clamp(CreatureOffspringColor.R * (creature.FoodEaten == 0 ? 1 : (double)creature.InitiatedAttacksCount / creature.FoodEaten), 0, 175);
+            int offSpringBlue = (int)Globals.Clamp(CreatureOffspringColor.B * (creature.InitiatedAttacksCount == 0 ? 1 : (double)creature.FoodEaten / creature.InitiatedAttacksCount), 0, 200);
 
             foreach (var creatureOffSpring in offspring)
             {

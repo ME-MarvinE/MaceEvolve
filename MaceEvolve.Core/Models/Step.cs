@@ -268,35 +268,47 @@ namespace MaceEvolve.Core.Models
                 return null;
             }
 
-            bool? creatureSuccessfullyAttacked;
+            bool? creatureAttackWasSuccessful;
 
+            creature.AttemptedAttacksCount += 1;
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
-                creature.AttackCount += 1;
+                creature.InitiatedAttacksCount += 1;
+                bool wouldCreatureLandAttack = WouldCreatureLandAttack(creature, closestCreature);
 
-                float percentOfTargetSize = closestCreature.Size == 0 ? 1 : creature.Size / closestCreature.Size;
-                float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize);
-                float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize);
-                float healthToTake = Math.Min(closestCreature.HealthPoints, closestCreature.MaxHealthPoints * percentOfTargetSize);
-                float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.Nutrients / 8) * percentOfTargetSize);
+                if (wouldCreatureLandAttack)
+                {
+                    creature.SuccessfulAttacksCount += 1;
+                    float percentOfTargetSize = closestCreature.Size == 0 ? 1 : creature.Size / closestCreature.Size;
+                    float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize);
+                    float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize);
+                    float healthToTake = Math.Min(closestCreature.HealthPoints, closestCreature.MaxHealthPoints * percentOfTargetSize);
+                    float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.Nutrients / 8) * percentOfTargetSize);
 
-                closestCreature.Energy -= energyToTake;
-                creature.Energy += energyToTake;
-                closestCreature.Nutrients -= nutrientsToTake;
-                creature.Nutrients += nutrientsToTake;
-                closestCreature.Mass -= massToTake;
-                creature.Mass += massToTake;
-                closestCreature.HealthPoints -= healthToTake;
-                creatureSuccessfullyAttacked = true;
+                    closestCreature.Energy -= energyToTake;
+                    creature.Energy += energyToTake;
+                    closestCreature.Nutrients -= nutrientsToTake;
+                    creature.Nutrients += nutrientsToTake;
+                    closestCreature.Mass -= massToTake;
+                    creature.Mass += massToTake;
+                    closestCreature.HealthPoints -= healthToTake;
+
+                    creatureAttackWasSuccessful = true;
+                }
+                else
+                {
+                    closestCreature.AttacksEvadedCount += 1;
+
+                    creatureAttackWasSuccessful = false;
+                }
             }
             else
             {
-                creatureSuccessfullyAttacked = null;
+                creatureAttackWasSuccessful = null;
             }
 
             creature.Energy -= creature.AttackCost;
-
-            return creatureSuccessfullyAttacked;
+            return creatureAttackWasSuccessful;
         }
         public void CreatureTurnLeft(TCreature creature)
         {
@@ -354,6 +366,20 @@ namespace MaceEvolve.Core.Models
                     }
                 }
             }
+        }
+        bool WouldCreatureLandAttack(TCreature initiator, TCreature target)
+        {
+            if (initiator.IsDead)
+            {
+                return false;
+            }
+
+            if (target.IsDead)
+            {
+                return true;
+            }
+
+            return true;
         }
         public void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions)
         {

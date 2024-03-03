@@ -44,7 +44,10 @@ namespace MaceEvolve.Core.Models
         public float SightRange { get; set; } = 200;
         public float Metabolism { get; set; } = 0.1f;
         public int FoodEaten { get; set; }
-        public int AttackCount { get; set; }
+        public int AttemptedAttacksCount { get; set; }
+        public int InitiatedAttacksCount { get; set; }
+        public int SuccessfulAttacksCount { get; set; }
+        public int AttacksEvadedCount { get; set; }
         public bool IsDead { get; set; }
         public float Nutrients
         {
