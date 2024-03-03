@@ -681,6 +681,20 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
+                        case CreatureInput.ClosestVisibleCreatureAggression:
+                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleCreature == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else
+                            {
+                                int attemptedAttacksAndEats = closestVisibleCreature.AttemptedAttacksCount + closestVisibleCreature.AttemptedEatsCount;
+                                creatureInputValue = attemptedAttacksAndEats == 0 ? 0 : closestVisibleCreature.AttemptedAttacksCount / attemptedAttacksAndEats;
+                            }
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }
