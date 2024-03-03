@@ -1,4 +1,5 @@
 using MaceEvolve.Core;
+using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.JsonContractResolvers;
@@ -84,6 +85,26 @@ namespace MaceEvolve.WinForms
         {
             string serializedStep = File.ReadAllText(filePath);
             GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood>>(serializedStep, LoadStepSerializerSettings);
+
+            foreach (var creature in savedStep.Creatures)
+            {
+                foreach (var nodeId in creature.Brain.NodeIdsToNodesDict.Keys.ToList())
+                {
+                    if (creature.Brain.NodeIdsToNodesDict[nodeId].CreatureInput != null && Enum.GetName<CreatureInput>(creature.Brain.NodeIdsToNodesDict[nodeId].CreatureInput.Value) == null)
+                    {
+                        creature.Brain.RemoveNode(nodeId, true);
+                    }
+                }
+
+                foreach (var nodeId in creature.Brain.NodeIdsToNodesDict.Keys.ToList())
+                {
+                    if (creature.Brain.NodeIdsToNodesDict[nodeId].CreatureAction != null && Enum.GetName<CreatureAction>(creature.Brain.NodeIdsToNodesDict[nodeId].CreatureAction.Value) == null)
+                    {
+                        creature.Brain.RemoveNode(nodeId, true);
+                    }
+                }
+            }
+
             return savedStep;
         }
         public void Reset()

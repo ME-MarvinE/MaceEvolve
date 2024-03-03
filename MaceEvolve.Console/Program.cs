@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using MaceEvolve.Core.Enums;
 
 namespace MaceEvolve.Console
 {
@@ -190,6 +191,26 @@ namespace MaceEvolve.Console
         {
             string serializedStep = File.ReadAllText(filePath);
             Step<Creature, Food> savedStep = JsonConvert.DeserializeObject<Step<Creature, Food>>(serializedStep, LoadStepSerializerSettings);
+
+            foreach (var creature in savedStep.Creatures)
+            {
+                foreach (var nodeId in creature.Brain.NodeIdsToNodesDict.Keys.ToList())
+                {
+                    if (creature.Brain.NodeIdsToNodesDict[nodeId].CreatureInput != null && Enum.GetName<CreatureInput>(creature.Brain.NodeIdsToNodesDict[nodeId].CreatureInput.Value) == null)
+                    {
+                        creature.Brain.RemoveNode(nodeId, true);
+                    }
+                }
+
+                foreach (var nodeId in creature.Brain.NodeIdsToNodesDict.Keys.ToList())
+                {
+                    if (creature.Brain.NodeIdsToNodesDict[nodeId].CreatureAction != null && Enum.GetName<CreatureAction>(creature.Brain.NodeIdsToNodesDict[nodeId].CreatureAction.Value) == null)
+                    {
+                        creature.Brain.RemoveNode(nodeId, true);
+                    }
+                }
+            }
+
             return savedStep;
         }
         public void UpdateSimulation()
