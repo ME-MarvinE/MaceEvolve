@@ -717,6 +717,40 @@ namespace MaceEvolve.Core.Models
                             }
                             break;
 
+                        case CreatureInput.SizeToClosestVisibleCreatureSize:
+                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleCreature == null)
+                            {
+                                creatureInputValue = 1;
+                            }
+                            else if (creature.Size == closestVisibleCreature.Size)
+                            {
+                                creatureInputValue = 1;
+                            }
+                            else
+                            {
+                                creatureInputValue = closestVisibleCreature.Size == 0 ? 1 : creature.Size / closestVisibleCreature.Size;
+                            }
+                            break;
+
+                        case CreatureInput.ClosestVisibleCreatureSizeToSize:
+                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                            if (closestVisibleCreature == null)
+                            {
+                                creatureInputValue = 0;
+                            }
+                            else if (creature.Size == closestVisibleCreature.Size)
+                            {
+                                creatureInputValue = 1;
+                            }
+                            else
+                            {
+                                creatureInputValue = creature.Size == 0 ? 1 : closestVisibleCreature.Size / creature.Size;
+                            }
+                            break;
+
                         default:
                             throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
                     }

@@ -27,5 +27,7 @@
         ClosestVisibleCreatureHealthPercentage,
         ClosestVisibleCreatureAggressionPercentage,
         ClosestVisibleCreatureSuccessfulAttackPercentage,
+        SizeToClosestVisibleCreatureSize,
+        ClosestVisibleCreatureSizeToSize,
     }
 }
