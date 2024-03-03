@@ -265,7 +265,7 @@ namespace MaceEvolve.Core.Models
 
             bool? creatureSuccessfullyAttacked;
 
-            if (closestCreature?.Energy > 0 && Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
+            if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
                 creature.AttackCount += 1;
 
