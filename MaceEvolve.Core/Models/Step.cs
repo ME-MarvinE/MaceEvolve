@@ -269,7 +269,6 @@ namespace MaceEvolve.Core.Models
         {
             IEnumerable<TCreature> visibleCreaturesOrderedByDistance = VisibleCreaturesDict[creature].OrderBy(x => Globals.GetDistanceFrom(creature.X, creature.Y, x.X, x.Y));
             TCreature closestCreature = visibleCreaturesOrderedByDistance.FirstOrDefault();
-
             creature.AttemptedAttacksCount += 1;
 
             if (closestCreature == null)
@@ -280,37 +279,7 @@ namespace MaceEvolve.Core.Models
             bool? creatureAttackWasSuccessful;
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
-                creature.InitiatedAttacksCount += 1;
-                float creatureAttackScore = GetAttackScore(creature, true);
-                float closestCreatureAttackScore = GetAttackScore(closestCreature, false);
-                float totalAttackScore = creatureAttackScore + closestCreatureAttackScore;
-                float chanceToLandAttack = totalAttackScore == 0 ? 0 : creatureAttackScore / totalAttackScore;
-
-                bool creatureLandedAttack = chanceToLandAttack != 0 && MaceRandom.Current.NextFloat() <= chanceToLandAttack;
-
-                if (creatureLandedAttack)
-                {
-                    creature.SuccessfulAttacksCount += 1;
-                    float percentOfTargetSize = closestCreature.Size == 0 ? 1 : creature.Size / closestCreature.Size;
-                    float energyToTake = Math.Min(closestCreature.Energy, (closestCreature.MaxEnergy / 8) * percentOfTargetSize * chanceToLandAttack);
-                    float massToTake = Math.Min(closestCreature.Mass, (closestCreature.Mass / 8) * percentOfTargetSize * chanceToLandAttack);
-                    float healthToTake = Math.Min(closestCreature.HealthPoints, closestCreature.MaxHealthPoints * percentOfTargetSize * chanceToLandAttack);
-                    float nutrientsToTake = Math.Min(closestCreature.Nutrients, (closestCreature.Nutrients / 8) * percentOfTargetSize * chanceToLandAttack);
-
-                    closestCreature.Energy -= energyToTake;
-                    creature.Energy += energyToTake;
-                    closestCreature.Nutrients -= nutrientsToTake;
-                    creature.Nutrients += nutrientsToTake;
-                    closestCreature.Mass -= massToTake;
-                    creature.Mass += massToTake;
-                    closestCreature.HealthPoints -= healthToTake;
-                    creatureAttackWasSuccessful = true;
-                }
-                else
-                {
-                    closestCreature.AttacksEvadedCount += 1;
-                    creatureAttackWasSuccessful = false;
-                }
+               creatureAttackWasSuccessful = InitiateAttack(creature, closestCreature);
             }
             else
             {
@@ -318,7 +287,55 @@ namespace MaceEvolve.Core.Models
             }
 
             creature.Energy -= creature.AttackCost;
+
             return creatureAttackWasSuccessful;
+        }
+        public bool InitiateAttack(TCreature initiatingCreature, TCreature defendingCreature)
+        {
+            initiatingCreature.InitiatedAttacksCount += 1;
+            float initiatorAttackScore = GetAttackScore(initiatingCreature, true);
+            float defenderAttackScore = GetAttackScore(defendingCreature, false);
+            float totalAttackScore = initiatorAttackScore + defenderAttackScore;
+            float chanceToLandAttack = totalAttackScore == 0 ? 0 : initiatorAttackScore / totalAttackScore;
+            bool initiatorLandedAttack = chanceToLandAttack != 0 && MaceRandom.Current.NextFloat() <= chanceToLandAttack;
+
+            bool wasAttackSuccessful;
+            if (initiatorLandedAttack)
+            {
+                TransferAttackValues(initiatingCreature, initiatorAttackScore, true, defendingCreature, defenderAttackScore);
+                initiatingCreature.SuccessfulAttacksCount += 1;
+                wasAttackSuccessful = true;
+            }
+            else
+            {
+                TransferAttackValues(defendingCreature, defenderAttackScore, false, initiatingCreature, initiatorAttackScore);
+                defendingCreature.AttacksEvadedCount += 1;
+                wasAttackSuccessful = false;
+            }
+
+            return wasAttackSuccessful;
+        }
+        public void TransferAttackValues(TCreature winningCreature, float winnerAttackScore, bool winningCreatureWasInitiator, TCreature losingCreature, float loserAttackScore)
+        {
+            float totalAttackScore = winnerAttackScore + loserAttackScore;
+
+            if (winningCreatureWasInitiator)
+            {
+                float chanceToLandAttack = totalAttackScore == 0 ? 0 : winnerAttackScore / totalAttackScore;
+                float percentOfTargetSize = losingCreature.Size == 0 ? 1 : winningCreature.Size / losingCreature.Size;
+                float energyToTake = Math.Min(losingCreature.Energy, (losingCreature.MaxEnergy / 8) * percentOfTargetSize * chanceToLandAttack);
+                float massToTake = Math.Min(losingCreature.Mass, (losingCreature.Mass / 8) * percentOfTargetSize * chanceToLandAttack);
+                float healthToTake = Math.Min(losingCreature.HealthPoints, losingCreature.MaxHealthPoints * percentOfTargetSize * chanceToLandAttack);
+                float nutrientsToTake = Math.Min(losingCreature.Nutrients, (losingCreature.Nutrients / 8) * percentOfTargetSize * chanceToLandAttack);
+
+                losingCreature.Energy -= energyToTake;
+                winningCreature.Energy += energyToTake;
+                losingCreature.Nutrients -= nutrientsToTake;
+                winningCreature.Nutrients += nutrientsToTake;
+                losingCreature.Mass -= massToTake;
+                winningCreature.Mass += massToTake;
+                losingCreature.HealthPoints -= healthToTake;
+            }
         }
         public void CreatureTurnLeft(TCreature creature)
         {
