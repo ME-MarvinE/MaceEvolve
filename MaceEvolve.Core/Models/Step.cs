@@ -280,18 +280,12 @@ namespace MaceEvolve.Core.Models
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
                creatureAttackWasSuccessful = InitiateAttack(creature, closestCreature);
-
-                if (!creatureAttackWasSuccessful.Value)
-                {
-                    closestCreature.Energy -= closestCreature.AttackCost * 0.5f;
-                }
             }
             else
             {
                 creatureAttackWasSuccessful = null;
+                creature.Energy -= creature.AttackCost;
             }
-
-            creature.Energy -= creature.AttackCost;
 
             return creatureAttackWasSuccessful;
         }
@@ -323,6 +317,7 @@ namespace MaceEvolve.Core.Models
         public static void TransferAttackValues(TCreature winningCreature, float winnerAttackScore, bool winningCreatureWasInitiator, TCreature losingCreature, float loserAttackScore)
         {
             float totalAttackScore = winnerAttackScore + loserAttackScore;
+            float winningCreatureEffort = totalAttackScore == 0 ? 0 : totalAttackScore / winnerAttackScore;
 
             if (winningCreatureWasInitiator)
             {
@@ -340,6 +335,12 @@ namespace MaceEvolve.Core.Models
                 losingCreature.Mass -= massToTake;
                 winningCreature.Mass += massToTake;
                 losingCreature.HealthPoints -= healthToTake;
+
+                winningCreature.Energy -= winningCreature.AttackCost * winningCreatureEffort;
+            }
+            else
+            {
+                winningCreature.Energy -= winningCreature.AttackCost * 0.8f * winningCreatureEffort;
             }
         }
         public void CreatureTurnLeft(TCreature creature)
