@@ -180,11 +180,35 @@ namespace MaceEvolve.Core
         }
         public static double AngleDifference(double angle1, double angle2)
         {
-            return 180 - Math.Abs(Math.Abs(angle1 - angle2) - 180);
+            double difference = angle1 - angle2;
+
+            if (difference > 180)
+            {
+                return -(360 - difference);
+            }
+
+            if (difference < -180)
+            {
+                return 360 + difference;
+            }
+
+            return difference;
         }
         public static float AngleDifference(float angle1, float angle2)
         {
-            return 180 - MathF.Abs(MathF.Abs(angle1 - angle2) - 180);
+            float difference = angle1 - angle2;
+
+            if (difference > 180)
+            {
+                return -(360 - difference);
+            }
+
+            if (difference < -180)
+            {
+                return 360 + difference;
+            }
+
+            return difference;
         }
         public static float Angle180RangeTo360Range(float angle180)
         {
