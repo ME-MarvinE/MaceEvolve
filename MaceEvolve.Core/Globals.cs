@@ -194,6 +194,21 @@ namespace MaceEvolve.Core
         {
             return angle180 < 0 ? -angle180 : 360 - angle180;
         }
+        public static float ToAngle(float value)
+        {
+            if (value < 0)
+            {
+                return 360 + (value % 360);
+            }
+            else if (value >= 360)
+            {
+                return value % 360;
+            }
+            else
+            {
+                return value;
+            }
+        }
         #endregion
     }
 }

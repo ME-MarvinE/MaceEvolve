@@ -119,18 +119,7 @@ namespace MaceEvolve.Core.Models
             }
             set
             {
-                if (value < 0)
-                {
-                    _forwardAngle = 360 + value % 360;
-                }
-                else if (value >= 360)
-                {
-                    _forwardAngle = value % 360;
-                }
-                else
-                {
-                    _forwardAngle = value;
-                }
+                _forwardAngle = Globals.ToAngle(value);
             }
         }
         public float FieldOfView
@@ -141,18 +130,7 @@ namespace MaceEvolve.Core.Models
             }
             set
             {
-                if (value < 0)
-                {
-                    _fieldOfView = Math.Abs(value) % 360;
-                }
-                else if (value >= 360)
-                {
-                    _fieldOfView = value % 360;
-                }
-                else
-                {
-                    _fieldOfView = value;
-                }
+                _fieldOfView = Globals.ToAngle(value);
             }
         }
 
