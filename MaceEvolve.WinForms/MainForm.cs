@@ -286,33 +286,48 @@ namespace MaceEvolve.WinForms
 
                 if (drawFieldOfView)
                 {
+                    List<GraphicalCreature> visibleCreaturesOrderedByDistance = MainGameHost.CurrentStep.Creatures.Where(x =>
+                    {
+                        if (Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != creature)
+                        {
+                            float angleFromSourceToTarget = Globals.GetAngleBetweenF(creature.MX, creature.MY, x.MX, x.MY);
+
+                            if (Math.Abs(Globals.AngleDifference(-creature.ForwardAngle, angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
+                            {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }).OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY)).ToList();
+
+                    foreach (var seenCreature in visibleCreaturesOrderedByDistance)
+                    {
+                        using (Pen pen = new Pen(Color.FromArgb(200, 32, 32), 2))
+                        {
+                            e.Graphics.DrawEllipse(pen, seenCreature.X, seenCreature.Y, seenCreature.Size, seenCreature.Size);
+                        }
+                    }
+
+                    GraphicalCreature closestVisibleCreature = visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                    if (closestVisibleCreature != null)
+                    {
+                        float angleFromClosestVisibleCreature = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
+                        var distanceFromForwardAngle = creature.ForwardAngle - Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature);
+
+                        using (Pen pen = new Pen(Color.FromArgb(255, 255, 32), 2))
+                        {
+                            e.Graphics.DrawEllipse(pen, closestVisibleCreature.X, closestVisibleCreature.Y, closestVisibleCreature.Size, closestVisibleCreature.Size);
+                        }
+
+                        e.Graphics.FillPath(FieldOfViewBrush, CreateFieldOfViewPath(creature.MX, creature.MY, closestVisibleCreature.Size + 2, creature.SightRange, creature.ForwardAngle - distanceFromForwardAngle));
+                    }
+
                     e.Graphics.FillPath(FieldOfViewBrush, CreateFieldOfViewPath(creature.MX, creature.MY, creature.FieldOfView, creature.SightRange, creature.ForwardAngle));
 
                     PointF forwardDirectionLineTarget = GetAngledLineTarget(creature.MX, creature.MY, creature.SightRange / 4, creature.ForwardAngle);
                     e.Graphics.DrawLine(FieldOfViewPen, creature.MX, creature.MY, forwardDirectionLineTarget.X, forwardDirectionLineTarget.Y);
-
-                    //IEnumerable<GraphicalCreature> visibleCreatures = MainGameHost.CurrentStep.Creatures.Where(x =>
-                    //{
-                    //    if (Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY) <= creature.SightRange && x != creature)
-                    //    {
-                    //        float angleFromSourceToTarget = Globals.GetAngleBetweenF(creature.MX, creature.MY, x.MX, x.MY);
-
-                    //        if (Math.Abs(Globals.AngleDifference(-creature.ForwardAngle, angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
-                    //        {
-                    //            return true;
-                    //        }
-                    //    }
-
-                    //    return false;
-                    //});
-
-                    //foreach (var seenCreature in visibleCreatures)
-                    //{
-                    //    using (Pen pen = new Pen(Color.FromArgb(200, 32, 32), 2))
-                    //    {
-                    //        e.Graphics.DrawEllipse(pen, seenCreature.X, seenCreature.Y, seenCreature.Size, seenCreature.Size);
-                    //    }
-                    //}
                 }
             }
         }
@@ -493,6 +508,7 @@ namespace MaceEvolve.WinForms
         {
             ToggleUI();
         }
+
         #endregion
     }
 }

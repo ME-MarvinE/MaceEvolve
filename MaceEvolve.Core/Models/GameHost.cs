@@ -225,7 +225,7 @@ namespace MaceEvolve.Core.Models
                                             {
                                                 float angleFromSourceToTarget = Globals.GetAngleBetweenF(creature.MX, creature.MY, x.MX, x.MY);
 
-                                                if (Math.Abs(Globals.AngleDifference(-creature.ForwardAngle, angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
+                                                if (Math.Abs(Globals.AngleDifference(creature.ForwardAngle, -angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
                                                 {
                                                     return true;
                                                 }
@@ -248,7 +248,7 @@ namespace MaceEvolve.Core.Models
                                             {
                                                 float angleFromSourceToTarget = Globals.GetAngleBetweenF(creature.MX, creature.MY, x.MX, x.MY);
 
-                                                if (Math.Abs(Globals.AngleDifference(-creature.ForwardAngle, angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
+                                                if (Math.Abs(Globals.AngleDifference(creature.ForwardAngle, -angleFromSourceToTarget)) <= (creature.FieldOfView / 2))
                                                 {
                                                     return true;
                                                 }
