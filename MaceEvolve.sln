@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaceEvolve.Console.Benchmar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MaceEvolve.SilkGL", "MaceEvolve.SilkGL\MaceEvolve.SilkGL.csproj", "{962FA9C3-B509-43AF-A640-E864B68B5144}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaceEvolve.Core.Tests", "MaceEvolve.Core.Tests\MaceEvolve.Core.Tests.csproj", "{1BE8D8C4-5B32-4F39-8CFA-E9A555DDEDBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{962FA9C3-B509-43AF-A640-E864B68B5144}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{962FA9C3-B509-43AF-A640-E864B68B5144}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{962FA9C3-B509-43AF-A640-E864B68B5144}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BE8D8C4-5B32-4F39-8CFA-E9A555DDEDBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BE8D8C4-5B32-4F39-8CFA-E9A555DDEDBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BE8D8C4-5B32-4F39-8CFA-E9A555DDEDBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BE8D8C4-5B32-4F39-8CFA-E9A555DDEDBC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
