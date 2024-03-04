@@ -123,7 +123,7 @@ namespace MaceEvolve.Core.Models
                 {
                     _forwardAngle = 360 + value % 360;
                 }
-                else if (value > 359)
+                else if (value >= 360)
                 {
                     _forwardAngle = value % 360;
                 }
@@ -145,7 +145,7 @@ namespace MaceEvolve.Core.Models
                 {
                     _fieldOfView = Math.Abs(value) % 360;
                 }
-                else if (value > 359)
+                else if (value >= 360)
                 {
                     _fieldOfView = value % 360;
                 }
