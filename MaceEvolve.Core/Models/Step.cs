@@ -280,7 +280,7 @@ namespace MaceEvolve.Core.Models
             bool? creatureAttackWasSuccessful;
             if (Globals.GetDistanceFrom(creature.MX, creature.MY, closestCreature.MX, closestCreature.MY) < (closestCreature.Size + creature.Size) / 2)
             {
-               creatureAttackWasSuccessful = InitiateAttack(creature, closestCreature);
+                creatureAttackWasSuccessful = InitiateAttack(creature, closestCreature);
             }
             else
             {
@@ -599,7 +599,10 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY), -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
+                                float angleFromClosestVisibleCreature = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
+                                float distanceFromForwardAngle = creature.ForwardAngle - Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature);
+
+                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
                             }
                             break;
 
@@ -612,7 +615,10 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                creatureInputValue = Globals.Map(Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY), -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
+                                float angleFromClosestVisibleFood = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
+                                float distanceFromForwardAngle = creature.ForwardAngle - Globals.Angle180RangeTo360Range(angleFromClosestVisibleFood);
+
+                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
                             }
                             break;
 

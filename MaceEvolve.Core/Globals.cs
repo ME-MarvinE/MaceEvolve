@@ -186,6 +186,14 @@ namespace MaceEvolve.Core
         {
             return 180 - MathF.Abs(MathF.Abs(angle1 - angle2) - 180);
         }
+        public static float Angle180RangeTo360Range(float angle180)
+        {
+            return angle180 < 0 ? -angle180 : 360 - angle180;
+        }
+        public static double Angle180RangeTo360Range(double angle180)
+        {
+            return angle180 < 0 ? -angle180 : 360 - angle180;
+        }
         #endregion
     }
 }
