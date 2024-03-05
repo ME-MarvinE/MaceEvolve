@@ -314,14 +314,13 @@ namespace MaceEvolve.WinForms
                     if (closestVisibleCreature != null)
                     {
                         float angleFromClosestVisibleCreature = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
-                        var distanceFromForwardAngle = creature.ForwardAngle - Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature);
 
                         using (Pen pen = new Pen(Color.FromArgb(255, 255, 32), 2))
                         {
                             e.Graphics.DrawEllipse(pen, closestVisibleCreature.X, closestVisibleCreature.Y, closestVisibleCreature.Size, closestVisibleCreature.Size);
                         }
 
-                        e.Graphics.FillPath(FieldOfViewBrush, CreateFieldOfViewPath(creature.MX, creature.MY, closestVisibleCreature.Size + 2, creature.SightRange, creature.ForwardAngle - distanceFromForwardAngle));
+                        e.Graphics.FillPath(FieldOfViewBrush, CreateFieldOfViewPath(creature.MX, creature.MY, closestVisibleCreature.Size + 2, creature.SightRange, Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature)));
                     }
 
                     e.Graphics.FillPath(FieldOfViewBrush, CreateFieldOfViewPath(creature.MX, creature.MY, creature.FieldOfView, creature.SightRange, creature.ForwardAngle));
