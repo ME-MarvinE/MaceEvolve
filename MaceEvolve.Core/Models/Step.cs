@@ -600,9 +600,11 @@ namespace MaceEvolve.Core.Models
                             else
                             {
                                 float angleFromClosestVisibleCreature = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
-                                float distanceFromForwardAngle = creature.ForwardAngle - Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature);
+                                float distanceFromForwardAngle = Globals.AngleDifference(creature.ForwardAngle, Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature));
 
-                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
+                                //The mapping of the value to the output is reversed so that relative to the forward angle, the more anti-clockwise a creature is,
+                                //the lower the output will be.
+                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, 1, -1);
                             }
                             break;
 
@@ -616,9 +618,11 @@ namespace MaceEvolve.Core.Models
                             else
                             {
                                 float angleFromClosestVisibleFood = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
-                                float distanceFromForwardAngle = creature.ForwardAngle - Globals.Angle180RangeTo360Range(angleFromClosestVisibleFood);
+                                float distanceFromForwardAngle = Globals.AngleDifference(creature.ForwardAngle, Globals.Angle180RangeTo360Range(angleFromClosestVisibleFood));
 
-                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, -1, 1);
+                                //The mapping of the value to the output is reversed so that relative to the forward angle, the more anti-clockwise a creature is,
+                                //the lower the output will be.
+                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, 1, -1);
                             }
                             break;
 
