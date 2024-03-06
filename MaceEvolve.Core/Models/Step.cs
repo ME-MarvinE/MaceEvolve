@@ -730,33 +730,6 @@ namespace MaceEvolve.Core.Models
                             creatureInputValue = creature.InitiatedAttacksCount == 0 ? 0 : (float)creature.SuccessfulAttacksCount / creature.InitiatedAttacksCount;
                             break;
 
-                        case CreatureInput.ClosestVisibleCreatureAggressionPercentage:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
-
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                int closestVisibleCreatureAttemptedAttacksAndEats = closestVisibleCreature.AttemptedAttacksCount + closestVisibleCreature.AttemptedEatsCount;
-                                creatureInputValue = closestVisibleCreatureAttemptedAttacksAndEats == 0 ? 0 : (float)closestVisibleCreature.AttemptedAttacksCount / closestVisibleCreatureAttemptedAttacksAndEats;
-                            }
-                            break;
-
-                        case CreatureInput.ClosestVisibleCreatureSuccessfulAttackPercentage:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
-
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestVisibleCreature.InitiatedAttacksCount == 0 ? 0 : (float)closestVisibleCreature.SuccessfulAttacksCount / closestVisibleCreature.InitiatedAttacksCount;
-                            }
-                            break;
-
                         case CreatureInput.SizeToClosestVisibleCreatureSize:
                             closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 

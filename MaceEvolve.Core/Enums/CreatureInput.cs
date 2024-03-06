@@ -25,11 +25,9 @@
         ClosestVisibleCreatureEnergyPercentage,
         ClosestVisibleCreatureAgePercentage,
         ClosestVisibleCreatureHealthPercentage,
-        ClosestVisibleCreatureAggressionPercentage,
-        ClosestVisibleCreatureSuccessfulAttackPercentage,
         SizeToClosestVisibleCreatureSize,
         ClosestVisibleCreatureSizeToSize,
         AnyVisibleCreatures,
-        AnyVisibleFood,
+        AnyVisibleFood
     }
 }
