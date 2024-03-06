@@ -247,6 +247,7 @@ namespace MaceEvolve.Console
             System.Console.WriteLine("--------------------------Commands-----------------------");
             System.Console.WriteLine("P = Start/Pause");
             System.Console.WriteLine("R = Reset");
+            System.Console.WriteLine("F = Enable Fast Mode (Pause to disable)");
             System.Console.WriteLine("G = Toggle Gather step info for all creatures");
             System.Console.WriteLine("Escape = Exit");
             System.Console.WriteLine("H = List Commands");
