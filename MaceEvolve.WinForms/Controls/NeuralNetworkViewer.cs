@@ -112,7 +112,7 @@ namespace MaceEvolve.WinForms.Controls
 
                 Dictionary<int, float> nodeIdToYPosition = new Dictionary<int, float>();
                 Dictionary<int, float> nodeIdToXPosition = new Dictionary<int, float>();
-                float inputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - NodeSize) / Math.Max(1, inputNodeIds.Count);
+                float inputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, inputNodeIds.Count);
                 float inputNodeMinX = Bounds.Left;
                 float inputNodeMaxX = (inputNodeMinX + Bounds.Width / 3);
 
@@ -121,9 +121,10 @@ namespace MaceEvolve.WinForms.Controls
                     int nodeId = inputNodeIds[i];
                     nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)inputNodeMinX, (int)inputNodeMaxX - (int)NodeSize));
                     nodeIdToYPosition.Add(nodeId, Bounds.Top + inputNodeIdVerticalSpacing * (i + 1));
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + inputNodeIdVerticalSpacing * i);
                 }
 
-                float processNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - NodeSize) / Math.Max(1, processNodeIds.Count);
+                float processNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, processNodeIds.Count);
                 float processNodeMinX = inputNodeMaxX;
                 float processNodeMaxX = (processNodeMinX + Bounds.Width / 3);
 
@@ -132,9 +133,10 @@ namespace MaceEvolve.WinForms.Controls
                     int nodeId = processNodeIds[i];
                     nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)processNodeMinX, (int)processNodeMaxX - (int)NodeSize));
                     nodeIdToYPosition.Add(nodeId, Bounds.Top + processNodeIdVerticalSpacing * (i + 1));
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + processNodeIdVerticalSpacing * i);
                 }
 
-                float outputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - NodeSize) / Math.Max(1, outputNodeIds.Count);
+                float outputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, outputNodeIds.Count);
                 float outputNodeMinX = processNodeMaxX;
                 float outputNodeMaxX = (outputNodeMinX + Bounds.Width / 3);
 
@@ -143,6 +145,7 @@ namespace MaceEvolve.WinForms.Controls
                     int nodeId = outputNodeIds[i];
                     nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)outputNodeMinX, (int)outputNodeMaxX - (int)NodeSize));
                     nodeIdToYPosition.Add(nodeId, Bounds.Top + outputNodeIdVerticalSpacing * (i + 1));
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + outputNodeIdVerticalSpacing * i);
                 }
 
                 for (int i = 0; i < nodeIds.Count; i++)
