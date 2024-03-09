@@ -11,6 +11,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace MaceEvolve.WinForms.Controls
 {
@@ -52,7 +53,7 @@ namespace MaceEvolve.WinForms.Controls
         };
         private Dictionary<NodeType, Brush> NodeTypeToBrushDict { get; }
         private ConcurrentDictionary<int, GameObject> DrawnNodeIdsToGameObject { get; set; } = new ConcurrentDictionary<int, GameObject>();
-        public int NodeSize = 75;
+        public float NodeSize = 75;
         public int NodeFontSize = 14;
         public int? SelectedNodeId { get; set; }
         public int? MovingNodeId { get; set; }
@@ -82,43 +83,78 @@ namespace MaceEvolve.WinForms.Controls
 
             if (NeuralNetwork != null)
             {
-                foreach (var keyValuePair in NeuralNetwork.NodeIdsToNodesDict)
+                List<int> nodeIds = NeuralNetwork.GetNodeIds();
+                List<int> inputNodeIds = new List<int>();
+                List<int> processNodeIds = new List<int>();
+                List<int> outputNodeIds = new List<int>();
+
+                foreach (var nodeId in nodeIds)
                 {
-                    int nodeId = keyValuePair.Key;
-                    Node node = keyValuePair.Value;
-
-                    GameObject nodeGameObject = new GameObject();
-                    nodeGameObject.Size = NodeSize;
-
-                    int xLowerimit;
-                    int xUpperLimit;
-                    switch (node.NodeType)
+                    switch (NeuralNetwork.NodeIdsToNodesDict[nodeId].NodeType)
                     {
                         case NodeType.Input:
-                            xLowerimit = Bounds.Left;
-                            xUpperLimit = (Bounds.Left + Bounds.Width / 3) - (int)nodeGameObject.Size;
+                            inputNodeIds.Add(nodeId);
                             break;
 
                         case NodeType.Process:
-                            xLowerimit = Bounds.Left + Bounds.Width / 3;
-                            xUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 2) - (int)nodeGameObject.Size;
+                            processNodeIds.Add(nodeId);
                             break;
 
                         case NodeType.Output:
-                            xLowerimit = Bounds.Left + (Bounds.Left + (Bounds.Width / 3) * 2);
-                            xUpperLimit = (Bounds.Left + (Bounds.Width / 3) * 3) - (int)nodeGameObject.Size;
+                            outputNodeIds.Add(nodeId);
                             break;
 
                         default:
-                            throw new NotImplementedException(nameof(node.NodeType));
+                            throw new NotImplementedException(nameof(Node.NodeType));
                     }
-                    if (xUpperLimit < xLowerimit)
-                    {
-                        xUpperLimit = xLowerimit;
-                    }
+                }
 
-                    nodeGameObject.X = MaceRandom.Current.Next(xLowerimit, xUpperLimit);
-                    nodeGameObject.Y = (Bounds.Bottom - nodeGameObject.Size) > 0 ? MaceRandom.Current.Next(Bounds.Bottom - (int)nodeGameObject.Size) : 0;
+
+                Dictionary<int, float> nodeIdToYPosition = new Dictionary<int, float>();
+                Dictionary<int, float> nodeIdToXPosition = new Dictionary<int, float>();
+                float inputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - NodeSize) / Math.Max(1, inputNodeIds.Count);
+                float inputNodeMinX = Bounds.Left;
+                float inputNodeMaxX = (inputNodeMinX + Bounds.Width / 3);
+
+                for (int i = 0; i < inputNodeIds.Count; i++)
+                {
+                    int nodeId = inputNodeIds[i];
+                    nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)inputNodeMinX, (int)inputNodeMaxX - (int)NodeSize));
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + inputNodeIdVerticalSpacing * (i + 1));
+                }
+
+                float processNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - NodeSize) / Math.Max(1, processNodeIds.Count);
+                float processNodeMinX = inputNodeMaxX;
+                float processNodeMaxX = (processNodeMinX + Bounds.Width / 3);
+
+                for (int i = 0; i < processNodeIds.Count; i++)
+                {
+                    int nodeId = processNodeIds[i];
+                    nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)processNodeMinX, (int)processNodeMaxX - (int)NodeSize));
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + processNodeIdVerticalSpacing * (i + 1));
+                }
+
+                float outputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - NodeSize) / Math.Max(1, outputNodeIds.Count);
+                float outputNodeMinX = processNodeMaxX;
+                float outputNodeMaxX = (outputNodeMinX + Bounds.Width / 3);
+
+                for (int i = 0; i < outputNodeIds.Count; i++)
+                {
+                    int nodeId = outputNodeIds[i];
+                    nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)outputNodeMinX, (int)outputNodeMaxX - (int)NodeSize));
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + outputNodeIdVerticalSpacing * (i + 1));
+                }
+
+                for (int i = 0; i < nodeIds.Count; i++)
+                {
+                    int nodeId = nodeIds[i];
+
+                    GameObject nodeGameObject = new GameObject
+                    {
+                        Size = NodeSize,
+                        X = nodeIdToXPosition[nodeId],
+                        Y = nodeIdToYPosition[nodeId]
+                    };
 
                     DrawnNodeIdsToGameObject[nodeId] = nodeGameObject;
                 }
