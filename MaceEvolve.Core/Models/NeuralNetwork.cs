@@ -187,6 +187,8 @@ namespace MaceEvolve.Core.Models
             nodeQueue.AddRange(outputNodeIds);
             nodeQueue.AddRange(inputNodeIds);
 
+            Dictionary<int, IEnumerable<Connection>> targetIdToConnectionsDict = Connections.GroupBy(x => x.TargetId).ToDictionary(x => x.Key, x => x.AsEnumerable());
+
             while (nodeQueue.Count > 0)
             {
                 int currentNodeId = nodeQueue[nodeQueue.Count - 1];
@@ -212,11 +214,9 @@ namespace MaceEvolve.Core.Models
 
                     currentNodeWeightedSum = 0;
 
-                    IEnumerable<Connection> connectionsToCurrentNode = Connections.Where(x => x.TargetId == currentNodeId);
-
-                    foreach (var connection in connectionsToCurrentNode)
+                    if (targetIdToConnectionsDict.TryGetValue(currentNodeId, out IEnumerable<Connection> connectionsToCurrentNode))
                     {
-                        if (connection.TargetId == currentNodeId)
+                        foreach (var connection in connectionsToCurrentNode)
                         {
                             float sourceNodeOutput;
                             Node connectionSourceNode = NodeIdsToNodesDict[connection.SourceId];
