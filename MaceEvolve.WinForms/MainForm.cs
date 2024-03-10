@@ -624,6 +624,12 @@ namespace MaceEvolve.WinForms
         {
             IsUIVisible = chkShowUI.Checked;
         }
+        private void btnUpdateWorldBounds_Click(object sender, EventArgs e)
+        {
+            Core.Models.Rectangle newWorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
+            MainGameHost.WorldBounds = newWorldBounds;
+            MainGameHost.CurrentStep.WorldBounds = newWorldBounds;
+        }
         #endregion
     }
 }

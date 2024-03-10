@@ -51,6 +51,7 @@ namespace MaceEvolve.WinForms
             chkLinkFpsAndTps = new CheckBox();
             chkGatherStepInfoForAllCreatures = new CheckBox();
             chkShowUI = new CheckBox();
+            btnUpdateWorldBounds = new Button();
             ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudSimulationFPS).BeginInit();
             SuspendLayout();
@@ -211,7 +212,7 @@ namespace MaceEvolve.WinForms
             // nudSimulationTPS
             // 
             nudSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            nudSimulationTPS.Location = new System.Drawing.Point(621, 210);
+            nudSimulationTPS.Location = new System.Drawing.Point(620, 242);
             nudSimulationTPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
             nudSimulationTPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             nudSimulationTPS.Name = "nudSimulationTPS";
@@ -227,7 +228,7 @@ namespace MaceEvolve.WinForms
             lblSimulationTPS.BackColor = System.Drawing.Color.Transparent;
             lblSimulationTPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             lblSimulationTPS.ForeColor = System.Drawing.Color.White;
-            lblSimulationTPS.Location = new System.Drawing.Point(579, 210);
+            lblSimulationTPS.Location = new System.Drawing.Point(578, 242);
             lblSimulationTPS.Name = "lblSimulationTPS";
             lblSimulationTPS.Size = new System.Drawing.Size(36, 21);
             lblSimulationTPS.TabIndex = 4;
@@ -236,7 +237,7 @@ namespace MaceEvolve.WinForms
             // nudSimulationFPS
             // 
             nudSimulationFPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            nudSimulationFPS.Location = new System.Drawing.Point(727, 210);
+            nudSimulationFPS.Location = new System.Drawing.Point(726, 242);
             nudSimulationFPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
             nudSimulationFPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             nudSimulationFPS.Name = "nudSimulationFPS";
@@ -252,7 +253,7 @@ namespace MaceEvolve.WinForms
             lblSimulationFPS.BackColor = System.Drawing.Color.Transparent;
             lblSimulationFPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             lblSimulationFPS.ForeColor = System.Drawing.Color.White;
-            lblSimulationFPS.Location = new System.Drawing.Point(685, 210);
+            lblSimulationFPS.Location = new System.Drawing.Point(684, 242);
             lblSimulationFPS.Name = "lblSimulationFPS";
             lblSimulationFPS.Size = new System.Drawing.Size(36, 21);
             lblSimulationFPS.TabIndex = 8;
@@ -311,6 +312,20 @@ namespace MaceEvolve.WinForms
             chkShowUI.UseVisualStyleBackColor = false;
             chkShowUI.CheckedChanged += chkShowUI_CheckedChanged;
             // 
+            // btnUpdateWorldBounds
+            // 
+            btnUpdateWorldBounds.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnUpdateWorldBounds.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnUpdateWorldBounds.Cursor = Cursors.Hand;
+            btnUpdateWorldBounds.FlatStyle = FlatStyle.Flat;
+            btnUpdateWorldBounds.Location = new System.Drawing.Point(620, 204);
+            btnUpdateWorldBounds.Name = "btnUpdateWorldBounds";
+            btnUpdateWorldBounds.Size = new System.Drawing.Size(156, 32);
+            btnUpdateWorldBounds.TabIndex = 1;
+            btnUpdateWorldBounds.Text = "Update World Bounds";
+            btnUpdateWorldBounds.UseVisualStyleBackColor = false;
+            btnUpdateWorldBounds.Click += btnUpdateWorldBounds_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -328,6 +343,7 @@ namespace MaceEvolve.WinForms
             Controls.Add(lblGenEndsIn);
             Controls.Add(lblGenerationCount);
             Controls.Add(btnTrackBestCreature);
+            Controls.Add(btnUpdateWorldBounds);
             Controls.Add(ResetButton);
             Controls.Add(StopButton);
             Controls.Add(btnSaveCurrentStep);
@@ -370,5 +386,6 @@ namespace MaceEvolve.WinForms
         private CheckBox chkLinkFpsAndTps;
         private CheckBox chkGatherStepInfoForAllCreatures;
         private CheckBox chkShowUI;
+        private Button btnUpdateWorldBounds;
     }
 }
