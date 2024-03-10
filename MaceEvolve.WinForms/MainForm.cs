@@ -22,6 +22,8 @@ namespace MaceEvolve.WinForms
     {
         #region Fields
         private int _simulationTPS;
+        private int _simulationFPS;
+        private bool _linkFPSAndTPS;
         #endregion
 
         #region Properties
@@ -36,6 +38,29 @@ namespace MaceEvolve.WinForms
                 _simulationTPS = value;
                 nudSimulationTPS.Value = value;
                 GameTimer.Interval = Math.Max((int)SimulationMspt, 1);
+
+                if (LinkFPSAndTPS && SimulationFPS != value)
+                {
+                    SimulationFPS = SimulationTPS;
+                }
+            }
+        }
+        public int SimulationFPS
+        {
+            get
+            {
+                return _simulationFPS;
+            }
+            set
+            {
+                _simulationFPS = value;
+                nudSimulationFPS.Value = value;
+                DrawTimer.Interval = (int)Math.Max((1f / SimulationFPS) * 1000, 1);
+
+                if (LinkFPSAndTPS && SimulationTPS != value)
+                {
+                    SimulationTPS = SimulationFPS;
+                }
             }
         }
         public bool SimulationRunning { get; set; }
@@ -59,6 +84,19 @@ namespace MaceEvolve.WinForms
         protected static JsonSerializerSettings LoadStepSerializerSettings { get; }
         Pen FieldOfViewPen { get; set; } = new Pen(Color.FromArgb(255, 20, 20, 255), 1);
         SolidBrush FieldOfViewBrush { get; set; } = new SolidBrush(Color.FromArgb(50, 20, 175, 200));
+        public bool LinkFPSAndTPS
+        {
+            get
+            {
+                return _linkFPSAndTPS;
+            }
+            set
+            {
+                _linkFPSAndTPS = value;
+                SimulationFPS = SimulationTPS;
+            }
+        }
+
         #endregion
 
         #region Constructors
@@ -230,8 +268,6 @@ namespace MaceEvolve.WinForms
             {
                 UpdateSimulation();
             }
-
-            Invalidate();
         }
         private void MainForm_Paint(object sender, PaintEventArgs e)
         {
@@ -365,6 +401,7 @@ namespace MaceEvolve.WinForms
         private void MainForm_Load(object sender, EventArgs e)
         {
             SimulationTPS = 60;
+            LinkFPSAndTPS = true;
 
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
 
@@ -417,6 +454,9 @@ namespace MaceEvolve.WinForms
             btnLoadStep.Visible = isControlMenuVisible;
             nudSimulationTPS.Visible = isControlMenuVisible;
             lblSimulationTPS.Visible = isControlMenuVisible;
+            lblSimulationFPS.Visible = isControlMenuVisible;
+            nudSimulationFPS.Visible = isControlMenuVisible;
+            btnLinkFPSAndTPS.Visible = isControlMenuVisible;
         }
         private void UpdateUIText()
         {
@@ -446,6 +486,7 @@ namespace MaceEvolve.WinForms
                 $"\nRun {FailedRunsUptimes.Count + 1}, {timeInCurrentRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Average: {averageTimePerRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}";
 
             GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
+            btnLinkFPSAndTPS.Text = $"Link FPS and TPS: {(LinkFPSAndTPS ? "Enabled" : "Disabled")}";
         }
         private void btnLoadStep_Click(object sender, EventArgs e)
         {
@@ -503,11 +544,22 @@ namespace MaceEvolve.WinForms
         {
             SimulationTPS = (int)nudSimulationTPS.Value;
         }
+        private void nudSimulationFPS_ValueChanged(object sender, EventArgs e)
+        {
+            SimulationFPS = (int)nudSimulationFPS.Value;
+        }
         private void btnHideUI_Click(object sender, EventArgs e)
         {
             ToggleUI();
         }
-
+        private void btnLinkFPSAndTPS_Click(object sender, EventArgs e)
+        {
+            LinkFPSAndTPS = !LinkFPSAndTPS;
+        }
+        private void DrawTimer_Tick(object sender, EventArgs e)
+        {
+            Invalidate();
+        }
         #endregion
     }
 }

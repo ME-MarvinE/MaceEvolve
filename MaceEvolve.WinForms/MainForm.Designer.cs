@@ -47,7 +47,12 @@ namespace MaceEvolve.WinForms
             nudSimulationTPS = new NumericUpDown();
             lblSimulationTPS = new Label();
             btnHideUI = new Button();
+            nudSimulationFPS = new NumericUpDown();
+            lblSimulationFPS = new Label();
+            btnLinkFPSAndTPS = new Button();
+            DrawTimer = new Timer(components);
             ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudSimulationFPS).BeginInit();
             SuspendLayout();
             // 
             // StartButton
@@ -219,8 +224,8 @@ namespace MaceEvolve.WinForms
             // 
             // nudSimulationTPS
             // 
-            nudSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            nudSimulationTPS.Location = new System.Drawing.Point(724, 204);
+            nudSimulationTPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            nudSimulationTPS.Location = new System.Drawing.Point(620, 544);
             nudSimulationTPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
             nudSimulationTPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             nudSimulationTPS.Name = "nudSimulationTPS";
@@ -231,12 +236,12 @@ namespace MaceEvolve.WinForms
             // 
             // lblSimulationTPS
             // 
-            lblSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblSimulationTPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             lblSimulationTPS.AutoSize = true;
             lblSimulationTPS.BackColor = System.Drawing.Color.Transparent;
             lblSimulationTPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             lblSimulationTPS.ForeColor = System.Drawing.Color.White;
-            lblSimulationTPS.Location = new System.Drawing.Point(682, 204);
+            lblSimulationTPS.Location = new System.Drawing.Point(578, 544);
             lblSimulationTPS.Name = "lblSimulationTPS";
             lblSimulationTPS.Size = new System.Drawing.Size(36, 21);
             lblSimulationTPS.TabIndex = 4;
@@ -256,12 +261,58 @@ namespace MaceEvolve.WinForms
             btnHideUI.UseVisualStyleBackColor = false;
             btnHideUI.Click += btnHideUI_Click;
             // 
+            // nudSimulationFPS
+            // 
+            nudSimulationFPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            nudSimulationFPS.Location = new System.Drawing.Point(726, 544);
+            nudSimulationFPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
+            nudSimulationFPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            nudSimulationFPS.Name = "nudSimulationFPS";
+            nudSimulationFPS.Size = new System.Drawing.Size(48, 23);
+            nudSimulationFPS.TabIndex = 9;
+            nudSimulationFPS.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            nudSimulationFPS.ValueChanged += nudSimulationFPS_ValueChanged;
+            // 
+            // lblSimulationFPS
+            // 
+            lblSimulationFPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            lblSimulationFPS.AutoSize = true;
+            lblSimulationFPS.BackColor = System.Drawing.Color.Transparent;
+            lblSimulationFPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblSimulationFPS.ForeColor = System.Drawing.Color.White;
+            lblSimulationFPS.Location = new System.Drawing.Point(684, 544);
+            lblSimulationFPS.Name = "lblSimulationFPS";
+            lblSimulationFPS.Size = new System.Drawing.Size(36, 21);
+            lblSimulationFPS.TabIndex = 8;
+            lblSimulationFPS.Text = "FPS";
+            // 
+            // btnLinkFPSAndTPS
+            // 
+            btnLinkFPSAndTPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            btnLinkFPSAndTPS.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnLinkFPSAndTPS.Cursor = Cursors.Hand;
+            btnLinkFPSAndTPS.FlatStyle = FlatStyle.Flat;
+            btnLinkFPSAndTPS.Location = new System.Drawing.Point(578, 573);
+            btnLinkFPSAndTPS.Name = "btnLinkFPSAndTPS";
+            btnLinkFPSAndTPS.Size = new System.Drawing.Size(198, 32);
+            btnLinkFPSAndTPS.TabIndex = 1;
+            btnLinkFPSAndTPS.Text = "Link FPS and TPS:";
+            btnLinkFPSAndTPS.UseVisualStyleBackColor = false;
+            btnLinkFPSAndTPS.Click += btnLinkFPSAndTPS_Click;
+            // 
+            // DrawTimer
+            // 
+            DrawTimer.Enabled = true;
+            DrawTimer.Tick += DrawTimer_Tick;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = System.Drawing.Color.FromArgb(32, 32, 32);
             ClientSize = new System.Drawing.Size(784, 661);
+            Controls.Add(nudSimulationFPS);
+            Controls.Add(lblSimulationFPS);
             Controls.Add(nudSimulationTPS);
             Controls.Add(lblSimulationRunning);
             Controls.Add(lblSimulationTPS);
@@ -273,6 +324,7 @@ namespace MaceEvolve.WinForms
             Controls.Add(StopButton);
             Controls.Add(btnSaveCurrentStep);
             Controls.Add(btnHideUI);
+            Controls.Add(btnLinkFPSAndTPS);
             Controls.Add(btnBenchmark);
             Controls.Add(btnLoadStep);
             Controls.Add(btnFastFoward);
@@ -285,6 +337,7 @@ namespace MaceEvolve.WinForms
             Paint += MainForm_Paint;
             MouseClick += MainForm_MouseClick;
             ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudSimulationFPS).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -307,5 +360,9 @@ namespace MaceEvolve.WinForms
         private NumericUpDown nudSimulationTPS;
         private Label lblSimulationTPS;
         private Button btnHideUI;
+        private NumericUpDown nudSimulationFPS;
+        private Label lblSimulationFPS;
+        private Button btnLinkFPSAndTPS;
+        private Timer DrawTimer;
     }
 }
