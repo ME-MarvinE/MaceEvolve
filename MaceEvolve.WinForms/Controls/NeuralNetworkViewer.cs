@@ -57,6 +57,7 @@ namespace MaceEvolve.WinForms.Controls
         public int? MovingNodeId { get; set; }
         private object _lock { get; set; } = new object();
         float MinNodeVerticalSpacing { get; set; }
+        public int SelectedNodeConnectionHighlightSize { get; set; } = 1;
         int MaxNodeStaggerLevel
         {
             get
@@ -230,17 +231,13 @@ namespace MaceEvolve.WinForms.Controls
         }
         public static int GetConnectionPenSize(Connection connection)
         {
-            if (connection.Weight == 0)
+            if (connection.Weight >= 0)
             {
-                return (int)Globals.Map(connection.Weight, -4, 4, 2, 8);
-            }
-            if (connection.Weight > 0)
-            {
-                return (int)Globals.Map(connection.Weight, 0, 4, 2, 8);
+                return (int)Globals.Map(connection.Weight, 0, 5, 3, 9);
             }
             else
             {
-                return (int)Globals.Map(connection.Weight, 0, -4, 2, 8);
+                return (int)Globals.Map(connection.Weight, 0, -5, 3, 9);
             }
         }
         private void NeuralNetworkViewer_Paint(object sender, PaintEventArgs e)
@@ -258,7 +255,6 @@ namespace MaceEvolve.WinForms.Controls
 
                     e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
                     e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-
                     //Draw connections between nodes.
                     //Currently, duplicate connections will draw over each other.
                     List<Connection> drawableConnections = networkCreatureInStep.Brain.Connections.Where(x => DrawnNodeIdsToGameObject.Keys.Contains(x.SourceId) && DrawnNodeIdsToGameObject.Keys.Contains(x.TargetId)).ToList();
@@ -273,6 +269,11 @@ namespace MaceEvolve.WinForms.Controls
                             float penSize = GetConnectionPenSize(connection);
 
                             e.Graphics.DrawLine(new Pen(penColor, penSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
+                            
+                            if (connection.SourceId == SelectedNodeId ||  connection.TargetId == SelectedNodeId)
+                            {
+                                e.Graphics.DrawLine(new Pen(Color.White, SelectedNodeConnectionHighlightSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
+                            }
                         }
                     }
 
@@ -305,6 +306,10 @@ namespace MaceEvolve.WinForms.Controls
                             e.Graphics.TranslateTransform(sourceIdGameObject.MX, sourceIdGameObject.MY);
                             e.Graphics.RotateTransform(angleToDrawConnection);
                             e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
+                            if (connection.SourceId == SelectedNodeId || connection.TargetId == SelectedNodeId)
+                            {
+                                e.Graphics.DrawEllipse(new Pen(Color.White, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
+                            }
                             e.Graphics.ResetTransform();
                         }
 
