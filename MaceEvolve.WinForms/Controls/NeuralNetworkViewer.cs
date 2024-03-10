@@ -17,6 +17,7 @@ namespace MaceEvolve.WinForms.Controls
         #region Fields
         public NeuralNetwork _neuralNetwork;
         private int _maxNodeStaggerLevel = 5;
+        private bool _showNodeNames;
         #endregion
 
         #region Properties
@@ -61,7 +62,7 @@ namespace MaceEvolve.WinForms.Controls
         public Color SelectedNodeConnectionsColor { get; set; } = Color.White;
         public Color ActiveNodeConnectionsColor { get; set; } = Color.FromArgb(25, 255, 255, 255);
         public int ActiveNodeConnectionsHighlightSize { get; set; } = 1;
-        int MaxNodeStaggerLevel
+        public int MaxNodeStaggerLevel
         {
             get
             {
@@ -71,6 +72,18 @@ namespace MaceEvolve.WinForms.Controls
             {
                 _maxNodeStaggerLevel = value;
                 nudMaxNodeStaggerLevel.Value = _maxNodeStaggerLevel;
+            }
+        }
+        public bool ShowNodeNames
+        {
+            get
+            {
+                return _showNodeNames;
+            }
+            set
+            {
+                _showNodeNames = value;
+                chkShowNodeLabels.Checked = _showNodeNames;
             }
         }
         #endregion
@@ -198,7 +211,7 @@ namespace MaceEvolve.WinForms.Controls
                     }
 
                     nodeIdToXPosition.Add(nodeId, xPosition);
-                    nodeIdToYPosition.Add(nodeId, Bounds.Top + verticalSpacing * iterator);
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + NodeSize * 0.04f + verticalSpacing * iterator);
                     nodeTypeToIteratorDict[node.NodeType] += 1;
                 }
 
@@ -347,6 +360,36 @@ namespace MaceEvolve.WinForms.Controls
                         }
 
                         e.Graphics.DrawString($"{nodeId}", new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.Black), nodeGameObject.MX - nodeIdFontSize, nodeGameObject.MY - nodePreviousOutputFontSize * 2);
+
+                        if (ShowNodeNames)
+                        {
+                            string nodeName;
+
+                            switch (node.NodeType)
+                            {
+                                case NodeType.Input:
+                                    nodeName = node.CreatureInput == null ? null : Enum.GetName(node.CreatureInput.Value);
+                                    break;
+
+                                case NodeType.Process:
+                                    nodeName = null;
+                                    break;
+
+                                case NodeType.Output:
+                                    nodeName = node.CreatureAction == null ? null : Enum.GetName(node.CreatureAction.Value);
+                                    break;
+
+                                default:
+                                    throw new NotImplementedException($"{node.NodeType}");
+                            }
+
+                            if (nodeName != null)
+                            {
+                                e.Graphics.DrawString(nodeName, new Font(FontFamily.GenericSansSerif, nodeIdFontSize, FontStyle.Bold), new SolidBrush(Color.White), nodeGameObject.X, nodeGameObject.Y - nodePreviousOutputFontSize);
+                            }
+                        }
+
+
                         e.Graphics.DrawString(previousOutputString, new Font(FontFamily.GenericSansSerif, nodePreviousOutputFontSize), new SolidBrush(Color.Black), nodeGameObject.MX - nodePreviousOutputFontSize * 2, nodeGameObject.MY);
                     }
 
@@ -357,6 +400,7 @@ namespace MaceEvolve.WinForms.Controls
                     lblSelectedNodePreviousOutput.Visible = SelectedNodeId != null;
                     lblSelectedNodeConnectionCount.Visible = SelectedNodeId != null;
                     lblNodeInputOrAction.Visible = SelectedNodeId != null;
+
                     if (SelectedNodeId != null)
                     {
                         NeuralNetworkStepNodeInfo selectedNodeStepInfo = CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == SelectedNodeId);
@@ -470,11 +514,14 @@ namespace MaceEvolve.WinForms.Controls
         {
             MaxNodeStaggerLevel = (int)nudMaxNodeStaggerLevel.Value;
         }
-        #endregion
-
         private void NeuralNetworkViewer_Load(object sender, EventArgs e)
         {
             MaxNodeStaggerLevel = 2;
         }
+        private void chkShowNodeLabels_CheckedChanged(object sender, EventArgs e)
+        {
+            ShowNodeNames = chkShowNodeLabels.Checked;
+        }
+        #endregion
     }
 }

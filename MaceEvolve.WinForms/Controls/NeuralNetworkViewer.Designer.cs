@@ -38,6 +38,7 @@
             lblNodeInputOrAction = new System.Windows.Forms.Label();
             nudMaxNodeStaggerLevel = new System.Windows.Forms.NumericUpDown();
             lblMaxNodeStaggerLEvel = new System.Windows.Forms.Label();
+            chkShowNodeLabels = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)nudMaxNodeStaggerLevel).BeginInit();
             SuspendLayout();
             // 
@@ -140,10 +141,26 @@
             lblMaxNodeStaggerLEvel.TabIndex = 8;
             lblMaxNodeStaggerLEvel.Text = "Max Node Stagger Level";
             // 
+            // chkShowNodeLabels
+            // 
+            chkShowNodeLabels.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            chkShowNodeLabels.AutoSize = true;
+            chkShowNodeLabels.BackColor = System.Drawing.Color.Transparent;
+            chkShowNodeLabels.ForeColor = System.Drawing.Color.White;
+            chkShowNodeLabels.Location = new System.Drawing.Point(752, 503);
+            chkShowNodeLabels.Name = "chkShowNodeLabels";
+            chkShowNodeLabels.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            chkShowNodeLabels.Size = new System.Drawing.Size(123, 19);
+            chkShowNodeLabels.TabIndex = 10;
+            chkShowNodeLabels.Text = "Show Node Labels";
+            chkShowNodeLabels.UseVisualStyleBackColor = false;
+            chkShowNodeLabels.CheckedChanged += chkShowNodeLabels_CheckedChanged;
+            // 
             // NeuralNetworkViewer
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            Controls.Add(chkShowNodeLabels);
             Controls.Add(nudMaxNodeStaggerLevel);
             Controls.Add(lblMaxNodeStaggerLEvel);
             Controls.Add(lblNetworkNodesCount);
@@ -174,5 +191,6 @@
         public System.Windows.Forms.Label lblNodeInputOrAction;
         private System.Windows.Forms.NumericUpDown nudMaxNodeStaggerLevel;
         private System.Windows.Forms.Label lblMaxNodeStaggerLEvel;
+        private System.Windows.Forms.CheckBox chkShowNodeLabels;
     }
 }
