@@ -56,6 +56,8 @@ namespace MaceEvolve.WinForms
                 _simulationFPS = value;
                 nudSimulationFPS.Value = value;
                 DrawTimer.Interval = (int)Math.Max((1f / SimulationFPS) * 1000, 1);
+                BestCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = DrawTimer.Interval;
+                SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = DrawTimer.Interval;
 
                 if (LinkFPSAndTPS && SimulationTPS != value)
                 {
@@ -400,15 +402,6 @@ namespace MaceEvolve.WinForms
         }
         private void MainForm_Load(object sender, EventArgs e)
         {
-            SimulationTPS = 60;
-            SimulationFPS = 60;
-
-            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
-
-            MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
-            MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
-            GameTimer.Interval = Math.Max((int)SimulationMspt, 1);
-
             BestCreatureNetworkViewerForm = new NetworkViewerForm();
             BestCreatureNetworkViewerForm.NetworkViewer = new NeuralNetworkViewer();
             BestCreatureNetworkViewerForm.NetworkViewer.Dock = DockStyle.Fill;
@@ -432,6 +425,15 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.lblSelectedNodeConnectionCount.ForeColor = Color.White;
             SelectedCreatureNetworkViewerForm.NetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
             SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = DrawTimer.Interval;
+
+            SimulationTPS = 60;
+            SimulationFPS = 60;
+
+            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
+
+            MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
+            MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
+            GameTimer.Interval = Math.Max((int)SimulationMspt, 1);
 
             Reset();
         }
