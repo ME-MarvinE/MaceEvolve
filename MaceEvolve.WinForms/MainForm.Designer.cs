@@ -40,17 +40,17 @@ namespace MaceEvolve.WinForms
             lblSimulationRunning = new Label();
             btnFastFoward = new Button();
             GameTimer = new Timer(components);
-            GatherStepInfoForAllCreaturesButton = new Button();
             btnLoadStep = new Button();
             btnSaveCurrentStep = new Button();
             btnBenchmark = new Button();
             nudSimulationTPS = new NumericUpDown();
             lblSimulationTPS = new Label();
-            btnHideUI = new Button();
             nudSimulationFPS = new NumericUpDown();
             lblSimulationFPS = new Label();
-            btnLinkFPSAndTPS = new Button();
             DrawTimer = new Timer(components);
+            chkLinkFpsAndTps = new CheckBox();
+            chkGatherStepInfoForAllCreatures = new CheckBox();
+            chkShowUI = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudSimulationFPS).BeginInit();
             SuspendLayout();
@@ -166,20 +166,6 @@ namespace MaceEvolve.WinForms
             GameTimer.Enabled = true;
             GameTimer.Tick += GameTimer_Tick;
             // 
-            // GatherStepInfoForAllCreaturesButton
-            // 
-            GatherStepInfoForAllCreaturesButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            GatherStepInfoForAllCreaturesButton.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
-            GatherStepInfoForAllCreaturesButton.Cursor = Cursors.Hand;
-            GatherStepInfoForAllCreaturesButton.FlatStyle = FlatStyle.Flat;
-            GatherStepInfoForAllCreaturesButton.Location = new System.Drawing.Point(511, 611);
-            GatherStepInfoForAllCreaturesButton.Name = "GatherStepInfoForAllCreaturesButton";
-            GatherStepInfoForAllCreaturesButton.Size = new System.Drawing.Size(265, 38);
-            GatherStepInfoForAllCreaturesButton.TabIndex = 1;
-            GatherStepInfoForAllCreaturesButton.Text = "Gather Step Info For All Creatures: ";
-            GatherStepInfoForAllCreaturesButton.UseVisualStyleBackColor = false;
-            GatherStepInfoForAllCreaturesButton.Click += GatherStepInfoForAllCreaturesButton_Click;
-            // 
             // btnLoadStep
             // 
             btnLoadStep.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -224,8 +210,8 @@ namespace MaceEvolve.WinForms
             // 
             // nudSimulationTPS
             // 
-            nudSimulationTPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            nudSimulationTPS.Location = new System.Drawing.Point(620, 544);
+            nudSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudSimulationTPS.Location = new System.Drawing.Point(621, 210);
             nudSimulationTPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
             nudSimulationTPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             nudSimulationTPS.Name = "nudSimulationTPS";
@@ -236,35 +222,21 @@ namespace MaceEvolve.WinForms
             // 
             // lblSimulationTPS
             // 
-            lblSimulationTPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            lblSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblSimulationTPS.AutoSize = true;
             lblSimulationTPS.BackColor = System.Drawing.Color.Transparent;
             lblSimulationTPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             lblSimulationTPS.ForeColor = System.Drawing.Color.White;
-            lblSimulationTPS.Location = new System.Drawing.Point(578, 544);
+            lblSimulationTPS.Location = new System.Drawing.Point(579, 210);
             lblSimulationTPS.Name = "lblSimulationTPS";
             lblSimulationTPS.Size = new System.Drawing.Size(36, 21);
             lblSimulationTPS.TabIndex = 4;
             lblSimulationTPS.Text = "TPS";
             // 
-            // btnHideUI
-            // 
-            btnHideUI.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnHideUI.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
-            btnHideUI.Cursor = Cursors.Hand;
-            btnHideUI.FlatStyle = FlatStyle.Flat;
-            btnHideUI.Location = new System.Drawing.Point(12, 622);
-            btnHideUI.Name = "btnHideUI";
-            btnHideUI.Size = new System.Drawing.Size(32, 27);
-            btnHideUI.TabIndex = 1;
-            btnHideUI.Text = "UI";
-            btnHideUI.UseVisualStyleBackColor = false;
-            btnHideUI.Click += btnHideUI_Click;
-            // 
             // nudSimulationFPS
             // 
-            nudSimulationFPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            nudSimulationFPS.Location = new System.Drawing.Point(726, 544);
+            nudSimulationFPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudSimulationFPS.Location = new System.Drawing.Point(727, 210);
             nudSimulationFPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
             nudSimulationFPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             nudSimulationFPS.Name = "nudSimulationFPS";
@@ -275,35 +247,69 @@ namespace MaceEvolve.WinForms
             // 
             // lblSimulationFPS
             // 
-            lblSimulationFPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            lblSimulationFPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblSimulationFPS.AutoSize = true;
             lblSimulationFPS.BackColor = System.Drawing.Color.Transparent;
             lblSimulationFPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             lblSimulationFPS.ForeColor = System.Drawing.Color.White;
-            lblSimulationFPS.Location = new System.Drawing.Point(684, 544);
+            lblSimulationFPS.Location = new System.Drawing.Point(685, 210);
             lblSimulationFPS.Name = "lblSimulationFPS";
             lblSimulationFPS.Size = new System.Drawing.Size(36, 21);
             lblSimulationFPS.TabIndex = 8;
             lblSimulationFPS.Text = "FPS";
             // 
-            // btnLinkFPSAndTPS
-            // 
-            btnLinkFPSAndTPS.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnLinkFPSAndTPS.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
-            btnLinkFPSAndTPS.Cursor = Cursors.Hand;
-            btnLinkFPSAndTPS.FlatStyle = FlatStyle.Flat;
-            btnLinkFPSAndTPS.Location = new System.Drawing.Point(578, 573);
-            btnLinkFPSAndTPS.Name = "btnLinkFPSAndTPS";
-            btnLinkFPSAndTPS.Size = new System.Drawing.Size(198, 32);
-            btnLinkFPSAndTPS.TabIndex = 1;
-            btnLinkFPSAndTPS.Text = "Link FPS and TPS:";
-            btnLinkFPSAndTPS.UseVisualStyleBackColor = false;
-            btnLinkFPSAndTPS.Click += btnLinkFPSAndTPS_Click;
-            // 
             // DrawTimer
             // 
             DrawTimer.Enabled = true;
             DrawTimer.Tick += DrawTimer_Tick;
+            // 
+            // chkLinkFpsAndTps
+            // 
+            chkLinkFpsAndTps.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            chkLinkFpsAndTps.AutoSize = true;
+            chkLinkFpsAndTps.BackColor = System.Drawing.Color.Transparent;
+            chkLinkFpsAndTps.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkLinkFpsAndTps.ForeColor = System.Drawing.Color.White;
+            chkLinkFpsAndTps.Location = new System.Drawing.Point(661, 580);
+            chkLinkFpsAndTps.Name = "chkLinkFpsAndTps";
+            chkLinkFpsAndTps.RightToLeft = RightToLeft.Yes;
+            chkLinkFpsAndTps.Size = new System.Drawing.Size(115, 19);
+            chkLinkFpsAndTps.TabIndex = 11;
+            chkLinkFpsAndTps.Text = "Link FPS and TPS";
+            chkLinkFpsAndTps.UseVisualStyleBackColor = false;
+            chkLinkFpsAndTps.CheckedChanged += chkLinkFpsAndTps_CheckedChanged;
+            // 
+            // chkGatherStepInfoForAllCreatures
+            // 
+            chkGatherStepInfoForAllCreatures.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            chkGatherStepInfoForAllCreatures.AutoSize = true;
+            chkGatherStepInfoForAllCreatures.BackColor = System.Drawing.Color.Transparent;
+            chkGatherStepInfoForAllCreatures.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkGatherStepInfoForAllCreatures.ForeColor = System.Drawing.Color.White;
+            chkGatherStepInfoForAllCreatures.Location = new System.Drawing.Point(576, 605);
+            chkGatherStepInfoForAllCreatures.Name = "chkGatherStepInfoForAllCreatures";
+            chkGatherStepInfoForAllCreatures.RightToLeft = RightToLeft.Yes;
+            chkGatherStepInfoForAllCreatures.Size = new System.Drawing.Size(200, 19);
+            chkGatherStepInfoForAllCreatures.TabIndex = 11;
+            chkGatherStepInfoForAllCreatures.Text = "Gather Step Info For All Creatures";
+            chkGatherStepInfoForAllCreatures.UseVisualStyleBackColor = false;
+            chkGatherStepInfoForAllCreatures.CheckedChanged += chkGatherStepInfoForAllCreatures_CheckedChanged;
+            // 
+            // chkShowUI
+            // 
+            chkShowUI.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            chkShowUI.AutoSize = true;
+            chkShowUI.BackColor = System.Drawing.Color.Transparent;
+            chkShowUI.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkShowUI.ForeColor = System.Drawing.Color.White;
+            chkShowUI.Location = new System.Drawing.Point(739, 630);
+            chkShowUI.Name = "chkShowUI";
+            chkShowUI.RightToLeft = RightToLeft.Yes;
+            chkShowUI.Size = new System.Drawing.Size(37, 19);
+            chkShowUI.TabIndex = 11;
+            chkShowUI.Text = "UI";
+            chkShowUI.UseVisualStyleBackColor = false;
+            chkShowUI.CheckedChanged += chkShowUI_CheckedChanged;
             // 
             // MainForm
             // 
@@ -311,6 +317,9 @@ namespace MaceEvolve.WinForms
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = System.Drawing.Color.FromArgb(32, 32, 32);
             ClientSize = new System.Drawing.Size(784, 661);
+            Controls.Add(chkShowUI);
+            Controls.Add(chkGatherStepInfoForAllCreatures);
+            Controls.Add(chkLinkFpsAndTps);
             Controls.Add(nudSimulationFPS);
             Controls.Add(lblSimulationFPS);
             Controls.Add(nudSimulationTPS);
@@ -319,12 +328,9 @@ namespace MaceEvolve.WinForms
             Controls.Add(lblGenEndsIn);
             Controls.Add(lblGenerationCount);
             Controls.Add(btnTrackBestCreature);
-            Controls.Add(GatherStepInfoForAllCreaturesButton);
             Controls.Add(ResetButton);
             Controls.Add(StopButton);
             Controls.Add(btnSaveCurrentStep);
-            Controls.Add(btnHideUI);
-            Controls.Add(btnLinkFPSAndTPS);
             Controls.Add(btnBenchmark);
             Controls.Add(btnLoadStep);
             Controls.Add(btnFastFoward);
@@ -352,17 +358,17 @@ namespace MaceEvolve.WinForms
         private Label lblSimulationRunning;
         private Button btnFastFoward;
         private Timer GameTimer;
-        private Button GatherStepInfoForAllCreaturesButton;
         private Button btnLoadStepList;
         private Button btnLoadStep;
         private Button btnSaveCurrentStep;
         private Button btnBenchmark;
         private NumericUpDown nudSimulationTPS;
         private Label lblSimulationTPS;
-        private Button btnHideUI;
         private NumericUpDown nudSimulationFPS;
         private Label lblSimulationFPS;
-        private Button btnLinkFPSAndTPS;
         private Timer DrawTimer;
+        private CheckBox chkLinkFpsAndTps;
+        private CheckBox chkGatherStepInfoForAllCreatures;
+        private CheckBox chkShowUI;
     }
 }

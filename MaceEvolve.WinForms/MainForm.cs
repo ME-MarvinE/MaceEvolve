@@ -27,6 +27,7 @@ namespace MaceEvolve.WinForms
         private bool _isInFastMode;
         private bool _gatherStepInfoForAllCreatures;
         private bool _simulationRunning;
+        private bool _isUIVisible = true;
         #endregion
 
         #region Properties
@@ -91,7 +92,7 @@ namespace MaceEvolve.WinForms
             set
             {
                 _gatherStepInfoForAllCreatures = value;
-                GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
+                chkGatherStepInfoForAllCreatures.Checked = _gatherStepInfoForAllCreatures;
             }
         }
         public bool IsInFastMode
@@ -132,10 +133,22 @@ namespace MaceEvolve.WinForms
             {
                 _linkFPSAndTPS = value;
                 SimulationFPS = SimulationTPS;
-                btnLinkFPSAndTPS.Text = $"Link FPS and TPS: {(LinkFPSAndTPS ? "Enabled" : "Disabled")}";
+                chkLinkFpsAndTps.Checked = _linkFPSAndTPS;
             }
         }
-
+        public bool IsUIVisible
+        {
+            get
+            {
+                return _isUIVisible;
+            }
+            set
+            {
+                _isUIVisible = value;
+                chkShowUI.Checked = _isUIVisible;
+                ToggleUI(_isUIVisible);
+            }
+        }
         #endregion
 
         #region Constructors
@@ -478,6 +491,9 @@ namespace MaceEvolve.WinForms
             LinkFPSAndTPS = !LinkFPSAndTPS;
             LinkFPSAndTPS = !LinkFPSAndTPS;
 
+            IsUIVisible = !IsUIVisible;
+            IsUIVisible = !IsUIVisible;
+
             int oldTPS = SimulationTPS;
             SimulationTPS = 5;
             SimulationTPS = oldTPS;
@@ -486,28 +502,22 @@ namespace MaceEvolve.WinForms
             SimulationFPS = 5;
             SimulationFPS = oldFPS;
         }
-        private void GatherStepInfoForAllCreaturesButton_Click(object sender, EventArgs e)
+        private void ToggleUI(bool isVisible)
         {
-            GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
-        }
-        private void ToggleUI(bool? isVisible = null)
-        {
-            bool isControlMenuVisible = isVisible ?? !StartButton.Visible;
-
-            StartButton.Visible = isControlMenuVisible;
-            StopButton.Visible = isControlMenuVisible;
-            ResetButton.Visible = isControlMenuVisible;
-            GatherStepInfoForAllCreaturesButton.Visible = isControlMenuVisible;
-            btnTrackBestCreature.Visible = isControlMenuVisible;
-            btnFastFoward.Visible = isControlMenuVisible;
-            btnBenchmark.Visible = isControlMenuVisible;
-            btnSaveCurrentStep.Visible = isControlMenuVisible;
-            btnLoadStep.Visible = isControlMenuVisible;
-            nudSimulationTPS.Visible = isControlMenuVisible;
-            lblSimulationTPS.Visible = isControlMenuVisible;
-            lblSimulationFPS.Visible = isControlMenuVisible;
-            nudSimulationFPS.Visible = isControlMenuVisible;
-            btnLinkFPSAndTPS.Visible = isControlMenuVisible;
+            StartButton.Visible = isVisible;
+            StopButton.Visible = isVisible;
+            ResetButton.Visible = isVisible;
+            chkGatherStepInfoForAllCreatures.Visible = isVisible;
+            btnTrackBestCreature.Visible = isVisible;
+            btnFastFoward.Visible = isVisible;
+            btnBenchmark.Visible = isVisible;
+            btnSaveCurrentStep.Visible = isVisible;
+            btnLoadStep.Visible = isVisible;
+            nudSimulationTPS.Visible = isVisible;
+            lblSimulationTPS.Visible = isVisible;
+            lblSimulationFPS.Visible = isVisible;
+            nudSimulationFPS.Visible = isVisible;
+            chkLinkFpsAndTps.Visible = isVisible;
         }
         private void UpdateUIText()
         {
@@ -587,14 +597,6 @@ namespace MaceEvolve.WinForms
         {
             SimulationFPS = (int)nudSimulationFPS.Value;
         }
-        private void btnHideUI_Click(object sender, EventArgs e)
-        {
-            ToggleUI();
-        }
-        private void btnLinkFPSAndTPS_Click(object sender, EventArgs e)
-        {
-            LinkFPSAndTPS = !LinkFPSAndTPS;
-        }
         private void DrawTimer_Tick(object sender, EventArgs e)
         {
             Invalidate();
@@ -609,6 +611,18 @@ namespace MaceEvolve.WinForms
             {
                 lblSimulationRunning.Text = IsInFastMode ? "Stopped (Fast)" : "Stopped";
             }
+        }
+        private void chkLinkFpsAndTps_CheckedChanged(object sender, EventArgs e)
+        {
+            LinkFPSAndTPS = chkLinkFpsAndTps.Checked;
+        }
+        private void chkGatherStepInfoForAllCreatures_CheckedChanged(object sender, EventArgs e)
+        {
+            GatherStepInfoForAllCreatures = chkGatherStepInfoForAllCreatures.Checked;
+        }
+        private void chkShowUI_CheckedChanged(object sender, EventArgs e)
+        {
+            IsUIVisible = chkShowUI.Checked;
         }
         #endregion
     }

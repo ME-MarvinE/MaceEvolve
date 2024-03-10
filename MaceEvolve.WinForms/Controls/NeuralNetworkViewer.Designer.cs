@@ -120,8 +120,8 @@
             // 
             // nudMaxNodeStaggerLevel
             // 
-            nudMaxNodeStaggerLevel.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            nudMaxNodeStaggerLevel.Location = new System.Drawing.Point(827, 528);
+            nudMaxNodeStaggerLevel.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            nudMaxNodeStaggerLevel.Location = new System.Drawing.Point(827, 11);
             nudMaxNodeStaggerLevel.Name = "nudMaxNodeStaggerLevel";
             nudMaxNodeStaggerLevel.Size = new System.Drawing.Size(48, 23);
             nudMaxNodeStaggerLevel.TabIndex = 9;
@@ -130,12 +130,12 @@
             // 
             // lblMaxNodeStaggerLEvel
             // 
-            lblMaxNodeStaggerLEvel.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            lblMaxNodeStaggerLEvel.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             lblMaxNodeStaggerLEvel.AutoSize = true;
             lblMaxNodeStaggerLEvel.BackColor = System.Drawing.Color.Transparent;
             lblMaxNodeStaggerLEvel.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             lblMaxNodeStaggerLEvel.ForeColor = System.Drawing.Color.White;
-            lblMaxNodeStaggerLEvel.Location = new System.Drawing.Point(642, 528);
+            lblMaxNodeStaggerLEvel.Location = new System.Drawing.Point(642, 11);
             lblMaxNodeStaggerLEvel.Name = "lblMaxNodeStaggerLEvel";
             lblMaxNodeStaggerLEvel.Size = new System.Drawing.Size(179, 21);
             lblMaxNodeStaggerLEvel.TabIndex = 8;
@@ -146,8 +146,9 @@
             chkShowNodeLabels.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
             chkShowNodeLabels.AutoSize = true;
             chkShowNodeLabels.BackColor = System.Drawing.Color.Transparent;
+            chkShowNodeLabels.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             chkShowNodeLabels.ForeColor = System.Drawing.Color.White;
-            chkShowNodeLabels.Location = new System.Drawing.Point(752, 503);
+            chkShowNodeLabels.Location = new System.Drawing.Point(756, 534);
             chkShowNodeLabels.Name = "chkShowNodeLabels";
             chkShowNodeLabels.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             chkShowNodeLabels.Size = new System.Drawing.Size(123, 19);
