@@ -219,6 +219,7 @@ namespace MaceEvolve.WinForms
             // 
             // nudSimulationTPS
             // 
+            nudSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             nudSimulationTPS.Location = new System.Drawing.Point(724, 204);
             nudSimulationTPS.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
             nudSimulationTPS.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
@@ -230,6 +231,7 @@ namespace MaceEvolve.WinForms
             // 
             // lblSimulationTPS
             // 
+            lblSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblSimulationTPS.AutoSize = true;
             lblSimulationTPS.BackColor = System.Drawing.Color.Transparent;
             lblSimulationTPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
@@ -242,7 +244,7 @@ namespace MaceEvolve.WinForms
             // 
             // btnHideUI
             // 
-            btnHideUI.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnHideUI.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnHideUI.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
             btnHideUI.Cursor = Cursors.Hand;
             btnHideUI.FlatStyle = FlatStyle.Flat;
