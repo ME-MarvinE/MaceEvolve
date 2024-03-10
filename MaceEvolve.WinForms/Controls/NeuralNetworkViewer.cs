@@ -1,9 +1,7 @@
 ﻿using MaceEvolve.Core;
 using MaceEvolve.Core.Enums;
-using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Models;
-using Microsoft.VisualBasic.Devices;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +9,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace MaceEvolve.WinForms.Controls
 {
@@ -19,6 +16,7 @@ namespace MaceEvolve.WinForms.Controls
     {
         #region Fields
         public NeuralNetwork _neuralNetwork;
+        private int _maxNodeStaggerLevel = 5;
         #endregion
 
         #region Properties
@@ -58,6 +56,19 @@ namespace MaceEvolve.WinForms.Controls
         public int? SelectedNodeId { get; set; }
         public int? MovingNodeId { get; set; }
         private object _lock { get; set; } = new object();
+        float MinNodeVerticalSpacing { get; set; }
+        int MaxNodeStaggerLevel
+        {
+            get
+            {
+                return _maxNodeStaggerLevel;
+            }
+            set
+            {
+                _maxNodeStaggerLevel = value;
+                nudMaxNodeStaggerLevel.Value = _maxNodeStaggerLevel;
+            }
+        }
         #endregion
 
         #region Constructors
@@ -105,47 +116,86 @@ namespace MaceEvolve.WinForms.Controls
                             break;
 
                         default:
-                            throw new NotImplementedException(nameof(Node.NodeType));
+                            throw new NotImplementedException(Enum.GetName(NeuralNetwork.NodeIdsToNodesDict[nodeId].NodeType));
                     }
                 }
 
-
                 Dictionary<int, float> nodeIdToYPosition = new Dictionary<int, float>();
                 Dictionary<int, float> nodeIdToXPosition = new Dictionary<int, float>();
-                float inputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, inputNodeIds.Count);
+                float inputNodeIdVerticalSpacing = Math.Max(Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, inputNodeIds.Count), MinNodeVerticalSpacing);
                 float inputNodeMinX = Bounds.Left;
-                float inputNodeMaxX = (inputNodeMinX + Bounds.Width / 3);
+                float inputNodeMaxX = (inputNodeMinX + Bounds.Width / Globals.AllNodeTypes.Count);
 
-                for (int i = 0; i < inputNodeIds.Count; i++)
-                {
-                    int nodeId = inputNodeIds[i];
-                    nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)inputNodeMinX, (int)inputNodeMaxX - (int)NodeSize));
-                    nodeIdToYPosition.Add(nodeId, Bounds.Top + inputNodeIdVerticalSpacing * (i + 1));
-                    nodeIdToYPosition.Add(nodeId, Bounds.Top + inputNodeIdVerticalSpacing * i);
-                }
-
-                float processNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, processNodeIds.Count);
+                float processNodeIdVerticalSpacing = Math.Max(Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, processNodeIds.Count), MinNodeVerticalSpacing);
                 float processNodeMinX = inputNodeMaxX;
-                float processNodeMaxX = (processNodeMinX + Bounds.Width / 3);
+                float processNodeMaxX = (processNodeMinX + Bounds.Width / Globals.AllNodeTypes.Count);
 
-                for (int i = 0; i < processNodeIds.Count; i++)
-                {
-                    int nodeId = processNodeIds[i];
-                    nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)processNodeMinX, (int)processNodeMaxX - (int)NodeSize));
-                    nodeIdToYPosition.Add(nodeId, Bounds.Top + processNodeIdVerticalSpacing * (i + 1));
-                    nodeIdToYPosition.Add(nodeId, Bounds.Top + processNodeIdVerticalSpacing * i);
-                }
-
-                float outputNodeIdVerticalSpacing = Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, outputNodeIds.Count);
+                float outputNodeIdVerticalSpacing = Math.Max(Math.Max(0, Bounds.Bottom - (NodeSize / 2)) / Math.Max(1, outputNodeIds.Count), MinNodeVerticalSpacing);
                 float outputNodeMinX = processNodeMaxX;
-                float outputNodeMaxX = (outputNodeMinX + Bounds.Width / 3);
+                float outputNodeMaxX = (outputNodeMinX + Bounds.Width / Globals.AllNodeTypes.Count);
 
-                for (int i = 0; i < outputNodeIds.Count; i++)
+
+                Dictionary<NodeType, int> nodeTypeToIteratorDict = Globals.AllNodeTypes.ToDictionary(x => x, x => 0);
+
+                for (int i = 0; i < nodeIds.Count; i++)
                 {
-                    int nodeId = outputNodeIds[i];
-                    nodeIdToXPosition.Add(nodeId, MaceRandom.Current.Next((int)outputNodeMinX, (int)outputNodeMaxX - (int)NodeSize));
-                    nodeIdToYPosition.Add(nodeId, Bounds.Top + outputNodeIdVerticalSpacing * (i + 1));
-                    nodeIdToYPosition.Add(nodeId, Bounds.Top + outputNodeIdVerticalSpacing * i);
+                    int nodeId = nodeIds[i];
+                    Node node = NeuralNetwork.NodeIdsToNodesDict[nodeId];
+                    int iterator = nodeTypeToIteratorDict[node.NodeType];
+
+                    float verticalSpacing;
+                    float minX;
+                    float maxX;
+
+                    switch (node.NodeType)
+                    {
+                        case NodeType.Input:
+                            verticalSpacing = inputNodeIdVerticalSpacing;
+                            minX = inputNodeMinX;
+                            maxX = inputNodeMaxX;
+                            break;
+
+                        case NodeType.Process:
+                            verticalSpacing = processNodeIdVerticalSpacing;
+                            minX = processNodeMinX;
+                            maxX = processNodeMaxX;
+                            break;
+
+                        case NodeType.Output:
+                            verticalSpacing = outputNodeIdVerticalSpacing;
+                            minX = outputNodeMinX;
+                            maxX = outputNodeMaxX;
+                            break;
+
+                        default:
+                            throw new NotImplementedException(Enum.GetName(node.NodeType));
+                    }
+
+                    float availableHorizontalSpace = (maxX - NodeSize) - minX;
+                    bool stagger = verticalSpacing < NodeSize;
+                    float xPosition = (minX + availableHorizontalSpace / 2);
+
+                    if (stagger)
+                    {
+                        int staggerPosition = iterator % Math.Max(MaxNodeStaggerLevel, 1);
+                        float middleStaggerPosition = MaxNodeStaggerLevel / 3;
+                        float staggerSize = Math.Min(NodeSize, availableHorizontalSpace / MaxNodeStaggerLevel);
+
+                        if (staggerPosition < middleStaggerPosition)
+                        {
+                            xPosition -= staggerSize * staggerPosition;
+                        }
+                        else
+                        {
+                            xPosition += staggerSize * staggerPosition;
+                        }
+
+                        xPosition -= staggerSize * ((MaxNodeStaggerLevel - 1) / 2);
+                    }
+
+                    nodeIdToXPosition.Add(nodeId, xPosition);
+                    nodeIdToYPosition.Add(nodeId, Bounds.Top + verticalSpacing * iterator);
+                    nodeTypeToIteratorDict[node.NodeType] += 1;
                 }
 
                 for (int i = 0; i < nodeIds.Count; i++)
@@ -317,6 +367,35 @@ namespace MaceEvolve.WinForms.Controls
                                 throw new NotImplementedException();
                         }
                     }
+
+                    {
+                        List<int> nodeIds = NeuralNetwork.GetNodeIds();
+                        List<int> inputNodeIds = new List<int>();
+                        List<int> processNodeIds = new List<int>();
+                        List<int> outputNodeIds = new List<int>();
+
+                        foreach (var nodeId in nodeIds)
+                        {
+                            switch (NeuralNetwork.NodeIdsToNodesDict[nodeId].NodeType)
+                            {
+                                case NodeType.Input:
+                                    inputNodeIds.Add(nodeId);
+                                    break;
+
+                                case NodeType.Process:
+                                    processNodeIds.Add(nodeId);
+                                    break;
+
+                                case NodeType.Output:
+                                    outputNodeIds.Add(nodeId);
+                                    break;
+
+                                default:
+                                    throw new NotImplementedException(Enum.GetName(NeuralNetwork.NodeIdsToNodesDict[nodeId].NodeType));
+                            }
+                        }
+                    }
+
                 }
             }
         }
@@ -368,6 +447,15 @@ namespace MaceEvolve.WinForms.Controls
                 Invalidate();
             }
         }
+        private void nudMaxNodeStaggerLevel_ValueChanged(object sender, EventArgs e)
+        {
+            MaxNodeStaggerLevel = (int)nudMaxNodeStaggerLevel.Value;
+        }
         #endregion
+
+        private void NeuralNetworkViewer_Load(object sender, EventArgs e)
+        {
+            MaxNodeStaggerLevel = 2;
+        }
     }
 }
