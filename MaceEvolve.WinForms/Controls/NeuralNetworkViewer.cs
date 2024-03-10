@@ -341,7 +341,8 @@ namespace MaceEvolve.WinForms.Controls
                         }
 
                         //Draw the node.
-                        NeuralNetworkStepNodeInfo nodeNetworkStepInfo = CreaturesBrainOutput[networkCreatureInStep].Find(x => x.NodeId == nodeId);
+                        CreaturesBrainOutput.TryGetValue(networkCreatureInStep, out List<NeuralNetworkStepNodeInfo> stepList);
+                        NeuralNetworkStepNodeInfo nodeNetworkStepInfo = stepList?.Find(x => x.NodeId == nodeId);
 
                         string previousOutputString = nodeNetworkStepInfo == null ? "N/A" : string.Format("{0:0.##}", nodeNetworkStepInfo.PreviousOutput);
                         int nodeIdFontSize = NodeFontSize - 4;
