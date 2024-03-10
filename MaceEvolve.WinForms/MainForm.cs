@@ -401,7 +401,7 @@ namespace MaceEvolve.WinForms
         private void MainForm_Load(object sender, EventArgs e)
         {
             SimulationTPS = 60;
-            LinkFPSAndTPS = true;
+            SimulationFPS = 60;
 
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
 
