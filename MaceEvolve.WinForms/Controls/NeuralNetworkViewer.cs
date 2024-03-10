@@ -57,7 +57,10 @@ namespace MaceEvolve.WinForms.Controls
         public int? MovingNodeId { get; set; }
         private object _lock { get; set; } = new object();
         float MinNodeVerticalSpacing { get; set; }
-        public int SelectedNodeConnectionHighlightSize { get; set; } = 1;
+        public int SelectedNodeConnectionsHighlightSize { get; set; } = 1;
+        public Color SelectedNodeConnectionsColor { get; set; } = Color.White;
+        public Color ActiveNodeConnectionsColor { get; set; } = Color.FromArgb(25, 255, 255, 255);
+        public int ActiveNodeConnectionsHighlightSize { get; set; } = 1;
         int MaxNodeStaggerLevel
         {
             get
@@ -258,6 +261,7 @@ namespace MaceEvolve.WinForms.Controls
                     //Draw connections between nodes.
                     //Currently, duplicate connections will draw over each other.
                     List<Connection> drawableConnections = networkCreatureInStep.Brain.Connections.Where(x => DrawnNodeIdsToGameObject.Keys.Contains(x.SourceId) && DrawnNodeIdsToGameObject.Keys.Contains(x.TargetId)).ToList();
+                    NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = CreaturesBrainOutput[networkCreatureInStep].Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
 
                     foreach (var connection in drawableConnections)
                     {
@@ -269,15 +273,18 @@ namespace MaceEvolve.WinForms.Controls
                             float penSize = GetConnectionPenSize(connection);
 
                             e.Graphics.DrawLine(new Pen(penColor, penSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
-                            
-                            if (connection.SourceId == SelectedNodeId ||  connection.TargetId == SelectedNodeId)
+
+                            if (connection.SourceId == SelectedNodeId || connection.TargetId == SelectedNodeId || connection.SourceId == highestOutputNodeStepInfo?.NodeId || connection.TargetId == highestOutputNodeStepInfo?.NodeId)
                             {
-                                e.Graphics.DrawLine(new Pen(Color.White, SelectedNodeConnectionHighlightSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
+                                e.Graphics.DrawLine(new Pen(SelectedNodeConnectionsColor, SelectedNodeConnectionsHighlightSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
+                            }
+
+                            if (connection.SourceId == highestOutputNodeStepInfo?.NodeId || connection.TargetId == highestOutputNodeStepInfo?.NodeId)
+                            {
+                                e.Graphics.DrawLine(new Pen(ActiveNodeConnectionsColor, SelectedNodeConnectionsHighlightSize), sourceIdGameObject.MX, sourceIdGameObject.MY, targetIdGameObject.MX, targetIdGameObject.MY);
                             }
                         }
                     }
-
-                    NeuralNetworkStepNodeInfo highestOutputNodeStepInfo = CreaturesBrainOutput[networkCreatureInStep].Where(x => x.NodeType == NodeType.Output).OrderBy(x => x.PreviousOutput).LastOrDefault();
 
                     //Draw nodes and self referencing connections.
                     foreach (var keyValuePair in DrawnNodeIdsToGameObject)
@@ -306,10 +313,15 @@ namespace MaceEvolve.WinForms.Controls
                             e.Graphics.TranslateTransform(sourceIdGameObject.MX, sourceIdGameObject.MY);
                             e.Graphics.RotateTransform(angleToDrawConnection);
                             e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
-                            
+
                             if (connection.SourceId == SelectedNodeId || connection.TargetId == SelectedNodeId)
                             {
-                                e.Graphics.DrawEllipse(new Pen(Color.White, SelectedNodeConnectionHighlightSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
+                                e.Graphics.DrawEllipse(new Pen(SelectedNodeConnectionsColor, SelectedNodeConnectionsHighlightSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
+                            }
+
+                            if (connection.SourceId == highestOutputNodeStepInfo?.NodeId || connection.TargetId == highestOutputNodeStepInfo?.NodeId)
+                            {
+                                e.Graphics.DrawEllipse(new Pen(ActiveNodeConnectionsColor, ActiveNodeConnectionsHighlightSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
                             }
 
                             e.Graphics.ResetTransform();
