@@ -21,9 +21,12 @@ namespace MaceEvolve.WinForms
     public partial class MainForm : Form
     {
         #region Fields
-        private int _simulationTPS;
-        private int _simulationFPS;
+        private int _simulationTPS = 60;
+        private int _simulationFPS = 60;
         private bool _linkFPSAndTPS;
+        private bool _isInFastMode;
+        private bool _gatherStepInfoForAllCreatures;
+        private bool _simulationRunning;
         #endregion
 
         #region Properties
@@ -65,11 +68,44 @@ namespace MaceEvolve.WinForms
                 }
             }
         }
-        public bool SimulationRunning { get; set; }
+        public bool SimulationRunning
+        {
+            get
+            {
+                return _simulationRunning;
+            }
+            set
+            {
+                _simulationRunning = value;
+                UpdateIsRunningText();
+            }
+        }
         public int CurrentRunTicksElapsed { get; set; }
         public long AllRunsElapsed { get; set; }
-        public bool GatherStepInfoForAllCreatures { get; set; }
-        public bool IsInFastMode { get; set; }
+        public bool GatherStepInfoForAllCreatures
+        {
+            get
+            {
+                return _gatherStepInfoForAllCreatures;
+            }
+            set
+            {
+                _gatherStepInfoForAllCreatures = value;
+                GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
+            }
+        }
+        public bool IsInFastMode
+        {
+            get
+            {
+                return _isInFastMode;
+            }
+            set
+            {
+                _isInFastMode = value;
+                UpdateIsRunningText();
+            }
+        }
         public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
         public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
         public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; }
@@ -96,6 +132,7 @@ namespace MaceEvolve.WinForms
             {
                 _linkFPSAndTPS = value;
                 SimulationFPS = SimulationTPS;
+                btnLinkFPSAndTPS.Text = $"Link FPS and TPS: {(LinkFPSAndTPS ? "Enabled" : "Disabled")}";
             }
         }
 
@@ -426,16 +463,28 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
             SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = DrawTimer.Interval;
 
-            SimulationTPS = 60;
-            SimulationFPS = 60;
-
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
-
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
-            GameTimer.Interval = Math.Max((int)SimulationMspt, 1);
 
+            InitDefaults();
             Reset();
+        }
+        private void InitDefaults()
+        {
+            GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
+            GatherStepInfoForAllCreatures = !GatherStepInfoForAllCreatures;
+
+            LinkFPSAndTPS = !LinkFPSAndTPS;
+            LinkFPSAndTPS = !LinkFPSAndTPS;
+
+            int oldTPS = SimulationTPS;
+            SimulationTPS = 5;
+            SimulationTPS = oldTPS;
+
+            int oldFPS = SimulationFPS;
+            SimulationFPS = 5;
+            SimulationFPS = oldFPS;
         }
         private void GatherStepInfoForAllCreaturesButton_Click(object sender, EventArgs e)
         {
@@ -474,21 +523,9 @@ namespace MaceEvolve.WinForms
             TimeSpan timeInAllRuns = timeInFailedRuns.Add(timeInCurrentRun);
             TimeSpan averageTimePerRun = TimeSpan.FromMilliseconds(FailedRunsUptimes.Count == 0 ? 0 : FailedRunsUptimes.Average(x => x.TotalMilliseconds));
 
-            if (SimulationRunning)
-            {
-                lblSimulationRunning.Text = IsInFastMode ? "Running (Fast)" : "Running";
-            }
-            else
-            {
-                lblSimulationRunning.Text = IsInFastMode ? "Stopped (Fast)" : "Stopped";
-            }
-
             lblGenerationCount.Text = $"Run {FailedRunsUptimes.Count + 1}";
             lblGenEndsIn.Text = $"Uptime: {timeInAllRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Failed: {timeInFailedRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
                 $"\nRun {FailedRunsUptimes.Count + 1}, {timeInCurrentRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Average: {averageTimePerRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}";
-
-            GatherStepInfoForAllCreaturesButton.Text = $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}";
-            btnLinkFPSAndTPS.Text = $"Link FPS and TPS: {(LinkFPSAndTPS ? "Enabled" : "Disabled")}";
         }
         private void btnLoadStep_Click(object sender, EventArgs e)
         {
@@ -561,6 +598,17 @@ namespace MaceEvolve.WinForms
         private void DrawTimer_Tick(object sender, EventArgs e)
         {
             Invalidate();
+        }
+        private void UpdateIsRunningText()
+        {
+            if (SimulationRunning)
+            {
+                lblSimulationRunning.Text = IsInFastMode ? "Running (Fast)" : "Running";
+            }
+            else
+            {
+                lblSimulationRunning.Text = IsInFastMode ? "Stopped (Fast)" : "Stopped";
+            }
         }
         #endregion
     }
