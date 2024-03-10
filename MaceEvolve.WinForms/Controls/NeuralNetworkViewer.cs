@@ -306,10 +306,12 @@ namespace MaceEvolve.WinForms.Controls
                             e.Graphics.TranslateTransform(sourceIdGameObject.MX, sourceIdGameObject.MY);
                             e.Graphics.RotateTransform(angleToDrawConnection);
                             e.Graphics.DrawEllipse(new Pen(penColor, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
+                            
                             if (connection.SourceId == SelectedNodeId || connection.TargetId == SelectedNodeId)
                             {
-                                e.Graphics.DrawEllipse(new Pen(Color.White, penSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
+                                e.Graphics.DrawEllipse(new Pen(Color.White, SelectedNodeConnectionHighlightSize), 0, 0, sourceIdGameObject.Size * 0.75f, sourceIdGameObject.Size * 0.75f);
                             }
+
                             e.Graphics.ResetTransform();
                         }
 
