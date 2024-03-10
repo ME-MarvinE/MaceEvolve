@@ -176,7 +176,7 @@ namespace MaceEvolve.WinForms.Controls
                     }
 
                     float availableHorizontalSpace = (maxX - NodeSize) - minX;
-                    bool stagger = verticalSpacing < NodeSize;
+                    bool stagger = verticalSpacing < NodeSize || node.NodeType == NodeType.Process;
                     float xPosition = (minX + availableHorizontalSpace / 2);
 
                     if (stagger)
