@@ -518,6 +518,7 @@ namespace MaceEvolve.WinForms
             lblSimulationFPS.Visible = isVisible;
             nudSimulationFPS.Visible = isVisible;
             chkLinkFpsAndTps.Visible = isVisible;
+            btnUpdateWorldBounds.Visible = isVisible;
         }
         private void UpdateUIText()
         {
