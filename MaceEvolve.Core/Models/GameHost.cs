@@ -367,37 +367,43 @@ namespace MaceEvolve.Core.Models
                     Dictionary<CreatureInput, float> inputToInputValueDict = CurrentStep.GenerateCreatureInputValues(inputsRequiredForStep, creature);
                     Dictionary<int, float> nodeIdToOutputValueDict = creature.Brain.GenerateNodeOutputs(inputToInputValueDict);
 
-                    //Get the output node with the highest output value.
-                    int? highestOutputNodeId = null;
 
-                    foreach (var keyValuePair in nodeIdToOutputValueDict)
-                    {
-                        Node node = creature.Brain.NodeIdsToNodesDict[keyValuePair.Key];
-                        float outputValue = keyValuePair.Value;
-
-                        if (node.NodeType == NodeType.Output && outputValue > 0 && (highestOutputNodeId == null || outputValue > nodeIdToOutputValueDict[highestOutputNodeId.Value]))
-                        {
-                            highestOutputNodeId = keyValuePair.Key;
-                        }
-                    }
-
-                    StepAction<TCreature> stepAction = new StepAction<TCreature>()
-                    {
-                        Creature = creature
-                    };
-
-                    if (highestOutputNodeId != null && nodeIdToOutputValueDict[highestOutputNodeId.Value] > 0)
-                    {
-                        stepAction.Action = creature.Brain.NodeIdsToNodesDict[highestOutputNodeId.Value].CreatureAction.Value;
-                    }
-                    else
-                    {
-                        stepAction.Action = CreatureAction.DoNothing;
-                    }
-
+                    //Get the output nodes with the highest output values.
                     if (!creature.IsDead)
                     {
-                        stepResult.CalculatedActions.Enqueue(stepAction);
+                        Dictionary<int, float> orderedNodeIdToOutputValueDict = nodeIdToOutputValueDict.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+                        Dictionary<CreatureAction, float> creatureActionToOutputValueDict = new Dictionary<CreatureAction, float>();
+                        Dictionary<CreatureAction, StepAction<TCreature>> actionsToAdd = new Dictionary<CreatureAction, StepAction<TCreature>>();
+
+                        foreach (var keyValuePair in orderedNodeIdToOutputValueDict)
+                        {
+                            if (actionsToAdd.Count >= 1)
+                            {
+                                break;
+                            }
+
+                            int nodeId = keyValuePair.Key;
+                            float outputValue = keyValuePair.Value;
+                            Node node = creature.Brain.NodeIdsToNodesDict[nodeId];
+
+                            if (node.NodeType == NodeType.Output && outputValue > 0 && !actionsToAdd.ContainsKey(node.CreatureAction.Value))
+                            {
+                                creatureActionToOutputValueDict.Add(node.CreatureAction.Value, outputValue);
+                                StepAction<TCreature> stepAction = new StepAction<TCreature>
+                                {
+                                    Creature = creature,
+                                    Action = node.CreatureAction.Value,
+                                    CreatureActionToOutputValueDict = creatureActionToOutputValueDict
+                                };
+
+                                actionsToAdd.Add(stepAction.Action, stepAction);
+                            }
+                        }
+
+                        foreach (var keyValuePair in actionsToAdd)
+                        {
+                            stepResult.CalculatedActions.Enqueue(keyValuePair.Value);
+                        }
                     }
 
                     //Store properties of the creature's current status.
@@ -524,7 +530,8 @@ namespace MaceEvolve.Core.Models
                     MaxHealthPoints = CreatureMaxHealthPoints,
                     NaturalHealInterval = CreatureNaturalHealInterval,
                     NaturalHealHealthPoints = CreatureMaxHealthPoints * 0.05f,
-                    MassRequiredToReproduce = CreatureMassRequiredToReproduce
+                    MassRequiredToReproduce = CreatureMassRequiredToReproduce,
+                    MoveEffort = 1f
                 };
 
                 newCreature.Size = Globals.Map(newCreature.Mass, MinGeneratedCreatureMass, MaxGeneratedCreatureMass, MinCreatureSize, MaxCreatureSize);

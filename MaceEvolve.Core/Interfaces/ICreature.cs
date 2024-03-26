@@ -41,6 +41,7 @@ namespace MaceEvolve.Core.Interfaces
         public float MassRequiredToReproduce { get; set; }
         public float ForwardAngle { get; set; }
         public float FieldOfView { get; set; }
+        public float MoveEffort { get; set; }
         #endregion
 
         #region Methods

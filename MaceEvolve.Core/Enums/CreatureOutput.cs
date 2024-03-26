@@ -11,6 +11,7 @@
         DoNothing,
         TryAttack,
         TurnLeft,
-        TurnRight
+        TurnRight,
+        SetMoveEffort
     }
 }

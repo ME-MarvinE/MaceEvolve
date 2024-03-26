@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
+using System.Collections.Generic;
 
 namespace MaceEvolve.Core.Models
 {
@@ -7,5 +8,6 @@ namespace MaceEvolve.Core.Models
     {
         public TCreature Creature { get; set; }
         public CreatureAction Action { get; set; }
+        public Dictionary<CreatureAction, float> CreatureActionToOutputValueDict { get; set; }
     }
 }

@@ -11,6 +11,9 @@ namespace MaceEvolve.Core.Models
         private float _healthPoints = 90;
         private float _forwardAngle;
         private float _fieldOfView = 112.5f;
+        private float _moveEffort = 1f;
+        private float _minMoveEffort;
+        private float _maxMoveEffort = 2;
         #endregion
 
         #region Properties
@@ -131,6 +134,28 @@ namespace MaceEvolve.Core.Models
             set
             {
                 _fieldOfView = Globals.ToAngle(value);
+            }
+        }
+        public float MoveEffort
+        {
+            get
+            {
+                return _moveEffort;
+            }
+            set
+            {
+                if (value < _minMoveEffort)
+                {
+                    _moveEffort = _minMoveEffort;
+                }
+                else if (value > _maxMoveEffort)
+                {
+                    _moveEffort = _maxMoveEffort;
+                }
+                else
+                {
+                    _moveEffort = value;
+                }
             }
         }
 

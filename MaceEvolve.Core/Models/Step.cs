@@ -108,8 +108,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.MaxHealthPoints = creature.MaxHealthPoints;
                 newCreature.NaturalHealInterval = creature.NaturalHealInterval;
                 newCreature.NaturalHealHealthPoints = creature.MaxHealthPoints * 0.05f;
-
-
+                newCreature.MoveEffort = 1f;
                 newCreature.X = creature.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
                 newCreature.Y = creature.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
 
@@ -201,7 +200,7 @@ namespace MaceEvolve.Core.Models
                 }
                 else
                 {
-                    creature.Y += creature.Speed;
+                    creature.Y += creature.Speed * creature.MoveEffort;
                 }
             }
             else if (creature.MY > worldBoundsBottom)
@@ -212,7 +211,7 @@ namespace MaceEvolve.Core.Models
                 }
                 else
                 {
-                    creature.Y -= creature.Speed;
+                    creature.Y -= creature.Speed * creature.MoveEffort;
                 }
             }
 
@@ -224,7 +223,7 @@ namespace MaceEvolve.Core.Models
                 }
                 else
                 {
-                    creature.X += creature.Speed;
+                    creature.X += creature.Speed * creature.MoveEffort;
                 }
             }
             else if (creature.MX > worldBoundsRight)
@@ -235,7 +234,7 @@ namespace MaceEvolve.Core.Models
                 }
                 else
                 {
-                    creature.X -= creature.Speed;
+                    creature.X -= creature.Speed * creature.MoveEffort;
                 }
             }
         }
@@ -257,10 +256,10 @@ namespace MaceEvolve.Core.Models
         }
         private void CreatureMove(TCreature creature, float angle)
         {
-            creature.X += MathF.Cos(Globals.AngleToRadians(angle)) * creature.Speed;
-            creature.Y += MathF.Sin(Globals.AngleToRadians(angle)) * creature.Speed;
+            creature.X += MathF.Cos(Globals.AngleToRadians(angle)) * creature.Speed * creature.MoveEffort;
+            creature.Y += MathF.Sin(Globals.AngleToRadians(angle)) * creature.Speed * creature.MoveEffort;
             LimitCreatureBounds(creature, WorldBounds, LoopWorldBounds);
-            creature.Energy -= creature.MoveCost;
+            creature.Energy -= creature.MoveCost * creature.MoveEffort;
         }
         public void CreatureDoNothing()
         {
@@ -357,6 +356,10 @@ namespace MaceEvolve.Core.Models
         private void CreatureTurn(TCreature creature, float angle)
         {
             creature.ForwardAngle += angle;
+        }
+        private void CreatureSetMoveEffort(TCreature creature, float moveEffort)
+        {
+            creature.MoveEffort = moveEffort;
         }
         public void CreatureMoveTowardsClosestFood(TCreature creature)
         {
@@ -472,6 +475,10 @@ namespace MaceEvolve.Core.Models
 
                         case CreatureAction.TurnRight:
                             CreatureTurnRight(stepAction.Creature);
+                            break;
+
+                        case CreatureAction.SetMoveEffort:
+                            CreatureSetMoveEffort(stepAction.Creature, stepAction.CreatureActionToOutputValueDict[CreatureAction.SetMoveEffort]);
                             break;
 
                         default:
