@@ -243,13 +243,15 @@ namespace MaceEvolve.WinForms
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
         }
-        public List<GraphicalFood> GenerateFood(List<GraphicalFood> foodToCovert = null)
+        public List<GraphicalFood> GenerateFood(List<GraphicalFood> foodToConvert = null)
         {
-            List<GraphicalFood> foodList = foodToCovert ?? MainGameHost.GenerateFood();
+            List<GraphicalFood> foodList = foodToConvert ?? MainGameHost.GenerateFood();
 
             foreach (var food in foodList)
             {
-                food.Color = Color.Green;
+                int foodG = (int)Globals.Map(food.Nutrients, MainGameHost.FoodNutrientsMinMax.Min, MainGameHost.FoodNutrientsMinMax.Max, 32, 255);
+
+                food.Color = Color.FromArgb(0, foodG, 0);
             }
 
             return foodList;
