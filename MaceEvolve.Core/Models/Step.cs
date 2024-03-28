@@ -103,10 +103,10 @@ namespace MaceEvolve.Core.Models
                 newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
                 newCreature.EnergyPerEat = creature.EnergyPerEat;
                 newCreature.NutrientsPerEat = creature.NutrientsPerEat;
-                newCreature.HealthPoints = creature.MaxHealthPoints * 0.9f;
                 newCreature.MaxHealthPoints = creature.MaxHealthPoints;
+                newCreature.HealthPoints = newCreature.MaxHealthPoints * 0.9f;
+                newCreature.NaturalHealHealthPoints = newCreature.MaxHealthPoints * 0.05f;
                 newCreature.NaturalHealInterval = creature.NaturalHealInterval;
-                newCreature.NaturalHealHealthPoints = creature.MaxHealthPoints * 0.05f;
                 newCreature.MoveEffort = 1f;
                 newCreature.X = creature.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
                 newCreature.Y = creature.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
