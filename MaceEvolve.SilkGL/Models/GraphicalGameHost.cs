@@ -10,7 +10,7 @@ namespace MaceEvolve.SilkGL.Models
         public override TFood CreateFoodWithRandomLocation()
         {
             TFood food = base.CreateFoodWithRandomLocation();
-            int foodG = (int)Globals.Map(food.Nutrients, 0, FoodNutrientsMinMax.Max, 32, 255);
+            int foodG = (int)Globals.Map(food.Nutrients, FoodNutrientsMinMax.Min, FoodNutrientsMinMax.Max, 32, 255);
 
             food.Color = Color.FromArgb(0, foodG, 0);
 
