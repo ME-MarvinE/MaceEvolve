@@ -11,7 +11,7 @@ namespace MaceEvolve.Mono.Desktop.Models
         public override TFood CreateFoodWithRandomLocation()
         {
             TFood food = base.CreateFoodWithRandomLocation();
-            int foodG = (int)Globals.Map(food.Nutrients, 0, MaxFoodNutrients, 32, 255);
+            int foodG = (int)Globals.Map(food.Nutrients, 0, FoodNutrientsMinMax.Max, 32, 255);
 
             food.Color = new Color(0, foodG, 0);
 
