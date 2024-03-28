@@ -552,7 +552,6 @@ namespace MaceEvolve.WinForms
                 PreviousStepResult.CalculatedActions.Clear();
                 MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
                 MainGameHost.CreatureConnectionsMinMax = savedStep.CreatureConnectionsMinMax;
-                MainGameHost.CreatureConnectionsMinMax = savedStep.CreatureConnectionsMinMax;
                 MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
                 MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                 MainGameHost.WorldBounds = savedStep.WorldBounds;
