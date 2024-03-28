@@ -19,8 +19,7 @@ namespace MaceEvolve.Core.Models
         public ConcurrentBag<TCreature> Creatures { get; set; }
         public ConcurrentBag<TFood> Food { get; set; }
         public Rectangle WorldBounds { get; set; }
-        public int MinCreatureConnections { get; set; } = 4;
-        public int MaxCreatureConnections { get; set; } = 128;
+        public MinMaxVal<int> CreatureConnectionsMinMax { get; set; } = MinMaxVal.Create(4, 128);
         public int MaxCreatureProcessNodes { get; set; } = 3;
         public float ConnectionWeightBound { get; set; } = 4;
         public bool LoopWorldBounds { get; set; }
@@ -171,8 +170,8 @@ namespace MaceEvolve.Core.Models
                         mutateRandomConnectionWeightChance: creature.OffspringBrainMutationChance,
                         possibleInputs: Globals.AllCreatureInputs,
                         possibleOutputs: Globals.AllCreatureActions,
-                        minCreatureConnections: MinCreatureConnections,
-                        maxCreatureConnections: MaxCreatureConnections,
+                        minCreatureConnections: CreatureConnectionsMinMax.Min,
+                        maxCreatureConnections: CreatureConnectionsMinMax.Max,
                         maxCreatureProcessNodes: MaxCreatureProcessNodes,
                         connectionWeightBound: ConnectionWeightBound);
                 }

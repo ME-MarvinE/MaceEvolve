@@ -154,8 +154,7 @@ namespace MaceEvolve.Console
                             PreviousStepResult.CreaturesBrainOutputs.Clear();
                             PreviousStepResult.CalculatedActions.Clear();
                             MainGameHost.ConnectionWeightBound = savedStep.ConnectionWeightBound;
-                            MainGameHost.MinCreatureConnections = savedStep.MinCreatureConnections;
-                            MainGameHost.MaxCreatureConnections = savedStep.MaxCreatureConnections;
+                            MainGameHost.CreatureConnectionsMinMax = savedStep.CreatureConnectionsMinMax;
                             MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
                             MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                             MainGameHost.WorldBounds = savedStep.WorldBounds;

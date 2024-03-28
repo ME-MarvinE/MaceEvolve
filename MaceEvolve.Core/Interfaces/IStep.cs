@@ -12,9 +12,8 @@ namespace MaceEvolve.Core.Interfaces
         ConcurrentBag<TFood> Food { get; set; }
         Rectangle WorldBounds { get; set; }
         float ConnectionWeightBound { get; set; }
-        int MaxCreatureConnections { get; set; }
+        MinMaxVal<int> CreatureConnectionsMinMax { get; set; }
         int MaxCreatureProcessNodes { get; set; }
-        int MinCreatureConnections { get; set; }
         bool LoopWorldBounds { get; set; }
         ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; }
         ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; }

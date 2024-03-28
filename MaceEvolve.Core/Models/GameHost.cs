@@ -21,21 +21,16 @@ namespace MaceEvolve.Core.Models
         public int MaxCreatureAmount { get; set; } = 1000;
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
-        public int MinCreatureConnections { get; set; } = 0;
-        public int MaxCreatureConnections { get; set; } = 64;
+        public MinMaxVal<int> CreatureConnectionsMinMax { get; set; } = MinMaxVal.Create(0, 64);
         public float CreatureSpeed { get; set; } = 2.75f;
         public int MaxCreatureProcessNodes { get; set; } = 5;
         public float CreatureOffspringBrainMutationChance { get; set; } = 1 / 3f;
         public int CreatureOffspringBrainMutationAttempts { get; set; } = 1;
         public float ConnectionWeightBound { get; set; } = 4;
-        public float MinFoodSize { get; set; } = 5;
-        public float MaxFoodSize { get; set; } = 12;
-        public float MinCreatureSize { get; set; } = 8;
-        public float MaxCreatureSize { get; set; } = 12;
-        public float MinGeneratedFoodMass { get; set; } = 4;
-        public float MaxGeneratedFoodMass { get; set; } = 12;
-        public float MinGeneratedCreatureMass { get; set; } = 700;
-        public float MaxGeneratedCreatureMass { get; set; } = 900;
+        public MinMaxVal<float> FoodSizeMinMax { get; set; } = MinMaxVal.Create(5f, 12);
+        public MinMaxVal<float> CreatureSizeMinMax { get; set; } = MinMaxVal.Create(8f, 12);
+        public MinMaxVal<float> GeneratedFoodMassMinMax { get; set; } = MinMaxVal.Create(4f, 12);
+        public MinMaxVal<float> GeneratedCreatureMassMinMax { get; set; } = MinMaxVal.Create(700f, 900);
         public float MaxCreatureEnergy { get; set; } = 900;
         public float CreatureNutrients { get; set; } = 30;
         public float EnergyRequiredForCreatureToReproduce { get; set; } = 100;
@@ -44,10 +39,8 @@ namespace MaceEvolve.Core.Models
         public float ReproductionNodeBiasVariance { get; set; }
         public float ReproductionConnectionWeightVariance { get; set; }
         public float CreatureMetabolism { get; set; } = 0.1f;
-        public float MinFoodEnergy { get; set; } = 150;
-        public float MaxFoodEnergy { get; set; } = 300;
-        public float MinFoodNutrients { get; set; } = 10;
-        public float MaxFoodNutrients { get; set; } = 50;
+        public MinMaxVal<float> FoodEnergyMinMax { get; set; } = MinMaxVal.Create(150f, 300);
+        public MinMaxVal<float> FoodNutrientsMinMax { get; set; } = MinMaxVal.Create(10f, 50);
         public float CreatureSightRange { get; set; } = 100;
         public int MaxCreatureOffSpringPerReproduction { get; set; } = 1;
         public bool LoopWorldBounds { get; set; } = true;
@@ -114,8 +107,7 @@ namespace MaceEvolve.Core.Models
                 Food = new ConcurrentBag<TFood>(food),
                 WorldBounds = new Rectangle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height),
                 ConnectionWeightBound = ConnectionWeightBound,
-                MinCreatureConnections = MinCreatureConnections,
-                MaxCreatureConnections = MaxCreatureConnections,
+                CreatureConnectionsMinMax = CreatureConnectionsMinMax,
                 MaxCreatureProcessNodes = MaxCreatureProcessNodes,
                 LoopWorldBounds = LoopWorldBounds
             };
@@ -475,14 +467,14 @@ namespace MaceEvolve.Core.Models
         {
             TFood newFood = new TFood()
             {
-                MaxEnergy = MaxFoodEnergy,
-                MaxNutrients = MaxFoodNutrients,
+                MaxEnergy = FoodEnergyMinMax.Max,
+                MaxNutrients = FoodNutrientsMinMax.Max,
             };
 
-            newFood.Mass = MaceRandom.Current.NextFloat(MinGeneratedFoodMass, MaxGeneratedFoodMass);
-            newFood.Energy = MaceRandom.Current.NextFloat(MinFoodEnergy, MaxFoodEnergy);
-            newFood.Nutrients = MaceRandom.Current.NextFloat(MinFoodNutrients, MaxFoodNutrients);
-            newFood.Size = Globals.Map(newFood.Mass, MinGeneratedFoodMass, MaxGeneratedFoodMass, MinFoodSize, MaxFoodSize);
+            newFood.Mass = MaceRandom.Current.NextFloat(GeneratedFoodMassMinMax.Min, GeneratedFoodMassMinMax.Max);
+            newFood.Energy = MaceRandom.Current.NextFloat(FoodEnergyMinMax.Min, FoodEnergyMinMax.Max);
+            newFood.Nutrients = MaceRandom.Current.NextFloat(FoodNutrientsMinMax.Min, FoodNutrientsMinMax.Max);
+            newFood.Size = Globals.Map(newFood.Mass, GeneratedFoodMassMinMax.Min, GeneratedFoodMassMinMax.Max, FoodSizeMinMax.Min, FoodSizeMinMax.Max);
             newFood.X = MaceRandom.Current.NextFloat(-newFood.Size / 2, (WorldBounds.X + WorldBounds.Width) - newFood.Size / 2);
             newFood.Y = MaceRandom.Current.NextFloat(-newFood.Size / 2, (WorldBounds.Y + WorldBounds.Height) - newFood.Size / 2);
 
@@ -507,7 +499,7 @@ namespace MaceEvolve.Core.Models
             {
                 TCreature newCreature = new TCreature()
                 {
-                    Mass = MaceRandom.Current.NextFloat(MinGeneratedCreatureMass, MaxGeneratedCreatureMass),
+                    Mass = MaceRandom.Current.NextFloat(GeneratedCreatureMassMinMax.Min, GeneratedCreatureMassMinMax.Max),
                     MaxEnergy = MaxCreatureEnergy,
                     Energy = MaxCreatureEnergy * 0.75f,
                     Speed = CreatureSpeed,
@@ -526,7 +518,7 @@ namespace MaceEvolve.Core.Models
                     MoveCost = 0.05f,
                     AttackCost = 5f,
                     DefendCost = 4f,
-                    HealthPoints = MaxGeneratedCreatureMass * 0.9f,
+                    HealthPoints = GeneratedCreatureMassMinMax.Max * 0.9f,
                     MaxHealthPoints = CreatureMaxHealthPoints,
                     NaturalHealInterval = CreatureNaturalHealInterval,
                     NaturalHealHealthPoints = CreatureMaxHealthPoints * 0.05f,
@@ -534,7 +526,7 @@ namespace MaceEvolve.Core.Models
                     MoveEffort = 1f
                 };
 
-                newCreature.Size = Globals.Map(newCreature.Mass, MinGeneratedCreatureMass, MaxGeneratedCreatureMass, MinCreatureSize, MaxCreatureSize);
+                newCreature.Size = Globals.Map(newCreature.Mass, GeneratedCreatureMassMinMax.Min, GeneratedCreatureMassMinMax.Max, CreatureSizeMinMax.Min, CreatureSizeMinMax.Max);
                 newCreature.X = MaceRandom.Current.NextFloat(-newCreature.Size / 2, (WorldBounds.X + WorldBounds.Width) - newCreature.Size / 2);
                 newCreature.Y = MaceRandom.Current.NextFloat(-newCreature.Size / 2, (WorldBounds.Y + WorldBounds.Height) - newCreature.Size / 2);
 
@@ -543,7 +535,7 @@ namespace MaceEvolve.Core.Models
                     .Concat(NeuralNetwork.GenerateOutputNodes(PossibleCreatureActions)));
 
                 newCreature.Brain.Connections.Clear();
-                newCreature.Brain.Connections.AddRange(newCreature.Brain.GenerateRandomConnections(MinCreatureConnections, MaxCreatureConnections, ConnectionWeightBound));
+                newCreature.Brain.Connections.AddRange(newCreature.Brain.GenerateRandomConnections(CreatureConnectionsMinMax.Min, CreatureConnectionsMinMax.Max, ConnectionWeightBound));
 
                 creatures.Add(newCreature);
             }
