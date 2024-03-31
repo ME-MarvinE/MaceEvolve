@@ -22,7 +22,6 @@ namespace MaceEvolve.Core.Models
         public int MaxFoodAmount { get; set; } = 350;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
         public MinMaxVal<int> CreatureConnectionsMinMax { get; set; } = MinMaxVal.Create(0, 64);
-        public float CreatureSpeed { get; set; } = 2.75f;
         public int MaxCreatureProcessNodes { get; set; } = 5;
         public float CreatureOffspringBrainMutationChance { get; set; } = 1 / 3f;
         public int CreatureOffspringBrainMutationAttempts { get; set; } = 1;
@@ -38,7 +37,6 @@ namespace MaceEvolve.Core.Models
         public float MinimumSuccessfulCreatureFitness { get; set; } = 0.25f;
         public float ReproductionNodeBiasVariance { get; set; }
         public float ReproductionConnectionWeightVariance { get; set; }
-        public float CreatureMetabolism { get; set; } = 0.1f;
         public MinMaxVal<float> FoodEnergyMinMax { get; set; } = MinMaxVal.Create(150f, 300);
         public MinMaxVal<float> FoodNutrientsMinMax { get; set; } = MinMaxVal.Create(10f, 50);
         public float CreatureSightRange { get; set; } = 100;
@@ -502,8 +500,6 @@ namespace MaceEvolve.Core.Models
                     Mass = MaceRandom.Current.NextFloat(GeneratedCreatureMassMinMax.Min, GeneratedCreatureMassMinMax.Max),
                     MaxEnergy = MaxCreatureEnergy,
                     Energy = MaxCreatureEnergy * 0.75f,
-                    Speed = CreatureSpeed,
-                    Metabolism = CreatureMetabolism,
                     MaxAge = CreatureMaxAge,
                     SightRange = CreatureSightRange,
                     MaxNutrients = MaxCreatureNutrients,

@@ -44,9 +44,21 @@ namespace MaceEvolve.Core.Models
             }
         }
         public float MaxEnergy { get; set; } = 150;
-        public float Speed { get; set; } = 1;
+        public float Speed
+        {
+            get
+            {
+                return Size * 0.275f;
+            }
+        }
         public float SightRange { get; set; } = 100;
-        public float Metabolism { get; set; } = 0.1f;
+        public float Metabolism
+        {
+            get
+            {
+                return Size * 0.01f;
+            }
+        }
         public int FoodEaten { get; set; }
         public int AttemptedAttacksCount { get; set; }
         public int InitiatedAttacksCount { get; set; }

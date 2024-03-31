@@ -87,8 +87,6 @@ namespace MaceEvolve.Core.Models
                 newCreature.MassRequiredToReproduce = creature.MassRequiredToReproduce;
                 newCreature.MaxEnergy = creature.MaxEnergy;
                 newCreature.Size = creature.Size;
-                newCreature.Speed = creature.Speed;
-                newCreature.Metabolism = creature.Metabolism;
                 newCreature.MoveCost = creature.MoveCost;
                 newCreature.AttackCost = creature.AttackCost;
                 newCreature.DefendCost = creature.DefendCost;

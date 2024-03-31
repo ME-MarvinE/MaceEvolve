@@ -11,9 +11,9 @@ namespace MaceEvolve.Core.Interfaces
         float DefendCost { get; set; }
         float Energy { get; set; }
         float MaxEnergy { get; set; }
-        float Speed { get; set; }
+        float Speed { get; }
         float SightRange { get; set; }
-        float Metabolism { get; set; }
+        float Metabolism { get; }
         int FoodEaten { get; set; }
         int AttemptedAttacksCount { get; set; }
         int InitiatedAttacksCount { get; set; }
