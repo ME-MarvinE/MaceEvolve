@@ -23,6 +23,7 @@ namespace MaceEvolve.Core.Models
         public int MaxCreatureProcessNodes { get; set; } = 3;
         public float ConnectionWeightBound { get; set; } = 4;
         public bool LoopWorldBounds { get; set; }
+        public float ParentAttributesVariance { get; set; } = 0.05f;
 
         public ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; } = new ConcurrentDictionary<TCreature, List<TCreature>>();
         public ConcurrentDictionary<TCreature, List<TFood>> VisibleFoodDict { get; } = new ConcurrentDictionary<TCreature, List<TFood>>();
@@ -86,7 +87,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.Mass = creature.MassRequiredToReproduce;
                 newCreature.MassRequiredToReproduce = creature.MassRequiredToReproduce;
                 newCreature.MaxEnergy = creature.MaxEnergy;
-                newCreature.Size = creature.Size;
+                newCreature.Size = MaceRandom.Current.NextFloatVariance(creature.Size, ParentAttributesVariance);
                 newCreature.MoveCost = creature.MoveCost;
                 newCreature.AttackCost = creature.AttackCost;
                 newCreature.DefendCost = creature.DefendCost;
