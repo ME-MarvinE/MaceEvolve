@@ -18,9 +18,27 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public NeuralNetwork Brain { get; set; }
-        public float MoveCost { get; set; } = 0.25f;
-        public float AttackCost { get; set; } = 5f;
-        public float DefendCost { get; set; } = 4f;
+        public float MoveCost
+        {
+            get
+            {
+                return Size * 0.005f;
+            }
+        }
+        public float AttackCost
+        {
+            get
+            {
+                return Size * 0.5f;
+            }
+        }
+        public float DefendCost
+        {
+            get
+            {
+                return Size * 0.4f;
+            }
+        }
         public float Energy
         {
             get

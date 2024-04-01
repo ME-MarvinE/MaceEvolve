@@ -88,9 +88,6 @@ namespace MaceEvolve.Core.Models
                 newCreature.MassRequiredToReproduce = creature.MassRequiredToReproduce;
                 newCreature.MaxEnergy = creature.MaxEnergy;
                 newCreature.Size = MaceRandom.Current.NextFloatVariance(creature.Size, ParentAttributesVariance);
-                newCreature.MoveCost = creature.MoveCost;
-                newCreature.AttackCost = creature.AttackCost;
-                newCreature.DefendCost = creature.DefendCost;
                 newCreature.MaxAge = creature.MaxAge;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
