@@ -317,11 +317,11 @@ namespace MaceEvolve.Core.Models
 
             if (winningCreatureWasInitiator)
             {
-                float percentageToTake = losingCreature.Size == 0 ? 1 : winningCreature.Size / (losingCreature.Size * 8); //Needs to be 4x as big to eat the losing creature in one go.
-                float energyToTake = Math.Min(losingCreature.Energy, losingCreature.MaxEnergy * percentageToTake);
-                float massToTake = Math.Min(losingCreature.Mass, losingCreature.Mass * percentageToTake);
-                float healthToTake = Math.Min(losingCreature.HealthPoints, losingCreature.MaxHealthPoints * percentageToTake);
-                float nutrientsToTake = Math.Min(losingCreature.Nutrients, losingCreature.Nutrients * percentageToTake);
+                float percentageToTake = Math.Min(1, losingCreature.Size == 0 ? 1 : winningCreature.Size / (losingCreature.Size * 8)); //Needs to be 4x as big to eat the losing creature in one go.
+                float energyToTake = losingCreature.Energy * percentageToTake;
+                float massToTake = losingCreature.Mass * percentageToTake;
+                float healthToTake = losingCreature.HealthPoints * percentageToTake;
+                float nutrientsToTake = losingCreature.Nutrients * percentageToTake;
 
                 losingCreature.Energy -= energyToTake;
                 winningCreature.Energy += energyToTake;
