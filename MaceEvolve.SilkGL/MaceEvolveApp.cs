@@ -10,11 +10,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Timers;
+using Color = System.Drawing.Color;
+using CoreGlobals = MaceEvolve.Core.Globals;
 using Window = Silk.NET.Windowing.Window;
 
 namespace MaceEvolve.SilkGL
@@ -22,13 +24,44 @@ namespace MaceEvolve.SilkGL
     public class MaceEvolveApp
     {
         #region Properties
+        private const int _VERTICES_DATALENGTH = 3;
+        private GL _gl;
+        private uint _vao;
+        private uint _vbo;
+        private uint _ebo;
+        private uint _program;
+        private int _verticesPerCircle = 90;
+        private const string SHADER_FILLCOLOR_VARIABLE_NAME = "drawColor";
+        private const string VERTEX_CODE = @$"
+            #version 330 core
+            layout (location = 0) in vec3 aPosition;
+
+            uniform vec4 {SHADER_FILLCOLOR_VARIABLE_NAME};
+
+            out vec4 vertexColor;
+
+            void main()
+            {{
+                gl_Position = vec4(aPosition, 1.0);
+                vertexColor = {SHADER_FILLCOLOR_VARIABLE_NAME};
+            }}";
+
+        private const string FRAGMENT_CODE = @"
+            #version 330 core
+            in vec4 vertexColor;
+
+            out vec4 FragColor;
+
+            void main()
+            {
+                FragColor = vertexColor;
+            }";
         public bool IsSimulationRunning { get; set; }
         public Timer PeriodicInfoTimer { get; }
         public bool AutoClearConsole { get; set; }
         public bool PeriodicInfo { get; set; } = true;
         protected static JsonSerializerSettings SaveStepSerializerSettings { get; }
         protected static JsonSerializerSettings LoadStepSerializerSettings { get; }
-        public GL gl { get; set; }
         public IWindow MainWindow { get; set; }
         public int SimulationTPS { get; set; }
         public int CurrentRunTicksElapsed { get; set; }
@@ -61,23 +94,6 @@ namespace MaceEvolve.SilkGL
         }
         public MaceEvolveApp()
         {
-            //_graphics = new GraphicsDeviceManager(this);
-
-            //if (GraphicsDevice == null)
-            //{
-            //    _graphics.ApplyChanges();
-            //}
-
-            //_graphics.PreferredBackBufferWidth = 800 - 17;
-            //_graphics.PreferredBackBufferHeight = 700 - 40;
-
-            //_graphics.ApplyChanges();
-
-            //MainWindow.KeyDown += Window_KeyDown;
-
-            //Content.RootDirectory = "Content";
-            //IsMouseVisible = true;
-
             MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
 
             SimulationTPS = 60;
@@ -88,6 +104,8 @@ namespace MaceEvolve.SilkGL
             options.Size = new Vector2D<int>(800, 600);
             options.Title = "Mace Evolve";
             options.UpdatesPerSecond = SimulationTPS;
+            options.FramesPerSecond = 60;
+            options.VSync = false;
 
             MainWindow = Window.Create(options);
             BackgroundColor = Color.FromArgb(32, 32, 32);
@@ -101,12 +119,83 @@ namespace MaceEvolve.SilkGL
         #endregion
 
         #region Methods
+        private void MainWindow_Load()
+        {
+            InitialiseGL();
+
+            Reset();
+
+            IInputContext input = MainWindow.CreateInput();
+
+            foreach (var keyboard in input.Keyboards)
+            {
+                keyboard.KeyDown += Keyboard_KeyDown;
+            }
+
+            ListCommands();
+            ListSimulationInfo();
+        }
+        private void InitialiseGL()
+        {
+            _gl = MainWindow.CreateOpenGL();
+            _gl.ClearColor(BackgroundColor);
+
+            // For colouring things
+            uint vertexShader = _gl.CreateShader(ShaderType.VertexShader);
+            _gl.ShaderSource(vertexShader, VERTEX_CODE);
+            _gl.CompileShader(vertexShader);
+            _gl.GetShader(vertexShader, ShaderParameterName.CompileStatus, out int vertexShaderLinkStatus);
+
+            if (vertexShaderLinkStatus != (int)GLEnum.True)
+            {
+                throw new Exception("Vertex shader failed to compile: " + _gl.GetShaderInfoLog(vertexShader));
+            }
+
+            uint fragmentShader = _gl.CreateShader(ShaderType.FragmentShader);
+            _gl.ShaderSource(fragmentShader, FRAGMENT_CODE);
+            _gl.CompileShader(fragmentShader);
+            _gl.GetShader(fragmentShader, ShaderParameterName.CompileStatus, out int fragmentShaderLinkStatus);
+
+            if (fragmentShaderLinkStatus != (int)GLEnum.True)
+            {
+                throw new Exception("Fragment shader failed to compile: " + _gl.GetShaderInfoLog(fragmentShader));
+            }
+
+            _program = _gl.CreateProgram();
+            _gl.AttachShader(_program, vertexShader);
+            _gl.AttachShader(_program, fragmentShader);
+            _gl.LinkProgram(_program);
+            _gl.GetProgram(_program, ProgramPropertyARB.LinkStatus, out int programLinkStatus);
+
+            if (programLinkStatus != (int)GLEnum.True)
+            {
+                throw new Exception("Program failed to link: " + _gl.GetProgramInfoLog(_program));
+            }
+
+            _gl.DetachShader(_program, vertexShader);
+            _gl.DetachShader(_program, fragmentShader);
+            _gl.DeleteShader(vertexShader);
+            _gl.DeleteShader(fragmentShader);
+
+            // Allows for colours with alpha values to work.
+            _gl.Enable(EnableCap.Blend);
+            _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            // For drawing things
+            _vao = _gl.GenVertexArray();
+            _gl.BindVertexArray(_vao);
+
+            _vbo = _gl.GenBuffer();
+            _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _vbo);
+
+            _gl.VertexAttribPointer(0, _VERTICES_DATALENGTH, VertexAttribPointerType.Float, false, 0, IntPtr.Zero);
+            _gl.EnableVertexAttribArray(0);
+            _gl.UseProgram(_program);
+        }
         private void MainWindow_Render(double deltaTime)
         {
             LastRenderDeltaTime = deltaTime;
-
-            gl.ClearColor(BackgroundColor);
-            gl.Clear(ClearBufferMask.ColorBufferBit);
+            _gl.Clear(ClearBufferMask.ColorBufferBit);
 
             double millisecondsInFailedRuns = 0;
 
@@ -138,34 +227,30 @@ namespace MaceEvolve.SilkGL
                     creatureRingColor = null;
                 }
 
-                //_spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size, 18, creatureColor, creature.Size);
-
                 if (creatureRingColor != null)
                 {
-                    // _spriteBatch.DrawCircle(creature.MX, creature.MY, creature.Size + 2, 18, creatureRingColor.Value, creature.Size * 0.3f);
+                    float[] bodyRingVertices = GenerateLocationalCircleVertices(creature.MX, creature.MY, creature.Size, _verticesPerCircle);
+
+                    SetShaderColor(creatureRingColor.Value, _program);
+                    _gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(bodyRingVertices.Length * sizeof(float)), [.. bodyRingVertices], BufferUsageARB.DynamicDraw);
+                    _gl.DrawArrays(PrimitiveType.TriangleFan, 1, (uint)bodyRingVertices.Length);
                 }
+
+                float[] bodyVertices = GenerateLocationalCircleVertices(creature.MX, creature.MY, creature.Size, _verticesPerCircle);
+
+                SetShaderColor(creatureColor, _program);
+                _gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(bodyVertices.Length * sizeof(float)), [.. bodyVertices], BufferUsageARB.DynamicDraw);
+                _gl.DrawArrays(PrimitiveType.TriangleFan, 1, (uint)bodyVertices.Length);
             }
+
             foreach (var food in MainGameHost.CurrentStep.Food)
             {
-                //_spriteBatch.DrawCircle(food.MX, food.MY, food.Size, 18, food.Color, food.Size);
+                float[] bodyVertices = GenerateLocationalCircleVertices(food.MX, food.MY, food.Size, _verticesPerCircle);
+
+                SetShaderColor(food.Color, _program);
+                _gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(bodyVertices.Length * sizeof(float)), [.. bodyVertices], BufferUsageARB.DynamicDraw);
+                _gl.DrawArrays(PrimitiveType.TriangleFan, 1, (uint)bodyVertices.Length);
             }
-
-            if (IsSimulationRunning)
-            {
-                //_spriteBatch.DrawString(BigUIFont, IsInFastMode ? "Running (Fast)" : "Running", new Vector2(10, 15), Color.White);
-            }
-            else
-            {
-                //_spriteBatch.DrawString(BigUIFont, IsInFastMode ? "Stopped (Fast)" : "Stopped", new Vector2(10, 15), Color.White);
-            }
-
-            //_spriteBatch.DrawString(BigUIFont, $"Run {FailedRunsUptimes.Count + 1}", new Vector2(10, 45), Color.White);
-            //_spriteBatch.DrawString(UIFont, $"Uptime: {timeInAllRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Failed: {timeInFailedRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
-            //    $"\nRun {FailedRunsUptimes.Count + 1}, {timeInCurrentRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Average: {averageTimePerRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}", new Vector2(10, 75), Color.White);
-
-            //_spriteBatch.DrawString(UIFont, $"Gather Step Info For All Creatures: {(GatherStepInfoForAllCreatures ? "Enabled" : "Disabled")}", new Vector2(10, 115), Color.White);
-
-            //_spriteBatch.End();
         }
         private void MainWindow_Update(double deltaTime)
         {
@@ -175,21 +260,6 @@ namespace MaceEvolve.SilkGL
             {
                 UpdateSimulation();
             }
-        }
-        private void MainWindow_Load()
-        {
-            gl = GL.GetApi(MainWindow);
-            Reset();
-
-            IInputContext input = MainWindow.CreateInput();
-
-            foreach (var keyboard in input.Keyboards)
-            {
-                keyboard.KeyDown += Keyboard_KeyDown;
-            }
-
-            ListCommands();
-            ListSimulationInfo();
         }
         public void UpdateSimulation()
         {
@@ -449,6 +519,56 @@ namespace MaceEvolve.SilkGL
             Console.WriteLine("--------------------------Benchmark----------------------");
             Console.WriteLine($"Time taken for {numberOfStepsToBenchmark} steps: {stopWatch.ElapsedMilliseconds / 1000d}s");
             Console.WriteLine("---------------------------------------------------------");
+        }
+        public static string GetGroupedDataDisplay(IList<float> data, int dataLength)
+        {
+            string returnString = "";
+            for (int i = 0; i < data.Count / dataLength; i++)
+            {
+                returnString += "[";
+                for (int j = 0; j < dataLength; j++)
+                {
+                    returnString += $"{data[(i * dataLength) + j]}";
+
+                    if (j != dataLength - 1)
+                    {
+                        returnString += ", ";
+                    }
+                }
+
+                returnString += "]";
+                if (i != (data.Count / dataLength) - 1)
+                {
+                    returnString += ",\n";
+                }
+            }
+
+            return returnString;
+        }
+        public void SetShaderVec3(string name, Vector3 value, uint program)
+        {
+            int location = _gl.GetUniformLocation(program, name);
+            _gl.Uniform3(location, value);
+        }
+        public void SetShaderVec4(string name, Vector4 value, uint program)
+        {
+            int location = _gl.GetUniformLocation(program, name);
+            _gl.Uniform4(location, value);
+        }
+        public void SetShaderColor(Color color, uint program, string fillColorVariableName = SHADER_FILLCOLOR_VARIABLE_NAME)
+        {
+            float mappedR = CoreGlobals.Map(color.R, 0, 255, 0, 1f);
+            float mappedG = CoreGlobals.Map(color.G, 0, 255, 0, 1f);
+            float mappedB = CoreGlobals.Map(color.B, 0, 255, 0, 1f);
+            float mappedA = CoreGlobals.Map(color.A, 0, 255, 0, 1f);
+            SetShaderVec4(fillColorVariableName, new Vector4(mappedR, mappedG, mappedB, mappedA), program);
+        }
+        public float[] GenerateLocationalCircleVertices(float x, float y, float radius, int verticesPerCircle)
+        {
+            return Globals.GenerateCircleVertices(
+                    CoreGlobals.Map(x, MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.X + MainGameHost.WorldBounds.Width, -1f, 1f),
+                    CoreGlobals.Map(y, MainGameHost.WorldBounds.Y, MainGameHost.WorldBounds.Y + MainGameHost.WorldBounds.Height, -1f, 1f),
+                    CoreGlobals.Map(radius, MainGameHost.WorldBounds.X, MainGameHost.WorldBounds.X + MainGameHost.WorldBounds.Width, 0f, 1f), _verticesPerCircle);
         }
         #endregion
     }

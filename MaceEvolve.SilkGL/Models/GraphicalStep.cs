@@ -1,8 +1,7 @@
 ﻿using MaceEvolve.Core.Models;
-using System.Drawing;
 using System.Collections.Generic;
-using System;
-using MaceEvolve.Core;
+using System.Drawing;
+using CoreGlobals = MaceEvolve.Core.Globals;
 
 namespace MaceEvolve.SilkGL.Models
 {
@@ -17,12 +16,12 @@ namespace MaceEvolve.SilkGL.Models
         {
             IList<TCreature> offspring = base.CreatureTryReproduce(creature);
 
-            int offSpringRed = (int)Globals.Clamp(CreatureOffspringColor.R * (creature.AttemptedEatsCount == 0 ? 1 : (double)creature.AttemptedAttacksCount / creature.AttemptedEatsCount), 0, 175);
-            int offSpringBlue = (int)Globals.Clamp(CreatureOffspringColor.B * (creature.AttemptedAttacksCount == 0 ? 1 : (double)creature.AttemptedEatsCount / creature.AttemptedAttacksCount), 0, 200);
+            int offSpringRed = (int)CoreGlobals.Clamp(CreatureOffspringColor.R * (creature.AttemptedEatsCount == 0 ? 1 : (double)creature.AttemptedAttacksCount / creature.AttemptedEatsCount), 0, 175);
+            int offSpringBlue = (int)CoreGlobals.Clamp(CreatureOffspringColor.B * (creature.AttemptedAttacksCount == 0 ? 1 : (double)creature.AttemptedEatsCount / creature.AttemptedAttacksCount), 0, 200);
 
             foreach (var creatureOffSpring in offspring)
             {
-                creatureOffSpring.Color = Color.FromArgb(offSpringRed, Globals.Map(offSpringRed + offSpringBlue, 0, 375, 100, 50), offSpringBlue);
+                creatureOffSpring.Color = Color.FromArgb(offSpringRed, CoreGlobals.Map(offSpringRed + offSpringBlue, 0, 375, 100, 50), offSpringBlue);
             }
 
             return offspring;
