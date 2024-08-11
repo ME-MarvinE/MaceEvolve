@@ -33,7 +33,7 @@ namespace MaceEvolve.Core.Interfaces
         IList<TCreature> CreatureTryReproduce(TCreature creature);
         void CreatureDoNothing();
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
-        Dictionary<CreatureInput, float> GenerateCreatureInputValues(IEnumerable<CreatureInput> creatureInput, TCreature creature);
+        IDictionary<TCreature, IDictionary<CreatureInput, float>> GenerateCreaturesInputValues(IDictionary<TCreature, IEnumerable<CreatureInput>> creatureToCreatureInputsDict);
         #endregion
     }
 }

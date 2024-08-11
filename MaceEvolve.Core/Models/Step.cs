@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MaceEvolve.Core.Models
 {
@@ -489,310 +490,319 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public Dictionary<CreatureInput, float> GenerateCreatureInputValues(IEnumerable<CreatureInput> creatureInputs, TCreature creature)
+        public IDictionary<TCreature, IDictionary<CreatureInput, float>> GenerateCreaturesInputValues(IDictionary<TCreature, IEnumerable<CreatureInput>> creatureToCreatureInputsDict)
         {
-            Dictionary<CreatureInput, float> creatureInputValues = new Dictionary<CreatureInput, float>();
+            ConcurrentDictionary<TCreature, IDictionary<CreatureInput, float>> creaturesInputValues = new ConcurrentDictionary<TCreature, IDictionary<CreatureInput, float>>();
 
-            List<TCreature> visibleCreatures = VisibleCreaturesDict[creature];
-            IEnumerable<TCreature> visibleCreaturesOrderedByDistance = visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
-            List<TCreature> visibleCreaturesOrderedByDistanceList = null;
-            List<TFood> visibleFood = VisibleFoodDict[creature];
-            IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
-            List<TFood> visibleFoodOrderedByDistanceList = null;
-            TCreature closestVisibleCreature = null;
-            TFood closestVisibleFood = null;
-            float? visibleArea = null;
-
-            foreach (var creatureInput in creatureInputs)
+            Parallel.ForEach(creatureToCreatureInputsDict, keyValuePair =>
             {
-                float creatureInputValue;
+                TCreature creature = keyValuePair.Key;
+                IEnumerable<CreatureInput> creatureInputs = keyValuePair.Value;
 
-                if (!creatureInputValues.TryGetValue(creatureInput, out creatureInputValue))
+                Dictionary<CreatureInput, float> creatureInputValues = new Dictionary<CreatureInput, float>();
+                List<TCreature> visibleCreatures = VisibleCreaturesDict[creature];
+                IEnumerable<TCreature> visibleCreaturesOrderedByDistance = visibleCreatures.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
+                List<TCreature> visibleCreaturesOrderedByDistanceList = null;
+                List<TFood> visibleFood = VisibleFoodDict[creature];
+                IEnumerable<TFood> visibleFoodOrderedByDistance = visibleFood.OrderBy(x => Globals.GetDistanceFrom(creature.MX, creature.MY, x.MX, x.MY));
+                List<TFood> visibleFoodOrderedByDistanceList = null;
+                TCreature closestVisibleCreature = null;
+                TFood closestVisibleFood = null;
+                float? visibleArea = null;
+
+                foreach (var creatureInput in creatureInputs)
                 {
-                    switch (creatureInput)
+                    float creatureInputValue;
+
+                    if (!creatureInputValues.TryGetValue(creatureInput, out creatureInputValue))
                     {
-                        case CreatureInput.PercentMaxEnergy:
-                            creatureInputValue = creature.MaxEnergy == 0 ? 1 : creature.Energy / creature.MaxEnergy;
-                            break;
+                        switch (creatureInput)
+                        {
+                            case CreatureInput.PercentMaxEnergy:
+                                creatureInputValue = creature.MaxEnergy == 0 ? 1 : creature.Energy / creature.MaxEnergy;
+                                break;
 
-                        case CreatureInput.DistanceFromTopWorldBound:
-                            creatureInputValue = Globals.Map(creature.Y, WorldBounds.Y, WorldBounds.Y + WorldBounds.Height, 0, 1);
-                            break;
+                            case CreatureInput.DistanceFromTopWorldBound:
+                                creatureInputValue = Globals.Map(creature.Y, WorldBounds.Y, WorldBounds.Y + WorldBounds.Height, 0, 1);
+                                break;
 
-                        case CreatureInput.DistanceFromLeftWorldBound:
-                            creatureInputValue = Globals.Map(creature.X, WorldBounds.X, WorldBounds.X + WorldBounds.Width, 0, 1);
-                            break;
+                            case CreatureInput.DistanceFromLeftWorldBound:
+                                creatureInputValue = Globals.Map(creature.X, WorldBounds.X, WorldBounds.X + WorldBounds.Width, 0, 1);
+                                break;
 
-                        case CreatureInput.RandomInput:
-                            creatureInputValue = MaceRandom.Current.NextFloat();
-                            break;
+                            case CreatureInput.RandomInput:
+                                creatureInputValue = MaceRandom.Current.NextFloat();
+                                break;
 
-                        case CreatureInput.PercentNutrientsRequiredToReproduce:
-                            creatureInputValue = creature.NutrientsRequiredToReproduce == 0 ? 1 : creature.Nutrients / creature.NutrientsRequiredToReproduce;
-                            break;
+                            case CreatureInput.PercentNutrientsRequiredToReproduce:
+                                creatureInputValue = creature.NutrientsRequiredToReproduce == 0 ? 1 : creature.Nutrients / creature.NutrientsRequiredToReproduce;
+                                break;
 
-                        case CreatureInput.PercentEnergyRequiredToReproduce:
-                            creatureInputValue = creature.EnergyRequiredToReproduce == 0 ? 1 : creature.Energy / creature.EnergyRequiredToReproduce;
-                            break;
+                            case CreatureInput.PercentEnergyRequiredToReproduce:
+                                creatureInputValue = creature.EnergyRequiredToReproduce == 0 ? 1 : creature.Energy / creature.EnergyRequiredToReproduce;
+                                break;
 
-                        case CreatureInput.PercentMaxAge:
-                            creatureInputValue = creature.MaxAge == 0 ? 1 : (float)creature.Age / creature.MaxAge;
-                            break;
-                        case CreatureInput.PercentMaxHealth:
-                            creatureInputValue = creature.MaxHealthPoints == 0 ? 1 : creature.HealthPoints / creature.MaxHealthPoints;
-                            break;
+                            case CreatureInput.PercentMaxAge:
+                                creatureInputValue = creature.MaxAge == 0 ? 1 : (float)creature.Age / creature.MaxAge;
+                                break;
+                            case CreatureInput.PercentMaxHealth:
+                                creatureInputValue = creature.MaxHealthPoints == 0 ? 1 : creature.HealthPoints / creature.MaxHealthPoints;
+                                break;
 
-                        case CreatureInput.WillNaturallyHeal:
-                            creatureInputValue = creature.NaturalHealInterval == 0 ? 1 : (float)creature.StepsSinceLastNaturalHeal / creature.NaturalHealInterval;
-                            break;
+                            case CreatureInput.WillNaturallyHeal:
+                                creatureInputValue = creature.NaturalHealInterval == 0 ? 1 : (float)creature.StepsSinceLastNaturalHeal / creature.NaturalHealInterval;
+                                break;
 
-                        case CreatureInput.PercentMassRequiredToReproduce:
-                            creatureInputValue = creature.MassRequiredToReproduce == 0 ? 1 : creature.Mass / creature.MassRequiredToReproduce;
-                            break;
+                            case CreatureInput.PercentMassRequiredToReproduce:
+                                creatureInputValue = creature.MassRequiredToReproduce == 0 ? 1 : creature.Mass / creature.MassRequiredToReproduce;
+                                break;
 
-                        case CreatureInput.VisibleAreaCreatureDensity:
-                            visibleArea ??= GetCreatureVisibleArea(creature);
+                            case CreatureInput.VisibleAreaCreatureDensity:
+                                visibleArea ??= GetCreatureVisibleArea(creature);
 
-                            if (visibleArea == 0)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                float creaturesArea = 0;
-
-                                foreach (var visibleCreature in visibleCreatures)
+                                if (visibleArea == 0)
                                 {
-                                    float visibleCreatureArea = CreatureToCachedAreaDict.GetOrAdd(visibleCreature, (x) => GetCircleArea(x.Size / 2));
-                                    creaturesArea += visibleCreatureArea;
+                                    creatureInputValue = 0;
                                 }
-
-                                creatureInputValue = creaturesArea >= visibleArea ? 1 : creaturesArea / visibleArea.Value;
-                            }
-                            break;
-
-                        case CreatureInput.VisibleAreaFoodDensity:
-                            visibleArea ??= GetCreatureVisibleArea(creature);
-
-                            if (visibleArea == 0)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                float foodArea = 0;
-
-                                foreach (var vFood in visibleFood)
+                                else
                                 {
-                                    float visibleFoodArea = FoodToCachedAreaDict.GetOrAdd(vFood, (x) => GetCircleArea(x.Size / 2));
-                                    foodArea += visibleFoodArea;
+                                    float creaturesArea = 0;
+
+                                    foreach (var visibleCreature in visibleCreatures)
+                                    {
+                                        float visibleCreatureArea = CreatureToCachedAreaDict.GetOrAdd(visibleCreature, (x) => GetCircleArea(x.Size / 2));
+                                        creaturesArea += visibleCreatureArea;
+                                    }
+
+                                    creatureInputValue = creaturesArea >= visibleArea ? 1 : creaturesArea / visibleArea.Value;
                                 }
+                                break;
 
-                                creatureInputValue = foodArea >= visibleArea ? 1 : foodArea / visibleArea.Value;
-                            }
-                            break;
+                            case CreatureInput.VisibleAreaFoodDensity:
+                                visibleArea ??= GetCreatureVisibleArea(creature);
 
-                        case CreatureInput.AngleToClosestVisibleCreature:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                                if (visibleArea == 0)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    float foodArea = 0;
 
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                float angleFromClosestVisibleCreature = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
-                                float distanceFromForwardAngle = Globals.AngleDifference(creature.ForwardAngle, Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature));
+                                    foreach (var vFood in visibleFood)
+                                    {
+                                        float visibleFoodArea = FoodToCachedAreaDict.GetOrAdd(vFood, (x) => GetCircleArea(x.Size / 2));
+                                        foodArea += visibleFoodArea;
+                                    }
 
-                                //The mapping of the value to the output is reversed so that relative to the forward angle, the more anti-clockwise a creature is,
-                                //the lower the output will be.
-                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, 1, -1);
-                            }
-                            break;
+                                    creatureInputValue = foodArea >= visibleArea ? 1 : foodArea / visibleArea.Value;
+                                }
+                                break;
 
-                        case CreatureInput.AngleToClosestVisibleFood:
-                            closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
+                            case CreatureInput.AngleToClosestVisibleCreature:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                            if (closestVisibleFood == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                float angleFromClosestVisibleFood = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
-                                float distanceFromForwardAngle = Globals.AngleDifference(creature.ForwardAngle, Globals.Angle180RangeTo360Range(angleFromClosestVisibleFood));
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    float angleFromClosestVisibleCreature = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
+                                    float distanceFromForwardAngle = Globals.AngleDifference(creature.ForwardAngle, Globals.Angle180RangeTo360Range(angleFromClosestVisibleCreature));
 
-                                //The mapping of the value to the output is reversed so that relative to the forward angle, the more anti-clockwise a creature is,
-                                //the lower the output will be.
-                                creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, 1, -1);
-                            }
-                            break;
+                                    //The mapping of the value to the output is reversed so that relative to the forward angle, the more anti-clockwise a creature is,
+                                    //the lower the output will be.
+                                    creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, 1, -1);
+                                }
+                                break;
 
-                        case CreatureInput.ProximityToClosestVisibleCreature:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                            case CreatureInput.AngleToClosestVisibleFood:
+                                closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
 
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                float distanceFromClosestVisibleCreature = Globals.GetDistanceFrom(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
+                                if (closestVisibleFood == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    float angleFromClosestVisibleFood = Globals.GetAngleBetweenF(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
+                                    float distanceFromForwardAngle = Globals.AngleDifference(creature.ForwardAngle, Globals.Angle180RangeTo360Range(angleFromClosestVisibleFood));
 
-                                creatureInputValue = creature.SightRange == 0 ? 1 : 1 - (distanceFromClosestVisibleCreature / creature.SightRange);
-                            }
-                            break;
+                                    //The mapping of the value to the output is reversed so that relative to the forward angle, the more anti-clockwise a creature is,
+                                    //the lower the output will be.
+                                    creatureInputValue = Globals.Map(distanceFromForwardAngle, -creature.FieldOfView / 2, creature.FieldOfView / 2, 1, -1);
+                                }
+                                break;
 
-                        case CreatureInput.ProximityToClosestVisibleFood:
-                            closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
+                            case CreatureInput.ProximityToClosestVisibleCreature:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                            if (closestVisibleFood == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                float distanceFromClosestVisibleFood = Globals.GetDistanceFrom(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    float distanceFromClosestVisibleCreature = Globals.GetDistanceFrom(creature.MX, creature.MY, closestVisibleCreature.MX, closestVisibleCreature.MY);
 
-                                creatureInputValue = creature.SightRange == 0 ? 1 : 1 - (distanceFromClosestVisibleFood / creature.SightRange);
-                            }
-                            break;
+                                    creatureInputValue = creature.SightRange == 0 ? 1 : 1 - (distanceFromClosestVisibleCreature / creature.SightRange);
+                                }
+                                break;
 
-                        case CreatureInput.ClosestVisibleFoodEnergyPercentage:
-                            closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
+                            case CreatureInput.ProximityToClosestVisibleFood:
+                                closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
 
-                            if (closestVisibleFood == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestVisibleFood.MaxEnergy == 0 ? 0 : closestVisibleFood.Energy / closestVisibleFood.MaxEnergy;
-                            }
-                            break;
+                                if (closestVisibleFood == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    float distanceFromClosestVisibleFood = Globals.GetDistanceFrom(creature.MX, creature.MY, closestVisibleFood.MX, closestVisibleFood.MY);
 
-                        case CreatureInput.ClosestVisibleFoodNutrientPercentage:
-                            closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
+                                    creatureInputValue = creature.SightRange == 0 ? 1 : 1 - (distanceFromClosestVisibleFood / creature.SightRange);
+                                }
+                                break;
 
-                            if (closestVisibleFood == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestVisibleFood.MaxNutrients == 0 ? 0 : closestVisibleFood.Nutrients / closestVisibleFood.MaxNutrients;
-                            }
-                            break;
+                            case CreatureInput.ClosestVisibleFoodEnergyPercentage:
+                                closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
 
-                        case CreatureInput.ClosestVisibleCreatureEnergyPercentage:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                                if (closestVisibleFood == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    creatureInputValue = closestVisibleFood.MaxEnergy == 0 ? 0 : closestVisibleFood.Energy / closestVisibleFood.MaxEnergy;
+                                }
+                                break;
 
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestVisibleCreature.MaxEnergy == 0 ? 0 : closestVisibleCreature.Energy / closestVisibleCreature.MaxEnergy;
-                            }
-                            break;
+                            case CreatureInput.ClosestVisibleFoodNutrientPercentage:
+                                closestVisibleFood ??= visibleFoodOrderedByDistance.FirstOrDefault();
 
-                        case CreatureInput.ClosestVisibleCreatureAgePercentage:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                                if (closestVisibleFood == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    creatureInputValue = closestVisibleFood.MaxNutrients == 0 ? 0 : closestVisibleFood.Nutrients / closestVisibleFood.MaxNutrients;
+                                }
+                                break;
 
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestVisibleCreature.MaxAge == 0 ? 0 : (float)closestVisibleCreature.Age / closestVisibleCreature.MaxAge;
-                            }
-                            break;
+                            case CreatureInput.ClosestVisibleCreatureEnergyPercentage:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                        case CreatureInput.ClosestVisibleCreatureHealthPercentage:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    creatureInputValue = closestVisibleCreature.MaxEnergy == 0 ? 0 : closestVisibleCreature.Energy / closestVisibleCreature.MaxEnergy;
+                                }
+                                break;
 
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestVisibleCreature.MaxHealthPoints == 0 ? 0 : closestVisibleCreature.HealthPoints / closestVisibleCreature.MaxHealthPoints;
-                            }
-                            break;
+                            case CreatureInput.ClosestVisibleCreatureAgePercentage:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                        case CreatureInput.AggressionPercentage:
-                            int attemptedAttacksAndEats = creature.AttemptedAttacksCount + creature.AttemptedEatsCount;
-                            creatureInputValue = attemptedAttacksAndEats == 0 ? 0 : (float)creature.AttemptedAttacksCount / attemptedAttacksAndEats;
-                            break;
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    creatureInputValue = closestVisibleCreature.MaxAge == 0 ? 0 : (float)closestVisibleCreature.Age / closestVisibleCreature.MaxAge;
+                                }
+                                break;
 
-                        case CreatureInput.SuccessfulAttackPercentage:
-                            creatureInputValue = creature.InitiatedAttacksCount == 0 ? 0 : (float)creature.SuccessfulAttacksCount / creature.InitiatedAttacksCount;
-                            break;
+                            case CreatureInput.ClosestVisibleCreatureHealthPercentage:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                        case CreatureInput.SizeToClosestVisibleCreatureSize:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    creatureInputValue = closestVisibleCreature.MaxHealthPoints == 0 ? 0 : closestVisibleCreature.HealthPoints / closestVisibleCreature.MaxHealthPoints;
+                                }
+                                break;
 
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 1;
-                            }
-                            else if (creature.Size == closestVisibleCreature.Size)
-                            {
-                                creatureInputValue = 1;
-                            }
-                            else
-                            {
-                                creatureInputValue = closestVisibleCreature.Size == 0 ? 1 : creature.Size / closestVisibleCreature.Size;
-                            }
-                            break;
+                            case CreatureInput.AggressionPercentage:
+                                int attemptedAttacksAndEats = creature.AttemptedAttacksCount + creature.AttemptedEatsCount;
+                                creatureInputValue = attemptedAttacksAndEats == 0 ? 0 : (float)creature.AttemptedAttacksCount / attemptedAttacksAndEats;
+                                break;
 
-                        case CreatureInput.ClosestVisibleCreatureSizeToSize:
-                            closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+                            case CreatureInput.SuccessfulAttackPercentage:
+                                creatureInputValue = creature.InitiatedAttacksCount == 0 ? 0 : (float)creature.SuccessfulAttacksCount / creature.InitiatedAttacksCount;
+                                break;
 
-                            if (closestVisibleCreature == null)
-                            {
-                                creatureInputValue = 0;
-                            }
-                            else if (creature.Size == closestVisibleCreature.Size)
-                            {
-                                creatureInputValue = 1;
-                            }
-                            else
-                            {
-                                creatureInputValue = creature.Size == 0 ? 1 : closestVisibleCreature.Size / creature.Size;
-                            }
-                            break;
+                            case CreatureInput.SizeToClosestVisibleCreatureSize:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                        case CreatureInput.AnyVisibleCreatures:
-                            creatureInputValue = visibleCreatures.Count == 0 ? 0 : 1;
-                            break;
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 1;
+                                }
+                                else if (creature.Size == closestVisibleCreature.Size)
+                                {
+                                    creatureInputValue = 1;
+                                }
+                                else
+                                {
+                                    creatureInputValue = closestVisibleCreature.Size == 0 ? 1 : creature.Size / closestVisibleCreature.Size;
+                                }
+                                break;
 
-                        case CreatureInput.AnyVisibleFood:
-                            creatureInputValue = visibleFood.Count == 0 ? 0 : 1;
-                            break;
+                            case CreatureInput.ClosestVisibleCreatureSizeToSize:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
 
-                        default:
-                            throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else if (creature.Size == closestVisibleCreature.Size)
+                                {
+                                    creatureInputValue = 1;
+                                }
+                                else
+                                {
+                                    creatureInputValue = creature.Size == 0 ? 1 : closestVisibleCreature.Size / creature.Size;
+                                }
+                                break;
+
+                            case CreatureInput.AnyVisibleCreatures:
+                                creatureInputValue = visibleCreatures.Count == 0 ? 0 : 1;
+                                break;
+
+                            case CreatureInput.AnyVisibleFood:
+                                creatureInputValue = visibleFood.Count == 0 ? 0 : 1;
+                                break;
+
+                            default:
+                                throw new NotImplementedException($"{nameof(CreatureInput)} '{creatureInput}' has not been implemented.");
+                        }
                     }
+
+                    if (visibleCreaturesOrderedByDistanceList != null)
+                    {
+                        visibleCreaturesOrderedByDistance = visibleCreaturesOrderedByDistanceList;
+                    }
+
+                    if (visibleFoodOrderedByDistanceList != null)
+                    {
+                        visibleFoodOrderedByDistance = visibleFoodOrderedByDistanceList;
+                    }
+
+                    creatureInputValues[creatureInput] = creatureInputValue;
                 }
 
-                if (visibleCreaturesOrderedByDistanceList != null)
-                {
-                    visibleCreaturesOrderedByDistance = visibleCreaturesOrderedByDistanceList;
-                }
+                creaturesInputValues.GetOrAdd(creature, creatureInputValues);
+            });
 
-                if (visibleFoodOrderedByDistanceList != null)
-                {
-                    visibleFoodOrderedByDistance = visibleFoodOrderedByDistanceList;
-                }
-
-                creatureInputValues[creatureInput] = creatureInputValue;
-            }
-
-            return creatureInputValues;
+            return creaturesInputValues;
         }
         private float GetCreatureVisibleArea(TCreature creature)
         {

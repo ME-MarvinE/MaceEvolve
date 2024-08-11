@@ -345,110 +345,107 @@ namespace MaceEvolve.Core.Models
 
             TCreature newBestCreature = BestCreature == null || BestCreature.IsDead ? null : BestCreature;
 
-            Parallel.ForEach(CurrentStep.Creatures, creature =>
+            Dictionary<TCreature, bool> creatureToShouldTrackBrainOutputsDict = CurrentStep.Creatures.ToDictionary(x => x, x => (!x.IsDead && gatherAliveCreatureInfo) || (x.IsDead && gatherDeadCreatureInfo) || (x == newBestCreature && gatherBestCreatureInfo) || (x == SelectedCreature && gatherSelectedCreatureInfo));
+            IDictionary<TCreature, IDictionary<CreatureInput, float>> creatureToCreatureInputToInputValueDictDict = CurrentStep.GenerateCreaturesInputValues(CurrentStep.Creatures.Where(x => !x.IsDead || creatureToShouldTrackBrainOutputsDict[x]).ToDictionary(x => x, x => x.Brain.GetInputsRequiredForStep()));
+            IDictionary<TCreature, IDictionary<int, float>> creatureToNodeOutputsDict = GenerateCreaturesNodeOutputs(creatureToCreatureInputToInputValueDictDict);
+
+            Parallel.ForEach(creatureToNodeOutputsDict, creatureToNodeOutputDictEntry =>
             {
-                bool shouldTrackBrainOutput = (!creature.IsDead && gatherAliveCreatureInfo) || (creature.IsDead && gatherDeadCreatureInfo) || (creature == newBestCreature && gatherBestCreatureInfo) || (creature == SelectedCreature && gatherSelectedCreatureInfo);
-                bool shouldEvaluateCreature = !creature.IsDead || shouldTrackBrainOutput;
+                TCreature creature = creatureToNodeOutputDictEntry.Key;
+                IDictionary<int, float> nodeIdToOutputValueDict = creatureToNodeOutputDictEntry.Value;
 
-                if (shouldEvaluateCreature)
+                bool shouldTrackBrainOutput = creatureToShouldTrackBrainOutputsDict[creature];
+
+                //Get the output nodes with the highest output values.
+                if (!creature.IsDead)
                 {
-                    //Calculate the output values for the creature's nodes.
-                    IEnumerable<CreatureInput> inputsRequiredForStep = creature.Brain.GetInputsRequiredForStep();
-                    Dictionary<CreatureInput, float> inputToInputValueDict = CurrentStep.GenerateCreatureInputValues(inputsRequiredForStep, creature);
-                    Dictionary<int, float> nodeIdToOutputValueDict = creature.Brain.GenerateNodeOutputs(inputToInputValueDict);
+                    Dictionary<int, float> orderedNodeIdToOutputValueDict = nodeIdToOutputValueDict.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
+                    Dictionary<CreatureAction, float> creatureActionToOutputValueDict = new Dictionary<CreatureAction, float>();
+                    Dictionary<CreatureAction, StepAction<TCreature>> actionsToAdd = new Dictionary<CreatureAction, StepAction<TCreature>>();
 
-
-                    //Get the output nodes with the highest output values.
-                    if (!creature.IsDead)
+                    foreach (var keyValuePair in orderedNodeIdToOutputValueDict)
                     {
-                        Dictionary<int, float> orderedNodeIdToOutputValueDict = nodeIdToOutputValueDict.OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value);
-                        Dictionary<CreatureAction, float> creatureActionToOutputValueDict = new Dictionary<CreatureAction, float>();
-                        Dictionary<CreatureAction, StepAction<TCreature>> actionsToAdd = new Dictionary<CreatureAction, StepAction<TCreature>>();
-
-                        foreach (var keyValuePair in orderedNodeIdToOutputValueDict)
+                        if (actionsToAdd.Count >= 1)
                         {
-                            if (actionsToAdd.Count >= 1)
-                            {
-                                break;
-                            }
-
-                            int nodeId = keyValuePair.Key;
-                            float outputValue = keyValuePair.Value;
-                            Node node = creature.Brain.NodeIdsToNodesDict[nodeId];
-
-                            if (node.NodeType == NodeType.Output && outputValue > 0 && !actionsToAdd.ContainsKey(node.CreatureAction.Value))
-                            {
-                                creatureActionToOutputValueDict.Add(node.CreatureAction.Value, outputValue);
-                                StepAction<TCreature> stepAction = new StepAction<TCreature>
-                                {
-                                    Creature = creature,
-                                    Action = node.CreatureAction.Value,
-                                    CreatureActionToOutputValueDict = creatureActionToOutputValueDict
-                                };
-
-                                actionsToAdd.Add(stepAction.Action, stepAction);
-                            }
+                            break;
                         }
 
-                        foreach (var keyValuePair in actionsToAdd)
+                        int nodeId = keyValuePair.Key;
+                        float outputValue = keyValuePair.Value;
+                        Node node = creature.Brain.NodeIdsToNodesDict[nodeId];
+
+                        if (node.NodeType == NodeType.Output && outputValue > 0 && !actionsToAdd.ContainsKey(node.CreatureAction.Value))
                         {
-                            stepResult.CalculatedActions.Enqueue(keyValuePair.Value);
-                        }
-                    }
-
-                    //Store properties of the creature's current status.
-                    if (shouldTrackBrainOutput)
-                    {
-                        List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
-
-                        foreach (var keyValuePair in nodeIdToOutputValueDict)
-                        {
-                            int nodeId = keyValuePair.Key;
-                            Node node = creature.Brain.NodeIdsToNodesDict[nodeId];
-                            float output = keyValuePair.Value;
-
-                            NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
+                            creatureActionToOutputValueDict.Add(node.CreatureAction.Value, outputValue);
+                            StepAction<TCreature> stepAction = new StepAction<TCreature>
                             {
-                                NodeId = nodeId,
-                                Bias = node.Bias,
-                                CreatureAction = node.CreatureAction,
-                                CreatureInput = node.CreatureInput,
-                                NodeType = node.NodeType,
-                                PreviousOutput = output,
+                                Creature = creature,
+                                Action = node.CreatureAction.Value,
+                                CreatureActionToOutputValueDict = creatureActionToOutputValueDict
                             };
 
-                            foreach (var connection in creature.Brain.Connections)
+                            actionsToAdd.Add(stepAction.Action, stepAction);
+                        }
+                    }
+
+                    foreach (var keyValuePair in actionsToAdd)
+                    {
+                        stepResult.CalculatedActions.Enqueue(keyValuePair.Value);
+                    }
+                }
+
+                //Store properties of the creature's current status.
+                if (shouldTrackBrainOutput)
+                {
+                    List<NeuralNetworkStepNodeInfo> currentStepNodeInfo = new List<NeuralNetworkStepNodeInfo>();
+
+                    foreach (var keyValuePair in nodeIdToOutputValueDict)
+                    {
+                        int nodeId = keyValuePair.Key;
+                        Node node = creature.Brain.NodeIdsToNodesDict[nodeId];
+                        float output = keyValuePair.Value;
+
+                        NeuralNetworkStepNodeInfo currentStepCurrentNodeInfo = new NeuralNetworkStepNodeInfo()
+                        {
+                            NodeId = nodeId,
+                            Bias = node.Bias,
+                            CreatureAction = node.CreatureAction,
+                            CreatureInput = node.CreatureInput,
+                            NodeType = node.NodeType,
+                            PreviousOutput = output,
+                        };
+
+                        foreach (var connection in creature.Brain.Connections)
+                        {
+                            bool sourceIdIsNodeId = connection.SourceId == nodeId;
+                            bool targetIdIsNodeId = connection.TargetId == nodeId;
+
+                            if (sourceIdIsNodeId || targetIdIsNodeId)
                             {
-                                bool sourceIdIsNodeId = connection.SourceId == nodeId;
-                                bool targetIdIsNodeId = connection.TargetId == nodeId;
-
-                                if (sourceIdIsNodeId || targetIdIsNodeId)
-                                {
-                                    currentStepCurrentNodeInfo.Connections.Add(connection);
-                                }
-
-                                if (sourceIdIsNodeId)
-                                {
-                                    currentStepCurrentNodeInfo.ConnectionsFrom.Add(connection);
-                                }
-
-                                if (targetIdIsNodeId)
-                                {
-                                    currentStepCurrentNodeInfo.ConnectionsTo.Add(connection);
-                                }
+                                currentStepCurrentNodeInfo.Connections.Add(connection);
                             }
 
-                            currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
+                            if (sourceIdIsNodeId)
+                            {
+                                currentStepCurrentNodeInfo.ConnectionsFrom.Add(connection);
+                            }
+
+                            if (targetIdIsNodeId)
+                            {
+                                currentStepCurrentNodeInfo.ConnectionsTo.Add(connection);
+                            }
                         }
 
-                        stepResult.CreaturesBrainOutputs[creature] = currentStepNodeInfo;
+                        currentStepNodeInfo.Add(currentStepCurrentNodeInfo);
                     }
 
-                    //Identify the best creature in the step.
-                    if (newBestCreature == null || (creature.TimesReproduced > newBestCreature.TimesReproduced))
-                    {
-                        newBestCreature = creature;
-                    }
+                    stepResult.CreaturesBrainOutputs[creature] = currentStepNodeInfo;
+                }
+
+                //Identify the best creature in the step.
+                if (newBestCreature == null || (creature.TimesReproduced > newBestCreature.TimesReproduced))
+                {
+                    newBestCreature = creature;
                 }
             });
 
@@ -578,7 +575,222 @@ namespace MaceEvolve.Core.Models
         //        }
         //    }
         //}
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="defaultNodeOutputValue">The value to use when the output of a node is dependent on a connection with a circular reference or the previous step info is not present.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="NotImplementedException"></exception>
+        public virtual Dictionary<int, float> GenerateNodeOutputs(IDictionary<CreatureInput, float> inputsToInputValuesDict, IDictionary<int, Node> nodeIdToNodeDict, IList<Connection> connections, float defaultNodeOutputValue = 0)
+        {
+            Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
+            List<int> inputNodeIds = new List<int>();
+            List<int> outputNodeIds = new List<int>();
 
+            foreach (var nodeIdToNodeKeyValuePair in nodeIdToNodeDict)
+            {
+                int nodeId = nodeIdToNodeKeyValuePair.Key;
+                Node node = nodeIdToNodeKeyValuePair.Value;
+
+                if (node.NodeType == NodeType.Input)
+                {
+                    inputNodeIds.Add(nodeId);
+                }
+                else if (node.NodeType == NodeType.Output)
+                {
+                    outputNodeIds.Add(nodeId);
+                }
+            }
+
+            List<int> nodesBeingEvaluated = new List<int>();
+            List<int> nodeQueue = new List<int>();
+
+            nodeQueue.AddRange(outputNodeIds);
+            nodeQueue.AddRange(inputNodeIds);
+
+            Dictionary<int, IEnumerable<Connection>> targetIdToConnectionsDict = connections.GroupBy(x => x.TargetId).ToDictionary(x => x.Key, x => x.AsEnumerable());
+
+            while (nodeQueue.Count > 0)
+            {
+                int currentNodeId = nodeQueue[nodeQueue.Count - 1];
+                Node currentNode = nodeIdToNodeDict[currentNodeId];
+                nodesBeingEvaluated.Add(currentNodeId);
+                float? currentNodeWeightedSum;
+
+                if (currentNode.NodeType == NodeType.Input)
+                {
+                    if (currentNode.CreatureInput == null)
+                    {
+                        throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureInput)} is null.");
+                    }
+
+                    currentNodeWeightedSum = inputsToInputValuesDict[currentNode.CreatureInput.Value];
+                }
+                else
+                {
+                    if (currentNode.NodeType == NodeType.Output && currentNode.CreatureAction == null)
+                    {
+                        throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureAction)} is null.");
+                    }
+
+                    currentNodeWeightedSum = 0;
+
+                    if (targetIdToConnectionsDict.TryGetValue(currentNodeId, out IEnumerable<Connection> connectionsToCurrentNode))
+                    {
+                        foreach (var connection in connectionsToCurrentNode)
+                        {
+                            float sourceNodeOutput;
+                            Node connectionSourceNode = nodeIdToNodeDict[connection.SourceId];
+                            bool isSelfReferencingConnection = connection.SourceId == connection.TargetId;
+
+                            //If the source node's output needs to be retrieved and it is currently being evaluated,
+                            //the only thing that can be done is use the cached value.
+                            if (cachedNodeOutputs.TryGetValue(connection.SourceId, out float cachedSourceNodeOutput))
+                            {
+                                sourceNodeOutput = cachedSourceNodeOutput;
+                            }
+                            else if (nodesBeingEvaluated.Contains(connection.SourceId))
+                            {
+                                sourceNodeOutput = Globals.ReLU(defaultNodeOutputValue + connectionSourceNode.Bias);
+                            }
+                            else
+                            {
+                                nodeQueue.Add(connection.SourceId);
+                                currentNodeWeightedSum = null;
+                                break;
+                            }
+
+                            currentNodeWeightedSum += sourceNodeOutput * connection.Weight;
+                        }
+                    }
+                }
+
+                if (currentNodeWeightedSum != null)
+                {
+                    float currentNodeOutput = currentNode.NodeType == NodeType.Input ? currentNodeWeightedSum.Value : Globals.ReLU(currentNodeWeightedSum.Value + currentNode.Bias);
+
+                    nodesBeingEvaluated.Remove(currentNodeId);
+
+                    cachedNodeOutputs[currentNodeId] = currentNodeOutput;
+
+                    nodeQueue.Remove(currentNodeId);
+                }
+            }
+
+            return cachedNodeOutputs;
+        }
+        public virtual IDictionary<TCreature, IDictionary<int, float>> GenerateCreaturesNodeOutputs(IDictionary<TCreature, IDictionary<CreatureInput, float>> creatureToInputValueDict, float defaultNodeOutputValue = 0)
+        {
+            ConcurrentDictionary<TCreature, IDictionary<int, float>> result = new ConcurrentDictionary<TCreature, IDictionary<int, float>>();
+
+            Parallel.ForEach(creatureToInputValueDict, keyValuePair =>
+            {
+                TCreature creature = keyValuePair.Key;
+                IDictionary<CreatureInput, float> inputsToInputValuesDict = creatureToInputValueDict[creature];
+                IDictionary<int, Node> nodeIdToNodeDict = creature.Brain.NodeIdsToNodesDict.ToDictionary(x => x.Key, x => x.Value);
+                IList<Connection> connections = creature.Brain.Connections;
+
+
+                ConcurrentDictionary<int, float> cachedNodeOutputs = new ConcurrentDictionary<int, float>();
+                List<int> inputNodeIds = new List<int>();
+                List<int> outputNodeIds = new List<int>();
+
+                foreach (var nodeIdToNodeKeyValuePair in nodeIdToNodeDict)
+                {
+                    int nodeId = nodeIdToNodeKeyValuePair.Key;
+                    Node node = nodeIdToNodeKeyValuePair.Value;
+
+                    if (node.NodeType == NodeType.Input)
+                    {
+                        inputNodeIds.Add(nodeId);
+                    }
+                    else if (node.NodeType == NodeType.Output)
+                    {
+                        outputNodeIds.Add(nodeId);
+                    }
+                }
+
+                List<int> nodesBeingEvaluated = new List<int>();
+                List<int> nodeQueue = new List<int>();
+
+                nodeQueue.AddRange(outputNodeIds);
+                nodeQueue.AddRange(inputNodeIds);
+
+                Dictionary<int, IEnumerable<Connection>> targetIdToConnectionsDict = connections.GroupBy(x => x.TargetId).ToDictionary(x => x.Key, x => x.AsEnumerable());
+
+                while (nodeQueue.Count > 0)
+                {
+                    int currentNodeId = nodeQueue[nodeQueue.Count - 1];
+                    Node currentNode = nodeIdToNodeDict[currentNodeId];
+                    nodesBeingEvaluated.Add(currentNodeId);
+                    float? currentNodeWeightedSum;
+
+                    if (currentNode.NodeType == NodeType.Input)
+                    {
+                        if (currentNode.CreatureInput == null)
+                        {
+                            throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureInput)} is null.");
+                        }
+
+                        currentNodeWeightedSum = inputsToInputValuesDict[currentNode.CreatureInput.Value];
+                    }
+                    else
+                    {
+                        if (currentNode.NodeType == NodeType.Output && currentNode.CreatureAction == null)
+                        {
+                            throw new InvalidOperationException($"node type is {currentNode.NodeType} but {nameof(CreatureAction)} is null.");
+                        }
+
+                        currentNodeWeightedSum = 0;
+
+                        if (targetIdToConnectionsDict.TryGetValue(currentNodeId, out IEnumerable<Connection> connectionsToCurrentNode))
+                        {
+                            foreach (var connection in connectionsToCurrentNode)
+                            {
+                                float sourceNodeOutput;
+                                Node connectionSourceNode = nodeIdToNodeDict[connection.SourceId];
+                                bool isSelfReferencingConnection = connection.SourceId == connection.TargetId;
+
+                                //If the source node's output needs to be retrieved and it is currently being evaluated,
+                                //the only thing that can be done is use the cached value.
+                                if (cachedNodeOutputs.TryGetValue(connection.SourceId, out float cachedSourceNodeOutput))
+                                {
+                                    sourceNodeOutput = cachedSourceNodeOutput;
+                                }
+                                else if (nodesBeingEvaluated.Contains(connection.SourceId))
+                                {
+                                    sourceNodeOutput = Globals.ReLU(defaultNodeOutputValue + connectionSourceNode.Bias);
+                                }
+                                else
+                                {
+                                    nodeQueue.Add(connection.SourceId);
+                                    currentNodeWeightedSum = null;
+                                    break;
+                                }
+
+                                currentNodeWeightedSum += sourceNodeOutput * connection.Weight;
+                            }
+                        }
+                    }
+
+                    if (currentNodeWeightedSum != null)
+                    {
+                        float currentNodeOutput = currentNode.NodeType == NodeType.Input ? currentNodeWeightedSum.Value : Globals.ReLU(currentNodeWeightedSum.Value + currentNode.Bias);
+
+                        nodesBeingEvaluated.Remove(currentNodeId);
+
+                        cachedNodeOutputs[currentNodeId] = currentNodeOutput;
+
+                        nodeQueue.Remove(currentNodeId);
+                    }
+                }
+
+                result.GetOrAdd(creature, cachedNodeOutputs);
+            });
+
+            return result;
+        }
         #endregion
     }
 }
