@@ -25,37 +25,25 @@ namespace MaceEvolve.Core
         #region Methods
         public static int Map(int num, int min1, int max1, int min2, int max2, bool withinBounds = true)
         {
-            int newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
+            int newValue = (num - min1) * (max2 - min2) / (max1 - min1) + min2;
 
-            if (!withinBounds)
+            if (withinBounds)
             {
-                return newValue;
+                return Clamp(newValue, Math.Min(min2, max2), Math.Max(min2, max2));
             }
-            if (min2 < max2)
-            {
-                return Clamp(newValue, min2, max2);
-            }
-            else
-            {
-                return Clamp(newValue, max2, min2);
-            }
+
+            return newValue;
         }
         public static float Map(float num, float min1, float max1, float min2, float max2, bool withinBounds = true)
         {
-            float newValue = (num - min1) / (max1 - min1) * (max2 - min2) + min2;
+            float newValue = (num - min1) * (max2 - min2) / (max1 - min1) + min2;
 
-            if (!withinBounds)
+            if (withinBounds)
             {
-                return newValue;
+                return Clamp(newValue, MathF.Min(min2, max2), MathF.Max(min2, max2));
             }
-            if (min2 < max2)
-            {
-                return Clamp(newValue, min2, max2);
-            }
-            else
-            {
-                return Clamp(newValue, max2, min2);
-            }
+
+            return newValue;
         }
         public static int Clamp(int num, int min, int max)
         {
@@ -99,19 +87,25 @@ namespace MaceEvolve.Core
         }
         public static double GetDistanceFrom(double x1, double y1, double x2, double y2)
         {
-            return Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2));
+            double xDistance = x1 - x2;
+            double yDistance = y1 - y2;
+
+            return Math.Sqrt(xDistance * xDistance + yDistance * yDistance);
         }
         public static float GetDistanceFrom(float x1, float y1, float x2, float y2)
         {
-            return MathF.Sqrt(MathF.Pow(x1 - x2, 2) + MathF.Pow(y1 - y2, 2));
+            float xDistance = x1 - x2;
+            float yDistance = y1 - y2;
+
+            return MathF.Sqrt(xDistance * xDistance + yDistance * yDistance);
         }
         public static double Hypotenuse(double a, double b)
         {
-            return Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
+            return Math.Sqrt(a * a + b * b);
         }
         public static float Hypotenuse(float a, float b)
         {
-            return MathF.Sqrt(MathF.Pow(a, 2) + MathF.Pow(b, 2));
+            return MathF.Sqrt(a * a + b * b);
         }
         public static double MiddleX(double x, double width)
         {
@@ -131,12 +125,7 @@ namespace MaceEvolve.Core
         }
         public static bool ShouldCreatureBeDead(ICreature creature)
         {
-            if (creature.Energy <= 0 || creature.HealthPoints <= 0 || creature.Age > creature.MaxAge || !ShouldGameObjectExist(creature))
-            {
-                return true;
-            }
-
-            return false;
+            return creature.Energy <= 0 || creature.HealthPoints <= 0 || creature.Age > creature.MaxAge || !ShouldGameObjectExist(creature);
         }
         public static bool ShouldGameObjectExist(IGameObject gameObject)
         {
@@ -166,17 +155,21 @@ namespace MaceEvolve.Core
         {
             return Math.Atan2(start.Y - end.Y, end.X - start.X) * Rad2Deg;
         }
+        public static float GetAngleBetweenF(int x1, int y1, int x2, int y2)
+        {
+            return MathF.Atan2(y1 - y2, x2 - x1) * Rad2DegF;
+        }
         public static float GetAngleBetweenF(Point start, Point end)
         {
-            return MathF.Atan2(start.Y - end.Y, end.X - start.X) * Rad2DegF;
-        }
-        public static float GetAngleBetweenF(PointF start, PointF end)
-        {
-            return MathF.Atan2(start.Y - end.Y, end.X - start.X) * Rad2DegF;
+            return GetAngleBetweenF(start.X, start.Y, end.X, end.Y);
         }
         public static float GetAngleBetweenF(float x1, float y1, float x2, float y2)
         {
-            return GetAngleBetweenF(new PointF(x1, y1), new PointF(x2, y2));
+            return MathF.Atan2(y1 - y2, x2 - x1) * Rad2DegF;
+        }
+        public static float GetAngleBetweenF(PointF start, PointF end)
+        {
+            return GetAngleBetweenF(start.X, start.Y, end.X, end.Y);
         }
         public static double AngleDifference(double angle1, double angle2)
         {
@@ -184,12 +177,12 @@ namespace MaceEvolve.Core
 
             if (difference > 180)
             {
-                return -(360 - difference);
+                return difference - 360;
             }
 
             if (difference < -180)
             {
-                return 360 + difference;
+                return difference + 360;
             }
 
             return difference;
@@ -200,12 +193,12 @@ namespace MaceEvolve.Core
 
             if (difference > 180)
             {
-                return -(360 - difference);
+                return difference - 360;
             }
 
             if (difference < -180)
             {
-                return 360 + difference;
+                return difference + 360;
             }
 
             return difference;
@@ -222,7 +215,7 @@ namespace MaceEvolve.Core
         {
             if (value < 0)
             {
-                return 360 + (value % 360);
+                return (value % 360) + 360;
             }
             else if (value >= 360)
             {
