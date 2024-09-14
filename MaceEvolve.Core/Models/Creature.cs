@@ -1,4 +1,5 @@
-﻿using MaceEvolve.Core.Interfaces;
+﻿using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Interfaces;
 using System;
 
 namespace MaceEvolve.Core.Models
@@ -14,6 +15,13 @@ namespace MaceEvolve.Core.Models
         private float _moveEffort = 1f;
         private float _minMoveEffort;
         private float _maxMoveEffort = 2;
+        #endregion
+
+        #region Constructors
+        public Creature()
+        {
+            Type = GameObjectType.Creature;
+        }
         #endregion
 
         #region Properties

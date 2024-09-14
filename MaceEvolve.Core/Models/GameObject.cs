@@ -1,4 +1,5 @@
-﻿using MaceEvolve.Core.Interfaces;
+﻿using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Interfaces;
 
 namespace MaceEvolve.Core.Models
 {
@@ -13,6 +14,7 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Properties
+        public GameObjectType Type { get; set; } = GameObjectType.Unknown;
         public float X { get; set; }
         public float Y { get; set; }
         public float MX

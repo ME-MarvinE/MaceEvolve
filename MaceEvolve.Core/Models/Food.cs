@@ -1,4 +1,5 @@
-﻿using MaceEvolve.Core.Interfaces;
+﻿using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Interfaces;
 
 namespace MaceEvolve.Core.Models
 {
@@ -7,6 +8,13 @@ namespace MaceEvolve.Core.Models
         #region Fields
         private float _energy;
         private float _nutrients;
+        #endregion
+
+        #region Constructors
+        public Food()
+        {
+            Type = GameObjectType.Food;
+        }
         #endregion
 
         #region Properties
