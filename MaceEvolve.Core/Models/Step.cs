@@ -131,7 +131,7 @@ namespace MaceEvolve.Core.Models
                     }
                 }
 
-                if (creature.MY < WorldBounds.Y)
+                if (newCreature.MY < WorldBounds.Y)
                 {
                     if (LoopWorldBounds)
                     {
