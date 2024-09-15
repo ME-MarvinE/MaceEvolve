@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MaceEvolve.Core.Models
 {
-    public class GameHost<TStep, TCreature, TFood> where TStep : class, IStep<TCreature, TFood>, new() where TCreature : class, ICreature, new() where TFood : class, IFood, new()
+    public class GameHost<TStep, TCreature, TFood, TTree> where TStep : class, IStep<TCreature, TFood, TTree>, new() where TCreature : class, ICreature, new() where TFood : class, IFood, new() where TTree : class, ITree<TFood>, new()
     {
         #region Fields
         protected TCreature bestCreature;
@@ -19,17 +19,21 @@ namespace MaceEvolve.Core.Models
         #region Properties
         public TStep CurrentStep { get; set; }
         public int MaxCreatureAmount { get; set; } = 1000;
-        public int MaxFoodAmount { get; set; } = 350;
+        public int MaxFoodAmount { get; set; } = 400;
+        public int MaxTreeAmount { get; set; } = 50;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
         public MinMaxVal<int> CreatureConnectionsMinMax { get; set; } = MinMaxVal.Create(0, 64);
         public int MaxCreatureProcessNodes { get; set; } = 5;
         public float CreatureOffspringBrainMutationChance { get; set; } = 1 / 3f;
         public int CreatureOffspringBrainMutationAttempts { get; set; } = 1;
         public float ConnectionWeightBound { get; set; } = 4;
+        public float FoodSpawnChance { get; set; } = 0.01f;
+        public float TreeSpawnChance { get; set; } = 0.0001f;
         public MinMaxVal<float> FoodSizeMinMax { get; set; } = MinMaxVal.Create(5f, 12);
         public MinMaxVal<float> CreatureSizeMinMax { get; set; } = MinMaxVal.Create(8f, 12);
         public MinMaxVal<float> GeneratedFoodMassMinMax { get; set; } = MinMaxVal.Create(4f, 12);
         public MinMaxVal<float> GeneratedCreatureMassMinMax { get; set; } = MinMaxVal.Create(700f, 900);
+        public MinMaxVal<int> TreeSizeMinMax { get; set; } = MinMaxVal.Create(50, 150);
         public float MaxCreatureEnergy { get; set; } = 900;
         public float CreatureNutrients { get; set; } = 30;
         public float EnergyRequiredForCreatureToReproduce { get; set; } = 100;
@@ -95,19 +99,22 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public virtual void ResetStep(IEnumerable<TCreature> creatures, IEnumerable<TFood> food)
+        public virtual void ResetStep(IEnumerable<TCreature> creatures, IEnumerable<TFood> food, IEnumerable<TTree> trees)
         {
             BestCreature = null;
             SelectedCreature = null;
             CurrentStep = new TStep()
             {
-                Creatures = new ConcurrentBag<TCreature>(creatures),
-                Food = new ConcurrentBag<TFood>(food),
+                Creatures = new ConcurrentBag<TCreature>(creatures ?? Enumerable.Empty<TCreature>()),
+                Food = new ConcurrentBag<TFood>(food ?? Enumerable.Empty<TFood>()),
+                Trees = new ConcurrentBag<TTree>(trees ?? Enumerable.Empty<TTree>()),
                 WorldBounds = new Rectangle(WorldBounds.X, WorldBounds.Y, WorldBounds.Width, WorldBounds.Height),
                 ConnectionWeightBound = ConnectionWeightBound,
                 CreatureConnectionsMinMax = CreatureConnectionsMinMax,
                 MaxCreatureProcessNodes = MaxCreatureProcessNodes,
-                LoopWorldBounds = LoopWorldBounds
+                LoopWorldBounds = LoopWorldBounds,
+                TreeSizeMinMax = TreeSizeMinMax,
+                MaxTreeAmount = MaxTreeAmount
             };
         }
         public List<T>[,] CreatePartitionedGrid<T>(IEnumerable<T> gameObjects, int gridRowCount, int gridColumnCount, double cellSize) where T : IGameObject
@@ -257,12 +264,12 @@ namespace MaceEvolve.Core.Models
         }
         public virtual StepResult<TCreature> NextStep(IEnumerable<StepAction<TCreature>> actionsToExecute, bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
         {
+            CurrentStep.UpdateTrees(MaxTreeAmount, MaxFoodAmount);
             CurrentStep.ExecuteActions(actionsToExecute);
+
 
             Parallel.ForEach(CurrentStep.Creatures, creature =>
             {
-                creature.Age += 1;
-
                 if (creature.IsDead)
                 {
                     creature.Mass *= 0.99f;
@@ -274,6 +281,8 @@ namespace MaceEvolve.Core.Models
                 }
                 else
                 {
+                    creature.Age += 1;
+
                     if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
                     {
                         creature.StepsSinceLastNaturalHeal = 0;
@@ -284,15 +293,52 @@ namespace MaceEvolve.Core.Models
                         creature.StepsSinceLastNaturalHeal += 1;
                     }
 
-                    if (Globals.ShouldCreatureBeDead(creature))
+                    if (Globals.ShouldLivingGameObjectBeDead(creature))
                     {
                         creature.Die();
                     }
                 }
             });
 
+            Parallel.ForEach(CurrentStep.Trees, tree =>
+            {
+                if (tree.IsDead)
+                {
+                    tree.Mass = 0;
+                }
+                else
+                {
+                    tree.Energy += 10 * tree.PhotosynthesisEfficency;
+                    tree.Nutrients += 1f * tree.PhotosynthesisEfficency;
+                    tree.Mass += 0.5f * tree.PhotosynthesisEfficency;
+                    tree.Energy -= tree.Metabolism + (tree.Metabolism * tree.IdToFoodDict.Count * 0.1f);
+                    tree.Age += 1;
+
+                    foreach (var keyValuePair in tree.FoodIdToAgeDict)
+                    {
+                        tree.FoodIdToAgeDict.TryUpdate(keyValuePair.Key, keyValuePair.Value + 1, keyValuePair.Value);
+                    }
+
+                    if (tree.StepsSinceLastNaturalHeal >= tree.NaturalHealInterval)
+                    {
+                        tree.StepsSinceLastNaturalHeal = 0;
+                        tree.HealthPoints += tree.NaturalHealHealthPoints;
+                    }
+                    else
+                    {
+                        tree.StepsSinceLastNaturalHeal += 1;
+                    }
+
+                    if (Globals.ShouldLivingGameObjectBeDead(tree))
+                    {
+                        tree.Die();
+                    }
+                }
+            });
+
             CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => Globals.ShouldGameObjectExist(x)));
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => Globals.ShouldGameObjectExist(x)));
+            CurrentStep.Trees = new ConcurrentBag<TTree>(CurrentStep.Trees.Where(x => Globals.ShouldGameObjectExist(x)));
             CurrentStep.VisibleCreaturesDict.Clear();
             CurrentStep.VisibleFoodDict.Clear();
             CurrentStep.CreatureToCachedAreaDict.Clear();
@@ -451,9 +497,14 @@ namespace MaceEvolve.Core.Models
 
             BestCreature = newBestCreature;
 
-            if (MaceRandom.Current.NextFloat() <= 0.8 && CurrentStep.Food.Count < MaxFoodAmount)
+            if (MaceRandom.Current.NextFloat() <= FoodSpawnChance && CurrentStep.Food.Count < MaxFoodAmount)
             {
                 CurrentStep.Food.Add(CreateFoodWithRandomLocation());
+            }
+
+            if (MaceRandom.Current.NextFloat() <= TreeSpawnChance && CurrentStep.Trees.Count < MaxTreeAmount)
+            {
+                CurrentStep.Trees.Add(CreateTreeWithRandomLocation());
             }
 
             return stepResult;
@@ -531,6 +582,38 @@ namespace MaceEvolve.Core.Models
             }
 
             return creatures;
+        }
+        public virtual List<TTree> GenerateTrees()
+        {
+            List<TTree> trees = new List<TTree>();
+            int numberOfTreesToCreate = (int)Math.Ceiling(MaxTreeAmount / 2f);
+
+            for (int i = 0; i < numberOfTreesToCreate; i++)
+            {
+                TTree newTree = CreateTreeWithRandomLocation();
+                trees.Add(newTree);
+            }
+
+            return trees;
+        }
+        public virtual TTree CreateTreeWithRandomLocation()
+        {
+            TTree newTree = new TTree()
+            {
+                Age = 8000,
+                AgeRequiredToReproduce = 8000,
+                AgeRequiredToCreateFood = 8000,
+                MaxAge = 32000,
+                MaxFoodAge = 300,
+                PhotosynthesisEfficency = MaceRandom.Current.NextFloat(),
+                Size = MaceRandom.Current.NextFloat(TreeSizeMinMax.Min, TreeSizeMinMax.Max),
+                ChanceToReproduce = 0.01f
+            };
+
+            newTree.X = MaceRandom.Current.NextFloat(-newTree.Size / 2, (WorldBounds.X + WorldBounds.Width) - newTree.Size / 2);
+            newTree.Y = MaceRandom.Current.NextFloat(-newTree.Size / 2, (WorldBounds.Y + WorldBounds.Height) - newTree.Size / 2);
+
+            return newTree;
         }
         protected virtual void OnBestCreatureChanged(object sender, ValueChangedEventArgs<TCreature> e)
         {

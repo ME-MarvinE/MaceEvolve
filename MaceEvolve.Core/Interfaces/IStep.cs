@@ -5,14 +5,17 @@ using System.Collections.Generic;
 
 namespace MaceEvolve.Core.Interfaces
 {
-    public interface IStep<TCreature, TFood>  where TCreature : ICreature where TFood : IFood
+    public interface IStep<TCreature, TFood, TTree>  where TCreature : ICreature where TFood : IFood, new() where TTree : ITree<TFood>
     {
         #region Properties
         ConcurrentBag<TCreature> Creatures { get; set; }
         ConcurrentBag<TFood> Food { get; set; }
+        ConcurrentBag<TTree> Trees { get; set; }
         Rectangle WorldBounds { get; set; }
         float ConnectionWeightBound { get; set; }
         MinMaxVal<int> CreatureConnectionsMinMax { get; set; }
+        MinMaxVal<int> TreeSizeMinMax { get; set; }
+        int MaxTreeAmount { get; set; }
         int MaxCreatureProcessNodes { get; set; }
         bool LoopWorldBounds { get; set; }
         ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; }
@@ -32,7 +35,11 @@ namespace MaceEvolve.Core.Interfaces
         void CreatureTurnRight(TCreature creature);
         IList<TCreature> CreatureTryReproduce(TCreature creature);
         void CreatureDoNothing();
+        TFood TreeGrowFood(TTree tree);
+        TTree TreeReproduce(TTree tree);
+
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
+        void UpdateTrees(int maxTreeAmount, int maxFoodAmount);
         IDictionary<TCreature, IDictionary<CreatureInput, float>> GenerateCreaturesInputValues(IDictionary<TCreature, IEnumerable<CreatureInput>> creatureToCreatureInputsDict);
         #endregion
     }

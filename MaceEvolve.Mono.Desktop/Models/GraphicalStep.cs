@@ -1,12 +1,11 @@
 ﻿using MaceEvolve.Core;
 using MaceEvolve.Core.Models;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 
 namespace MaceEvolve.Mono.Desktop.Models
 {
-    public class GraphicalStep<TCreature, TFood> : Step<TCreature, TFood> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood
+    public class GraphicalStep<TCreature, TFood, TTree> : Step<TCreature, TFood, TTree> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TTree : GraphicalTree<TFood>, new()
     {
         #region Properties
         public Color CreatureOffspringColor { get; set; }
@@ -27,6 +26,29 @@ namespace MaceEvolve.Mono.Desktop.Models
             }
 
             return offspring;
+        }
+        public override TFood TreeGrowFood(TTree tree)
+        {
+            TFood food = base.TreeGrowFood(tree);
+
+            if (food == null)
+            {
+                return null;
+            }
+
+            int foodG = (int)Globals.Map(food.Nutrients, 10, 50, 32, 255);
+
+            food.Color = new Color(0, foodG, 0);
+
+            return food;
+        }
+        public override TTree CreateTree()
+        {
+            TTree newTree = base.CreateTree();
+
+            newTree.Color = new Color(30, 170, 0, 50);
+
+            return newTree;
         }
         #endregion
     }

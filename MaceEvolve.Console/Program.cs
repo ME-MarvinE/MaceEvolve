@@ -18,7 +18,7 @@ namespace MaceEvolve.Console
         #region Properties
         public bool IsSimulationRunning { get; set; }
         public bool GatherStepInfoForAllCreatures { get; set; }
-        public GameHost<Step<Creature, Food>, Creature, Food> MainGameHost { get; }
+        public GameHost<Step<Creature, Food, Tree>, Creature, Food, Tree> MainGameHost { get; }
         public List<TimeSpan> FailedRunsUptimes { get; set; } = new List<TimeSpan>();
         public int CurrentRunTicksElapsed { get; set; }
         public float SimulationMspt
@@ -43,14 +43,14 @@ namespace MaceEvolve.Console
         #region Constructors
         static Program()
         {
-            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(Step<Creature, Food>.VisibleCreaturesDict), nameof(Step<Creature, Food>.VisibleFoodDict), nameof(Step<Creature, Food>.CreatureToCachedAreaDict), nameof(Step<Creature, Food>.FoodToCachedAreaDict));
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(Step<Creature, Food, Tree>.VisibleCreaturesDict), nameof(Step<Creature, Food, Tree>.VisibleFoodDict), nameof(Step<Creature, Food, Tree>.CreatureToCachedAreaDict), nameof(Step<Creature, Food, Tree>.FoodToCachedAreaDict));
 
             SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
             LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
         }
         public Program()
         {
-            MainGameHost = new GameHost<Step<Creature, Food>, Creature, Food>();
+            MainGameHost = new GameHost<Step<Creature, Food, Tree>, Creature, Food, Tree>();
 
             SimulationTPS = 60;
 
@@ -149,7 +149,7 @@ namespace MaceEvolve.Console
                         if (Path.Exists(savedStepFilePath))
                         {
                             System.Console.WriteLine("Loading Step...");
-                            Step<Creature, Food> savedStep = LoadSavedStep(savedStepFilePath);
+                            Step<Creature, Food, Tree> savedStep = LoadSavedStep(savedStepFilePath);
 
                             PreviousStepResult.CreaturesBrainOutputs.Clear();
                             PreviousStepResult.CalculatedActions.Clear();
@@ -158,7 +158,7 @@ namespace MaceEvolve.Console
                             MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
                             MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                             MainGameHost.WorldBounds = savedStep.WorldBounds;
-                            MainGameHost.ResetStep(savedStep.Creatures, savedStep.Food);
+                            MainGameHost.ResetStep(savedStep.Creatures, savedStep.Food, savedStep.Trees);
 
                             System.Console.WriteLine("Step Loaded Successfully.");
                         }
@@ -174,7 +174,7 @@ namespace MaceEvolve.Console
                     break;
             }
         }
-        public void SaveStep(Step<Creature, Food> step, string filePath)
+        public void SaveStep(Step<Creature, Food, Tree> step, string filePath)
         {
             string directoryName = Path.GetDirectoryName(filePath);
 
@@ -186,10 +186,10 @@ namespace MaceEvolve.Console
             string serializedStep = JsonConvert.SerializeObject(step, SaveStepSerializerSettings);
             File.WriteAllText(filePath, serializedStep);
         }
-        public Step<Creature, Food> LoadSavedStep(string filePath)
+        public Step<Creature, Food, Tree> LoadSavedStep(string filePath)
         {
             string serializedStep = File.ReadAllText(filePath);
-            Step<Creature, Food> savedStep = JsonConvert.DeserializeObject<Step<Creature, Food>>(serializedStep, LoadStepSerializerSettings);
+            Step<Creature, Food, Tree> savedStep = JsonConvert.DeserializeObject<Step<Creature, Food, Tree>>(serializedStep, LoadStepSerializerSettings);
 
             foreach (var creature in savedStep.Creatures)
             {
@@ -226,7 +226,7 @@ namespace MaceEvolve.Console
         public void FailRun()
         {
             PreviousStepResult = new StepResult<Creature>(new ConcurrentQueue<StepAction<Creature>>());
-            MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood());
+            MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood(), MainGameHost.GenerateTrees());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
@@ -235,7 +235,7 @@ namespace MaceEvolve.Console
         {
             MainGameHost.WorldBounds = new Rectangle(0, 0, 784, 661); //Same value as MaceEvolve.WinForms ClientRectangle
             PreviousStepResult = new StepResult<Creature>(new ConcurrentQueue<StepAction<Creature>>());
-            MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood());
+            MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood(), MainGameHost.GenerateTrees());
 
             FailedRunsUptimes.Clear();
             CurrentRunTicksElapsed = 0;

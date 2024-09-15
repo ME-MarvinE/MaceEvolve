@@ -52,6 +52,7 @@ namespace MaceEvolve.WinForms
             chkGatherStepInfoForAllCreatures = new CheckBox();
             chkShowUI = new CheckBox();
             btnUpdateWorldBounds = new Button();
+            chkShowTreeColorByAge = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudSimulationFPS).BeginInit();
             SuspendLayout();
@@ -116,7 +117,7 @@ namespace MaceEvolve.WinForms
             // 
             lblGenEndsIn.AutoSize = true;
             lblGenEndsIn.BackColor = System.Drawing.Color.Transparent;
-            lblGenEndsIn.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblGenEndsIn.Font = new System.Drawing.Font("Yu Gothic UI", 12F);
             lblGenEndsIn.ForeColor = System.Drawing.Color.White;
             lblGenEndsIn.Location = new System.Drawing.Point(15, 72);
             lblGenEndsIn.Name = "lblGenEndsIn";
@@ -128,7 +129,7 @@ namespace MaceEvolve.WinForms
             // 
             lblGenerationCount.AutoSize = true;
             lblGenerationCount.BackColor = System.Drawing.Color.Transparent;
-            lblGenerationCount.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            lblGenerationCount.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold);
             lblGenerationCount.ForeColor = System.Drawing.Color.White;
             lblGenerationCount.Location = new System.Drawing.Point(12, 40);
             lblGenerationCount.Name = "lblGenerationCount";
@@ -140,7 +141,7 @@ namespace MaceEvolve.WinForms
             // 
             lblSimulationRunning.AutoSize = true;
             lblSimulationRunning.BackColor = System.Drawing.Color.Transparent;
-            lblSimulationRunning.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            lblSimulationRunning.Font = new System.Drawing.Font("Yu Gothic UI", 18F, System.Drawing.FontStyle.Bold);
             lblSimulationRunning.ForeColor = System.Drawing.Color.White;
             lblSimulationRunning.Location = new System.Drawing.Point(12, 9);
             lblSimulationRunning.Name = "lblSimulationRunning";
@@ -226,7 +227,7 @@ namespace MaceEvolve.WinForms
             lblSimulationTPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblSimulationTPS.AutoSize = true;
             lblSimulationTPS.BackColor = System.Drawing.Color.Transparent;
-            lblSimulationTPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblSimulationTPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F);
             lblSimulationTPS.ForeColor = System.Drawing.Color.White;
             lblSimulationTPS.Location = new System.Drawing.Point(578, 242);
             lblSimulationTPS.Name = "lblSimulationTPS";
@@ -251,7 +252,7 @@ namespace MaceEvolve.WinForms
             lblSimulationFPS.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblSimulationFPS.AutoSize = true;
             lblSimulationFPS.BackColor = System.Drawing.Color.Transparent;
-            lblSimulationFPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            lblSimulationFPS.Font = new System.Drawing.Font("Yu Gothic UI", 12F);
             lblSimulationFPS.ForeColor = System.Drawing.Color.White;
             lblSimulationFPS.Location = new System.Drawing.Point(684, 242);
             lblSimulationFPS.Name = "lblSimulationFPS";
@@ -269,7 +270,7 @@ namespace MaceEvolve.WinForms
             chkLinkFpsAndTps.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             chkLinkFpsAndTps.AutoSize = true;
             chkLinkFpsAndTps.BackColor = System.Drawing.Color.Transparent;
-            chkLinkFpsAndTps.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkLinkFpsAndTps.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             chkLinkFpsAndTps.ForeColor = System.Drawing.Color.White;
             chkLinkFpsAndTps.Location = new System.Drawing.Point(661, 580);
             chkLinkFpsAndTps.Name = "chkLinkFpsAndTps";
@@ -285,7 +286,7 @@ namespace MaceEvolve.WinForms
             chkGatherStepInfoForAllCreatures.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             chkGatherStepInfoForAllCreatures.AutoSize = true;
             chkGatherStepInfoForAllCreatures.BackColor = System.Drawing.Color.Transparent;
-            chkGatherStepInfoForAllCreatures.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkGatherStepInfoForAllCreatures.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             chkGatherStepInfoForAllCreatures.ForeColor = System.Drawing.Color.White;
             chkGatherStepInfoForAllCreatures.Location = new System.Drawing.Point(576, 605);
             chkGatherStepInfoForAllCreatures.Name = "chkGatherStepInfoForAllCreatures";
@@ -301,7 +302,7 @@ namespace MaceEvolve.WinForms
             chkShowUI.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             chkShowUI.AutoSize = true;
             chkShowUI.BackColor = System.Drawing.Color.Transparent;
-            chkShowUI.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            chkShowUI.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
             chkShowUI.ForeColor = System.Drawing.Color.White;
             chkShowUI.Location = new System.Drawing.Point(739, 630);
             chkShowUI.Name = "chkShowUI";
@@ -326,6 +327,22 @@ namespace MaceEvolve.WinForms
             btnUpdateWorldBounds.UseVisualStyleBackColor = false;
             btnUpdateWorldBounds.Click += btnUpdateWorldBounds_Click;
             // 
+            // chkShowTreeColorByAge
+            // 
+            chkShowTreeColorByAge.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            chkShowTreeColorByAge.AutoSize = true;
+            chkShowTreeColorByAge.BackColor = System.Drawing.Color.Transparent;
+            chkShowTreeColorByAge.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
+            chkShowTreeColorByAge.ForeColor = System.Drawing.Color.White;
+            chkShowTreeColorByAge.Location = new System.Drawing.Point(626, 555);
+            chkShowTreeColorByAge.Name = "chkShowTreeColorByAge";
+            chkShowTreeColorByAge.RightToLeft = RightToLeft.Yes;
+            chkShowTreeColorByAge.Size = new System.Drawing.Size(150, 19);
+            chkShowTreeColorByAge.TabIndex = 11;
+            chkShowTreeColorByAge.Text = "Show Tree Color By Age";
+            chkShowTreeColorByAge.UseVisualStyleBackColor = false;
+            chkShowTreeColorByAge.CheckedChanged += chkShowTreeColorByAge_CheckedChanged;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -334,6 +351,7 @@ namespace MaceEvolve.WinForms
             ClientSize = new System.Drawing.Size(784, 661);
             Controls.Add(chkShowUI);
             Controls.Add(chkGatherStepInfoForAllCreatures);
+            Controls.Add(chkShowTreeColorByAge);
             Controls.Add(chkLinkFpsAndTps);
             Controls.Add(nudSimulationFPS);
             Controls.Add(lblSimulationFPS);
@@ -387,5 +405,6 @@ namespace MaceEvolve.WinForms
         private CheckBox chkGatherStepInfoForAllCreatures;
         private CheckBox chkShowUI;
         private Button btnUpdateWorldBounds;
+        private CheckBox chkShowTreeColorByAge;
     }
 }

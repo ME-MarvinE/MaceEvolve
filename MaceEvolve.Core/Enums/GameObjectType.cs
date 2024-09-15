@@ -4,6 +4,7 @@
     {
         Unknown,
         Creature,
-        Food
+        Food,
+        Tree
     }
 }

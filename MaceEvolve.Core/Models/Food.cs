@@ -5,11 +5,6 @@ namespace MaceEvolve.Core.Models
 {
     public class Food : GameObject, IFood
     {
-        #region Fields
-        private float _energy;
-        private float _nutrients;
-        #endregion
-
         #region Constructors
         public Food()
         {

@@ -28,6 +28,7 @@ namespace MaceEvolve.WinForms
         private bool _gatherStepInfoForAllCreatures;
         private bool _simulationRunning;
         private bool _isUIVisible = true;
+        private bool _showTreeColorByAge = true;
         #endregion
 
         #region Properties
@@ -107,7 +108,7 @@ namespace MaceEvolve.WinForms
                 UpdateIsRunningText();
             }
         }
-        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
+        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree> MainGameHost { get; set; }
         public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
         public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; }
         public float SimulationMspt
@@ -136,6 +137,18 @@ namespace MaceEvolve.WinForms
                 chkLinkFpsAndTps.Checked = _linkFPSAndTPS;
             }
         }
+        public bool ShowTreeColorByAge
+        {
+            get
+            {
+                return _showTreeColorByAge;
+            }
+            set
+            {
+                _showTreeColorByAge = value;
+                chkShowTreeColorByAge.Checked = _showTreeColorByAge;
+            }
+        }
         public bool IsUIVisible
         {
             get
@@ -154,7 +167,7 @@ namespace MaceEvolve.WinForms
         #region Constructors
         static MainForm()
         {
-            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.VisibleFoodDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.CreatureToCachedAreaDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood>.FoodToCachedAreaDict));
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.VisibleFoodDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.CreatureToCachedAreaDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.FoodToCachedAreaDict));
 
             SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
             LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
@@ -187,10 +200,10 @@ namespace MaceEvolve.WinForms
 
             MessageBox.Show($"Time taken for {numberOfStepsToBenchmark} steps: {stopWatch.ElapsedMilliseconds / 1000d}s");
         }
-        public GraphicalStep<GraphicalCreature, GraphicalFood> LoadSavedStep(string filePath)
+        public GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> LoadSavedStep(string filePath)
         {
             string serializedStep = File.ReadAllText(filePath);
-            GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood>>(serializedStep, LoadStepSerializerSettings);
+            GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>>(serializedStep, LoadStepSerializerSettings);
 
             foreach (var creature in savedStep.Creatures)
             {
@@ -224,7 +237,7 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
             PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
 
             FailedRunsUptimes.Clear();
             CurrentRunTicksElapsed = 0;
@@ -238,7 +251,7 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
             PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
@@ -255,6 +268,17 @@ namespace MaceEvolve.WinForms
             }
 
             return foodList;
+        }
+        public List<GraphicalTree> GenerateTrees(List<GraphicalTree> treesToConvert = null)
+        {
+            List<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
+
+            foreach (var tree in treeList)
+            {
+                tree.Color = Color.FromArgb(50, 30, 170, 0);
+            }
+
+            return treeList;
         }
         public List<GraphicalCreature> GenerateCreatures(List<GraphicalCreature> creaturesToCovert = null)
         {
@@ -362,6 +386,29 @@ namespace MaceEvolve.WinForms
                 }
             }
 
+            foreach (var tree in MainGameHost.CurrentStep.Trees)
+            {
+                Color treeColorToUse;
+
+                if (ShowTreeColorByAge)
+                {
+                    int treeR = (int)(80 * ((float)tree.Age / tree.MaxAge));
+                    int treeG = (int)Globals.Map(170 * ((float)tree.Age / tree.MaxAge), 0, 170, 170, 40);
+                    int treeB = (int)(10 * ((float)tree.Age / tree.MaxAge));
+
+                    treeColorToUse = Color.FromArgb(tree.Color.A, treeR, treeG, treeB);
+                }
+                else
+                {
+                    treeColorToUse = tree.Color;
+                }
+
+                using (SolidBrush brush = new SolidBrush(treeColorToUse))
+                {
+                    e.Graphics.FillEllipse(brush, tree.X, tree.Y, tree.Size, tree.Size);
+                }
+            }
+
             foreach (var food in MainGameHost.CurrentStep.Food)
             {
                 using (SolidBrush brush = new SolidBrush(food.Color))
@@ -415,7 +462,7 @@ namespace MaceEvolve.WinForms
 
                     e.Graphics.FillPath(FieldOfViewBrush, CreateFieldOfViewPath(creature.MX, creature.MY, creature.FieldOfView, creature.SightRange, creature.ForwardAngle));
 
-                    PointF forwardDirectionLineTarget = GetAngledLineTarget(creature.MX, creature.MY, creature.SightRange / 4, creature.ForwardAngle);
+                    PointF forwardDirectionLineTarget = Globals.GetAngledLineTarget(creature.MX, creature.MY, creature.SightRange / 4, creature.ForwardAngle);
                     e.Graphics.DrawLine(FieldOfViewPen, creature.MX, creature.MY, forwardDirectionLineTarget.X, forwardDirectionLineTarget.Y);
                 }
             }
@@ -478,7 +525,7 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
             SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = DrawTimer.Interval;
 
-            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
+            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree>();
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
 
@@ -495,6 +542,9 @@ namespace MaceEvolve.WinForms
 
             IsUIVisible = !IsUIVisible;
             IsUIVisible = !IsUIVisible;
+
+            ShowTreeColorByAge = !ShowTreeColorByAge;
+            ShowTreeColorByAge = !ShowTreeColorByAge;
 
             int oldTPS = SimulationTPS;
             SimulationTPS = 5;
@@ -546,7 +596,7 @@ namespace MaceEvolve.WinForms
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                GraphicalStep<GraphicalCreature, GraphicalFood> savedStep = LoadSavedStep(openFileDialog.FileName);
+                GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> savedStep = LoadSavedStep(openFileDialog.FileName);
 
                 PreviousStepResult.CreaturesBrainOutputs.Clear();
                 PreviousStepResult.CalculatedActions.Clear();
@@ -556,7 +606,7 @@ namespace MaceEvolve.WinForms
                 MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                 MainGameHost.WorldBounds = savedStep.WorldBounds;
                 MainGameHost.CreatureOffspringColor = savedStep.CreatureOffspringColor;
-                MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures.ToList()), GenerateFood(savedStep.Food.ToList()));
+                MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures.ToList()), GenerateFood(savedStep.Food.ToList()), GenerateTrees(savedStep.Trees.ToList()));
                 MessageBox.Show("Step Loaded Successfully.");
             }
         }
@@ -578,7 +628,7 @@ namespace MaceEvolve.WinForms
         private static GraphicsPath CreateFieldOfViewPath(float locationX, float locationY, float fieldOfView, float distance, float angle)
         {
             GraphicsPath path = new GraphicsPath();
-            PointF leftLineTarget = GetAngledLineTarget(locationX, locationY, distance, angle - fieldOfView / 2);
+            PointF leftLineTarget = Globals.GetAngledLineTarget(locationX, locationY, distance, angle - fieldOfView / 2);
             //PointF rightLineTarget = GetAngledLineTarget(locationX, locationY, distance, angle + fieldOfView / 2);
             path.AddLine(locationX, locationY, leftLineTarget.X, leftLineTarget.Y);
             path.AddArc(locationX - distance, locationY - distance, distance * 2, distance * 2, angle - fieldOfView / 2, fieldOfView);
@@ -586,10 +636,6 @@ namespace MaceEvolve.WinForms
             path.CloseFigure();
 
             return path;
-        }
-        private static PointF GetAngledLineTarget(float locationX, float locationY, float distance, float angle)
-        {
-            return new PointF(locationX + MathF.Cos(Globals.AngleToRadians(angle)) * distance, locationY + MathF.Sin(Globals.AngleToRadians(angle)) * distance);
         }
         private void nudSimulationTPS_ValueChanged(object sender, EventArgs e)
         {
@@ -633,5 +679,10 @@ namespace MaceEvolve.WinForms
             MainGameHost.CurrentStep.WorldBounds = newWorldBounds;
         }
         #endregion
+
+        private void chkShowTreeColorByAge_CheckedChanged(object sender, EventArgs e)
+        {
+            ShowTreeColorByAge = chkShowTreeColorByAge.Checked;
+        }
     }
 }

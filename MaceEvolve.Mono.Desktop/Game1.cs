@@ -1,4 +1,6 @@
-﻿using MaceEvolve.Core.Models;
+﻿using MaceEvolve.Core;
+using MaceEvolve.Core.Interfaces;
+using MaceEvolve.Core.Models;
 using MaceEvolve.Mono.Desktop.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -28,7 +30,7 @@ namespace MaceEvolve.Mono.Desktop
         public bool GatherStepInfoForAllCreatures { get; set; }
         public bool IsInFastMode { get; set; }
         public Color BackgroundColor { get; set; }
-        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood> MainGameHost { get; set; }
+        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree> MainGameHost { get; set; }
         public SpriteFont UIFont { get; set; }
         public SpriteFont BigUIFont { get; set; }
         public GameWindow BestCreatureNetworkViewerWindow { get; set; }
@@ -41,6 +43,7 @@ namespace MaceEvolve.Mono.Desktop
         }
         public List<TimeSpan> FailedRunsUptimes { get; set; } = new List<TimeSpan>();
         public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
+        public bool ShowTreeColorByAge { get; set; } = true;
         #endregion
 
         #region Constructors
@@ -74,7 +77,7 @@ namespace MaceEvolve.Mono.Desktop
             SimulationTPS = 60;
             TargetElapsedTime = TimeSpan.FromSeconds(1f / SimulationTPS);
 
-            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood>, GraphicalCreature, GraphicalFood>();
+            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree>();
 
             Reset();
 
@@ -114,6 +117,26 @@ namespace MaceEvolve.Mono.Desktop
             TimeSpan averageTimePerRun = TimeSpan.FromMilliseconds(FailedRunsUptimes.Count == 0 ? 0 : FailedRunsUptimes.Average(x => x.TotalMilliseconds));
 
             _spriteBatch.Begin();
+
+            foreach (var tree in MainGameHost.CurrentStep.Trees)
+            {
+                Color treeColorToUse;
+
+                if (ShowTreeColorByAge)
+                {
+                    int treeR = (int)(80 * ((float)tree.Age / tree.MaxAge));
+                    int treeG = (int)Globals.Map(170 * ((float)tree.Age / tree.MaxAge), 0, 170, 170, 40);
+                    int treeB = (int)(10 * ((float)tree.Age / tree.MaxAge));
+
+                    treeColorToUse = new Color(treeR, treeG, treeB, tree.Color.A);
+                }
+                else
+                {
+                    treeColorToUse = tree.Color;
+                }
+
+                _spriteBatch.DrawCircle(tree.MX, tree.MY, tree.Size, 360, treeColorToUse, tree.Size);
+            }
 
             foreach (var creature in MainGameHost.CurrentStep.Creatures)
             {
@@ -199,6 +222,17 @@ namespace MaceEvolve.Mono.Desktop
 
             return foodList;
         }
+        public List<GraphicalTree> GenerateTrees(List<GraphicalTree> treesToConvert = null)
+        {
+            List<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
+
+            foreach (var tree in treeList)
+            {
+                tree.Color = new Color (30, 170, 0, 50);
+            }
+
+            return treeList;
+        }
         public List<GraphicalCreature> GenerateCreatures()
         {
             List<GraphicalCreature> creatures = new List<GraphicalCreature>();
@@ -218,7 +252,7 @@ namespace MaceEvolve.Mono.Desktop
             MainGameHost.WorldBounds = new Core.Models.Rectangle(gameBounds.X, gameBounds.Y, gameBounds.Width, gameBounds.Height);
 
             PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
 
             FailedRunsUptimes.Clear();
             CurrentRunTicksElapsed = 0;
@@ -226,7 +260,7 @@ namespace MaceEvolve.Mono.Desktop
         public void FailRun()
         {
             PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood());
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;

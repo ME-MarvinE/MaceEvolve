@@ -1,5 +1,6 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
+using MaceEvolve.Core.Models;
 using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -123,9 +124,9 @@ namespace MaceEvolve.Core
         {
             return y + height / 2;
         }
-        public static bool ShouldCreatureBeDead(ICreature creature)
+        public static bool ShouldLivingGameObjectBeDead(ILivingGameObject livingGameObject)
         {
-            return creature.Energy <= 0 || creature.HealthPoints <= 0 || creature.Age > creature.MaxAge || !ShouldGameObjectExist(creature);
+            return livingGameObject.Energy <= 0 || livingGameObject.HealthPoints <= 0 || livingGameObject.Age > livingGameObject.MaxAge || !ShouldGameObjectExist(livingGameObject);
         }
         public static bool ShouldGameObjectExist(IGameObject gameObject)
         {
@@ -225,6 +226,10 @@ namespace MaceEvolve.Core
             {
                 return value;
             }
+        }
+        public static PointF GetAngledLineTarget(float locationX, float locationY, float distance, float angle)
+        {
+            return new PointF(locationX + MathF.Cos(Globals.AngleToRadians(angle)) * distance, locationY + MathF.Sin(Globals.AngleToRadians(angle)) * distance);
         }
         #endregion
     }
