@@ -18,51 +18,9 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Properties
-        public float Energy
-        {
-            get
-            {
-                return _energy;
-            }
-            set
-            {
-                if (value < 0)
-                {
-                    _energy = 0;
-                }
-                else if (value > MaxEnergy)
-                {
-                    _energy = MaxEnergy;
-                }
-                else
-                {
-                    _energy = value;
-                }
-            }
-        }
+        public float Energy { get; set; }
         public float MaxEnergy { get; set; }
-        public float Nutrients
-        {
-            get
-            {
-                return _nutrients;
-            }
-            set
-            {
-                if (value < 0)
-                {
-                    _nutrients = 0;
-                }
-                else if (value > MaxNutrients)
-                {
-                    _nutrients = MaxNutrients;
-                }
-                else
-                {
-                    _nutrients = value;
-                }
-            }
-        }
+        public float Nutrients { get; set; }
         public float MaxNutrients { get; set; }
         public int Servings { get; set; } = 1;
         public float ServingDigestionCost { get; set; } = 0.05f;
