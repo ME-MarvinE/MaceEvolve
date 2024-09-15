@@ -267,7 +267,6 @@ namespace MaceEvolve.Core.Models
             CurrentStep.UpdateTrees(MaxTreeAmount, MaxFoodAmount);
             CurrentStep.ExecuteActions(actionsToExecute);
 
-
             Parallel.ForEach(CurrentStep.Creatures, creature =>
             {
                 if (creature.IsDead)
@@ -281,6 +280,7 @@ namespace MaceEvolve.Core.Models
                 }
                 else
                 {
+                    creature.Energy -= creature.Metabolism;
                     creature.Age += 1;
 
                     if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)

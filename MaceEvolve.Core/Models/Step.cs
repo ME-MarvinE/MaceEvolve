@@ -624,8 +624,6 @@ namespace MaceEvolve.Core.Models
                             throw new NotImplementedException($"{nameof(CreatureAction)} '{stepAction.Action}' has not been implemented.");
                     }
 
-                    stepAction.Creature.Energy -= stepAction.Creature.Metabolism;
-
                     if (Globals.ShouldLivingGameObjectBeDead(stepAction.Creature))
                     {
                         stepAction.Creature.Die();
