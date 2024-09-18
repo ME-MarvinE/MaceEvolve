@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.Core.Enums;
+using System;
 
 namespace MaceEvolve.Core.Models
 {
@@ -8,6 +9,8 @@ namespace MaceEvolve.Core.Models
         private float _energy = 100;
         private float _nutrients = 30;
         private float _healthPoints = 90;
+        private float _cachedMetabolism;
+        private float _cachedMass;
         #endregion
 
         #region Constructors
@@ -45,7 +48,13 @@ namespace MaceEvolve.Core.Models
         {
             get
             {
-                return Size * 0.01f;
+                if (Mass != _cachedMass)
+                {
+                    _cachedMass = Mass;
+                    _cachedMetabolism = MathF.Pow(Mass, 0.75f) * 0.00075f;
+                }
+
+                return _cachedMetabolism;
             }
         }
         public bool IsDead { get; set; }

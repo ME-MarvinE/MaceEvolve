@@ -281,6 +281,7 @@ namespace MaceEvolve.Core.Models
                 else
                 {
                     creature.Energy -= creature.Metabolism;
+                    creature.Mass -= creature.Metabolism;
                     creature.Age += 1;
 
                     if (creature.StepsSinceLastNaturalHeal >= creature.NaturalHealInterval)
@@ -312,6 +313,7 @@ namespace MaceEvolve.Core.Models
                     tree.Nutrients += 1f * tree.PhotosynthesisEfficency;
                     tree.Mass += 0.5f * tree.PhotosynthesisEfficency;
                     tree.Energy -= tree.Metabolism + (tree.Metabolism * tree.IdToFoodDict.Count * 0.1f);
+                    tree.Mass -= tree.Metabolism + (tree.Metabolism * tree.IdToFoodDict.Count * 0.1f);
                     tree.Age += 1;
 
                     foreach (var keyValuePair in tree.FoodIdToAgeDict)
