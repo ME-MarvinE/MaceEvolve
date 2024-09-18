@@ -298,11 +298,9 @@ namespace MaceEvolve.SilkGL
                 FailRun();
             }
         }
-        public List<GraphicalFood> GenerateFood()
+        public IEnumerable<GraphicalFood> GenerateFood(IEnumerable<GraphicalFood> foodToConvert = null)
         {
-            List<GraphicalFood> foodList = new List<GraphicalFood>();
-
-            foodList.AddRange(MainGameHost.GenerateFood());
+            IEnumerable<GraphicalFood> foodList = foodToConvert ?? MainGameHost.GenerateFood();
 
             foreach (var food in foodList)
             {
@@ -311,9 +309,9 @@ namespace MaceEvolve.SilkGL
 
             return foodList;
         }
-        public List<GraphicalTree> GenerateTrees(List<GraphicalTree> treesToConvert = null)
+        public IEnumerable<GraphicalTree> GenerateTrees(IEnumerable<GraphicalTree> treesToConvert = null)
         {
-            List<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
+            IEnumerable<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
 
             foreach (var tree in treeList)
             {
@@ -322,11 +320,9 @@ namespace MaceEvolve.SilkGL
 
             return treeList;
         }
-        public List<GraphicalCreature> GenerateCreatures()
+        public IEnumerable<GraphicalCreature> GenerateCreatures(IEnumerable<GraphicalCreature> creaturesToConvert = null)
         {
-            List<GraphicalCreature> creatures = new List<GraphicalCreature>();
-
-            creatures.AddRange(MainGameHost.GenerateCreatures());
+            IEnumerable<GraphicalCreature> creatures = creaturesToConvert ?? MainGameHost.GenerateCreatures();
 
             foreach (var creature in creatures)
             {
@@ -440,7 +436,7 @@ namespace MaceEvolve.SilkGL
                             MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
                             MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                             MainGameHost.WorldBounds = savedStep.WorldBounds;
-                            MainGameHost.ResetStep(savedStep.Creatures, savedStep.Food, savedStep.Trees);
+                            MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures), GenerateFood(savedStep.Food), GenerateTrees(savedStep.Trees == null || savedStep.Trees.IsEmpty ? Enumerable.Empty<GraphicalTree>() : savedStep.Trees));
 
                             Console.WriteLine("Step Loaded Successfully.");
                         }

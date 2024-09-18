@@ -209,11 +209,9 @@ namespace MaceEvolve.Mono.Desktop
                 FailRun();
             }
         }
-        public List<GraphicalFood> GenerateFood()
+        public IEnumerable<GraphicalFood> GenerateFood(IEnumerable<GraphicalFood> foodToConvert = null)
         {
-            List<GraphicalFood> foodList = new List<GraphicalFood>();
-
-            foodList.AddRange(MainGameHost.GenerateFood());
+            IEnumerable<GraphicalFood> foodList = foodToConvert ?? MainGameHost.GenerateFood();
 
             foreach (var food in foodList)
             {
@@ -222,9 +220,9 @@ namespace MaceEvolve.Mono.Desktop
 
             return foodList;
         }
-        public List<GraphicalTree> GenerateTrees(List<GraphicalTree> treesToConvert = null)
+        public IEnumerable<GraphicalTree> GenerateTrees(IEnumerable<GraphicalTree> treesToConvert = null)
         {
-            List<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
+            IEnumerable<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
 
             foreach (var tree in treeList)
             {
@@ -233,11 +231,9 @@ namespace MaceEvolve.Mono.Desktop
 
             return treeList;
         }
-        public List<GraphicalCreature> GenerateCreatures()
+        public IEnumerable<GraphicalCreature> GenerateCreatures(IEnumerable<GraphicalCreature> creaturesToConvert = null)
         {
-            List<GraphicalCreature> creatures = new List<GraphicalCreature>();
-
-            creatures.AddRange(MainGameHost.GenerateCreatures());
+            IEnumerable<GraphicalCreature> creatures = creaturesToConvert ?? MainGameHost.GenerateCreatures();
 
             foreach (var creature in creatures)
             {

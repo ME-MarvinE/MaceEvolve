@@ -256,9 +256,9 @@ namespace MaceEvolve.WinForms
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
         }
-        public List<GraphicalFood> GenerateFood(List<GraphicalFood> foodToConvert = null)
+        public IEnumerable<GraphicalFood> GenerateFood(IEnumerable<GraphicalFood> foodToConvert = null)
         {
-            List<GraphicalFood> foodList = foodToConvert ?? MainGameHost.GenerateFood();
+            IEnumerable<GraphicalFood> foodList = foodToConvert ?? MainGameHost.GenerateFood();
 
             foreach (var food in foodList)
             {
@@ -269,9 +269,9 @@ namespace MaceEvolve.WinForms
 
             return foodList;
         }
-        public List<GraphicalTree> GenerateTrees(List<GraphicalTree> treesToConvert = null)
+        public IEnumerable<GraphicalTree> GenerateTrees(IEnumerable<GraphicalTree> treesToConvert = null)
         {
-            List<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
+            IEnumerable<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
 
             foreach (var tree in treeList)
             {
@@ -280,9 +280,9 @@ namespace MaceEvolve.WinForms
 
             return treeList;
         }
-        public List<GraphicalCreature> GenerateCreatures(List<GraphicalCreature> creaturesToCovert = null)
+        public IEnumerable<GraphicalCreature> GenerateCreatures(IEnumerable<GraphicalCreature> creaturesToCovert = null)
         {
-            List<GraphicalCreature> creatures = creaturesToCovert ?? MainGameHost.GenerateCreatures();
+            IEnumerable<GraphicalCreature> creatures = creaturesToCovert ?? MainGameHost.GenerateCreatures();
 
             foreach (var creature in creatures)
             {
@@ -607,7 +607,7 @@ namespace MaceEvolve.WinForms
                 MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                 MainGameHost.WorldBounds = savedStep.WorldBounds;
                 MainGameHost.CreatureOffspringColor = savedStep.CreatureOffspringColor;
-                MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures.ToList()), GenerateFood(savedStep.Food.ToList()), GenerateTrees(savedStep.Trees.ToList()));
+                MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures), GenerateFood(savedStep.Food), GenerateTrees(savedStep.Trees == null || savedStep.Trees.IsEmpty ? Enumerable.Empty<GraphicalTree>() : savedStep.Trees));
                 MessageBox.Show("Step Loaded Successfully.");
             }
         }
