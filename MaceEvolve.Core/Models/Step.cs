@@ -92,7 +92,7 @@ namespace MaceEvolve.Core.Models
                 newCreature.Mass = creature.MassRequiredToReproduce;
                 newCreature.MassRequiredToReproduce = creature.MassRequiredToReproduce;
                 newCreature.MaxEnergy = creature.MaxEnergy;
-                newCreature.Size = MaceRandom.Current.NextFloatVariance(creature.Size, ParentAttributesVariance);
+                newCreature.Size = Math.Min(15, MaceRandom.Current.NextFloatVariance(creature.Size, ParentAttributesVariance));
                 newCreature.MaxAge = creature.MaxAge;
                 newCreature.SightRange = creature.SightRange;
                 newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
@@ -552,7 +552,7 @@ namespace MaceEvolve.Core.Models
                 return 0;
             }
 
-            float attackScore = creature.Mass * creature.Energy;
+            float attackScore = creature.Energy * (creature.HealthPoints / creature.MaxHealthPoints) * creature.Speed;
 
             if (isInitiator)
             {
