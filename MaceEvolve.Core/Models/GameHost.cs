@@ -212,7 +212,7 @@ namespace MaceEvolve.Core.Models
                                 {
                                     if (!CurrentStep.VisibleCreaturesDict.ContainsKey(creature))
                                     {
-                                        CurrentStep.VisibleCreaturesDict[creature] = new List<TCreature>();
+                                        CurrentStep.VisibleCreaturesDict[creature] = new List<TCreature>(CurrentStep.Creatures.Count);
                                     }
 
                                     IEnumerable<TCreature> visibleCreaturesInOtherCell = partitionedCreatures[otherCellRowIndex, otherCellColumnIndex]
@@ -235,7 +235,7 @@ namespace MaceEvolve.Core.Models
 
                                     if (!CurrentStep.VisibleFoodDict.ContainsKey(creature))
                                     {
-                                        CurrentStep.VisibleFoodDict[creature] = new List<TFood>();
+                                        CurrentStep.VisibleFoodDict[creature] = new List<TFood>(CurrentStep.Food.Count);
                                     }
 
                                     IEnumerable<TFood> visibleFoodInOtherCell = partitionedFood[otherCellRowIndex, otherCellColumnIndex]
