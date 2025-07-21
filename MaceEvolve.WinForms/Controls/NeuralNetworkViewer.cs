@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace MaceEvolve.WinForms.Controls
 {
@@ -21,7 +22,9 @@ namespace MaceEvolve.WinForms.Controls
         #endregion
 
         #region Properties
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IDictionary<GraphicalCreature, List<NeuralNetworkStepNodeInfo>> CreaturesBrainOutput { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NeuralNetwork NeuralNetwork
         {
             get
@@ -54,14 +57,21 @@ namespace MaceEvolve.WinForms.Controls
         private ConcurrentDictionary<int, GameObject> DrawnNodeIdsToGameObject { get; set; } = new ConcurrentDictionary<int, GameObject>();
         public float NodeSize = 75;
         public int NodeFontSize = 14;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? SelectedNodeId { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int? MovingNodeId { get; set; }
         private object _lock { get; set; } = new object();
         float MinNodeVerticalSpacing { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedNodeConnectionsHighlightSize { get; set; } = 1;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color SelectedNodeConnectionsColor { get; set; } = Color.White;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color ActiveNodeConnectionsColor { get; set; } = Color.FromArgb(25, 255, 255, 255);
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ActiveNodeConnectionsHighlightSize { get; set; } = 1;
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int MaxNodeStaggerLevel
         {
             get
@@ -74,6 +84,7 @@ namespace MaceEvolve.WinForms.Controls
                 nudMaxNodeStaggerLevel.Value = _maxNodeStaggerLevel;
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowNodeNames
         {
             get
