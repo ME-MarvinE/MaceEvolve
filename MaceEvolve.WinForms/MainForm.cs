@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -32,6 +33,7 @@ namespace MaceEvolve.WinForms
         #endregion
 
         #region Properties
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SimulationTPS
         {
             get
@@ -50,6 +52,7 @@ namespace MaceEvolve.WinForms
                 }
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SimulationFPS
         {
             get
@@ -70,6 +73,7 @@ namespace MaceEvolve.WinForms
                 }
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SimulationRunning
         {
             get
@@ -82,8 +86,11 @@ namespace MaceEvolve.WinForms
                 UpdateIsRunningText();
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int CurrentRunTicksElapsed { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public long AllRunsElapsed { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool GatherStepInfoForAllCreatures
         {
             get
@@ -96,6 +103,7 @@ namespace MaceEvolve.WinForms
                 chkGatherStepInfoForAllCreatures.Checked = _gatherStepInfoForAllCreatures;
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsInFastMode
         {
             get
@@ -108,8 +116,11 @@ namespace MaceEvolve.WinForms
                 UpdateIsRunningText();
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree> MainGameHost { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NetworkViewerForm BestCreatureNetworkViewerForm { get; set; }
         public float SimulationMspt
         {
@@ -118,12 +129,15 @@ namespace MaceEvolve.WinForms
                 return (1f / SimulationTPS) * 1000;
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public List<TimeSpan> FailedRunsUptimes { get; set; } = new List<TimeSpan>();
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
         protected static JsonSerializerSettings SaveStepSerializerSettings { get; }
         protected static JsonSerializerSettings LoadStepSerializerSettings { get; }
         Pen FieldOfViewPen { get; set; } = new Pen(Color.FromArgb(255, 20, 20, 255), 1);
         SolidBrush FieldOfViewBrush { get; set; } = new SolidBrush(Color.FromArgb(50, 20, 175, 200));
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LinkFPSAndTPS
         {
             get
@@ -137,6 +151,7 @@ namespace MaceEvolve.WinForms
                 chkLinkFpsAndTps.Checked = _linkFPSAndTPS;
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ShowTreeColorByAge
         {
             get
@@ -149,6 +164,7 @@ namespace MaceEvolve.WinForms
                 chkShowTreeColorByAge.Checked = _showTreeColorByAge;
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsUIVisible
         {
             get
