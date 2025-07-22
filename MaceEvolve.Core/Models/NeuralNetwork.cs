@@ -47,44 +47,44 @@ namespace MaceEvolve.Core.Models
         #endregion
 
         #region Methods
-        public List<Connection> GenerateRandomConnections(int minConnections, int maxConnections, float weightBound)
+        public Connection[] GenerateRandomConnections(int minConnections, int maxConnections, float weightBound)
         {
-            List<Connection> generatedConnections = new List<Connection>();
             int targetConnectionAmount = MaceRandom.Current.Next(minConnections, maxConnections + 1);
-
             List<int> possibleSourceNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
             List<int> possibleTargetNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
 
             if (possibleSourceNodesIds.Count == 0) { throw new InvalidOperationException("No possible source nodes."); }
             if (possibleTargetNodesIds.Count == 0) { throw new InvalidOperationException("No possible target nodes."); }
 
-            while (generatedConnections.Count < targetConnectionAmount)
+            Connection[] generatedConnections = new Connection[targetConnectionAmount];
+
+            for (int i = 0; i < generatedConnections.Length; i++)
             {
                 int randomConnectionSource = possibleSourceNodesIds[MaceRandom.Current.Next(0, possibleSourceNodesIds.Count)];
                 int randomConnectionTarget = possibleTargetNodesIds[MaceRandom.Current.Next(0, possibleTargetNodesIds.Count)];
 
                 Connection newConnection = new Connection(randomConnectionSource, randomConnectionTarget, MaceRandom.Current.NextFloat(-weightBound, weightBound));
-                generatedConnections.Add(newConnection);
+                generatedConnections[i] = newConnection;
             }
 
             return generatedConnections;
         }
-        public static List<Node> GenerateInputNodes(IEnumerable<CreatureInput> possibleInputs)
+        public static Node[] GenerateInputNodes(IEnumerable<CreatureInput> possibleInputs)
         {
-            return possibleInputs.Select(x => new Node(NodeType.Input, MaceRandom.Current.NextFloat(-1, 1), creatureInput: x)).ToList();
+            return possibleInputs.Select(x => new Node(NodeType.Input, MaceRandom.Current.NextFloat(-1, 1), creatureInput: x)).ToArray();
         }
-        public static List<Node> GenerateOutputNodes(IEnumerable<CreatureAction> possibleOutputs)
+        public static Node[] GenerateOutputNodes(IEnumerable<CreatureAction> possibleOutputs)
         {
-            return possibleOutputs.Select(x => new Node(NodeType.Output, MaceRandom.Current.NextFloat(-1, 1), creatureAction: x)).ToList();
+            return possibleOutputs.Select(x => new Node(NodeType.Output, MaceRandom.Current.NextFloat(-1, 1), creatureAction: x)).ToArray();
         }
-        public static List<Node> GenerateProcessNodes(int minProcessNodes, int maxProcessNodes)
+        public static Node[] GenerateProcessNodes(int minProcessNodes, int maxProcessNodes)
         {
-            List<Node> processNodes = new List<Node>();
             int processNodesToCreate = MaceRandom.Current.Next(minProcessNodes, maxProcessNodes);
+            Node[] processNodes = new Node[processNodesToCreate];
 
             for (int i = 0; i < processNodesToCreate; i++)
             {
-                processNodes.Add(new Node(NodeType.Process, MaceRandom.Current.NextFloat(-1, 1)));
+                processNodes[i] = new Node(NodeType.Process, MaceRandom.Current.NextFloat(-1, 1));
             }
 
             return processNodes;
@@ -110,7 +110,7 @@ namespace MaceEvolve.Core.Models
             for (int i = 0; i < connectionPaths.Count; i++)
             {
                 List<Connection> connectionPath = connectionPaths[i];
-                List<Connection> sourceConnections = Connections.Where(x => !connectionPath.Any(y => y.TargetId == x.SourceId) && x.TargetId == connectionPath.Last().SourceId).ToList();
+                List<Connection> sourceConnections = Connections.Where(x => !connectionPath.Any(y => y.TargetId == x.SourceId) && x.TargetId == connectionPath[connectionPath.Count - 1].SourceId).ToList();
                 if (sourceConnections.Count > 1)
                 {
                     for (int j = 1; j < sourceConnections.Count; j++)
