@@ -1,6 +1,5 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
-using System;
 
 namespace MaceEvolve.Core.Models
 {
@@ -31,6 +30,7 @@ namespace MaceEvolve.Core.Models
 
         #region Properties
         public NeuralNetwork Brain { get; set; }
+        public byte[] Genetics { get; set; }
         public float MoveCost
         {
             get

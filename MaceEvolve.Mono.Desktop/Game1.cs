@@ -238,6 +238,13 @@ namespace MaceEvolve.Mono.Desktop
             foreach (var creature in creatures)
             {
                 creature.Color = new Color(64, 64, MaceRandom.Current.Next(256));
+
+                if (creature.Genetics == null)
+                {
+                    byte[] genetics = new byte[MainGameHost.CreatureGeneticDepthBytes];
+                    MaceRandom.Current.NextBytes(genetics);
+                    creature.Genetics = genetics;
+                }
             }
 
             return creatures;

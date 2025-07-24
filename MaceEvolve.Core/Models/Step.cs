@@ -1,6 +1,7 @@
 ﻿using MaceEvolve.Core.Enums;
 using MaceEvolve.Core.Interfaces;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -111,6 +112,13 @@ namespace MaceEvolve.Core.Models
                 newCreature.MoveEffort = 1f;
                 newCreature.X = creature.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
                 newCreature.Y = creature.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
+                newCreature.Genetics = creature.Genetics.ToArray();
+
+                int geneticMutationIndex = MaceRandom.Current.Next(newCreature.Genetics.Length - 1);
+                BitArray geneticsByteArray = new BitArray(newCreature.Genetics);
+
+                geneticsByteArray[geneticMutationIndex] = !new BitArray(newCreature.Genetics)[geneticMutationIndex];
+                geneticsByteArray.CopyTo(newCreature.Genetics, 0);
 
                 if (newCreature.MX < WorldBounds.X)
                 {
@@ -963,6 +971,32 @@ namespace MaceEvolve.Core.Models
 
                             case CreatureInput.AnyVisibleFood:
                                 creatureInputValue = visibleFood.Count == 0 ? 0 : 1;
+                                break;
+
+                            case CreatureInput.ClosestVisibleCreatureGeneticSimilarity:
+                                closestVisibleCreature ??= visibleCreaturesOrderedByDistance.FirstOrDefault();
+
+                                if (closestVisibleCreature == null)
+                                {
+                                    creatureInputValue = 0;
+                                }
+                                else
+                                {
+                                    BitArray geneticDifference = new BitArray(creature.Genetics);
+                                    geneticDifference.Xor(new BitArray(closestVisibleCreature.Genetics));
+                                    int differences = 0;
+
+                                    for (int i = 0; i < geneticDifference.Count; i++)
+                                    {
+                                        if (geneticDifference.Get(i))
+                                        {
+                                            differences += 1;
+                                        }
+                                    }
+
+                                    creatureInputValue = (geneticDifference.Count - differences) / (float)geneticDifference.Count;
+                                }
+                                    
                                 break;
 
                             default:

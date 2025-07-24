@@ -28,6 +28,7 @@
         SizeToClosestVisibleCreatureSize,
         ClosestVisibleCreatureSizeToSize,
         AnyVisibleCreatures,
-        AnyVisibleFood
+        AnyVisibleFood,
+        ClosestVisibleCreatureGeneticSimilarity
     }
 }

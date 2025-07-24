@@ -303,6 +303,13 @@ namespace MaceEvolve.WinForms
             foreach (var creature in creatures)
             {
                 creature.Color = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
+
+                if (creature.Genetics == null)
+                {
+                    byte[] genetics = new byte[MainGameHost.CreatureGeneticDepthBytes];
+                    MaceRandom.Current.NextBytes(genetics);
+                    creature.Genetics = genetics;
+                }
             }
 
             return creatures;

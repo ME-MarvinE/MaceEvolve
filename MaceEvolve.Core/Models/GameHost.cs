@@ -54,6 +54,7 @@ namespace MaceEvolve.Core.Models
         public float CreatureMaxHealthPoints { get; set; } = 100;
         public int CreatureNaturalHealInterval { get; set; } = 100;
         public float CreatureMassRequiredToReproduce { get; set; } = 50;
+        public int CreatureGeneticDepthBytes { get; set; } = 8;
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
@@ -545,6 +546,9 @@ namespace MaceEvolve.Core.Models
 
             for (int i = 0; i < MaxCreatureAmount; i++)
             {
+                byte[] genetics = new byte[CreatureGeneticDepthBytes];
+                MaceRandom.Current.NextBytes(genetics);
+
                 TCreature newCreature = new TCreature()
                 {
                     Mass = MaceRandom.Current.NextFloat(GeneratedCreatureMassMinMax.Min, GeneratedCreatureMassMinMax.Max),
@@ -566,7 +570,8 @@ namespace MaceEvolve.Core.Models
                     NaturalHealInterval = CreatureNaturalHealInterval,
                     NaturalHealHealthPoints = CreatureMaxHealthPoints * 0.05f,
                     MassRequiredToReproduce = CreatureMassRequiredToReproduce,
-                    MoveEffort = 1f
+                    MoveEffort = 1f,
+                    Genetics = genetics
                 };
 
                 newCreature.Size = Globals.Map(newCreature.Mass, GeneratedCreatureMassMinMax.Min, GeneratedCreatureMassMinMax.Max, CreatureSizeMinMax.Min, CreatureSizeMinMax.Max);
