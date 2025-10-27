@@ -1,4 +1,5 @@
 ﻿using MaceEvolve.WinForms.Controls;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace MaceEvolve.WinForms
@@ -10,6 +11,7 @@ namespace MaceEvolve.WinForms
         #endregion
 
         #region Properties
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NeuralNetworkViewer NetworkViewer
         {
             get
