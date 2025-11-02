@@ -121,41 +121,44 @@ namespace MaceEvolve.Core.Models
         public List<T>[,] CreatePartitionedGrid<T>(IEnumerable<T> gameObjects, int gridRowCount, int gridColumnCount, double cellSize) where T : IGameObject
         {
             List<T>[,] gameObjectsGrid = new List<T>[gridRowCount, gridColumnCount];
+            List<T>[,] gameObjectsGrid2 = new List<T>[gridRowCount, gridColumnCount];
 
             for (int cellRow = 0; cellRow < gridRowCount; cellRow++)
             {
                 for (int cellColumn = 0; cellColumn < gridColumnCount; cellColumn++)
                 {
                     gameObjectsGrid[cellRow, cellColumn] = new List<T>();
+                    gameObjectsGrid2[cellRow, cellColumn] = new List<T>();
                 }
             }
 
+            float worldX = WorldBounds.X;
+            float worldY = WorldBounds.Y;
+
             foreach (var gameObject in gameObjects)
             {
-                int? gameObjectCellRow = null;
-                int? gameObjectCellColumn = null;
+                int gameObjectCellColumn = (int)((gameObject.MX - worldX) / cellSize);
+                int gameObjectCellRow = (int)((gameObject.MY - worldY) / cellSize);
 
-                for (int cellRowIndex = 0; cellRowIndex < gridRowCount && gameObjectCellRow == null; cellRowIndex++)
+                if (gameObjectCellColumn < 0)
                 {
-                    double cellY = (cellRowIndex + 1) * cellSize;
-
-                    if (gameObject.MY <= cellY)
-                    {
-                        gameObjectCellRow = cellRowIndex;
-                    }
-
-                    for (int cellColumnIndex = 0; cellColumnIndex < gridColumnCount && gameObjectCellColumn == null; cellColumnIndex++)
-                    {
-                        double cellX = (cellColumnIndex + 1) * cellSize;
-
-                        if (gameObject.MX <= cellX)
-                        {
-                            gameObjectCellColumn = cellColumnIndex;
-                        }
-                    }
+                    gameObjectCellColumn = 0;
+                }
+                else if (gameObjectCellColumn >= gridColumnCount)
+                {
+                    gameObjectCellColumn = gridColumnCount - 1;
                 }
 
-                gameObjectsGrid[gameObjectCellRow.Value, gameObjectCellColumn.Value].Add(gameObject);
+                if (gameObjectCellRow < 0)
+                {
+                    gameObjectCellRow = 0;
+                }
+                else if (gameObjectCellRow >= gridRowCount)
+                {
+                    gameObjectCellRow = gridRowCount - 1;
+                }
+
+                gameObjectsGrid[gameObjectCellRow, gameObjectCellColumn].Add(gameObject);
             }
 
             return gameObjectsGrid;
