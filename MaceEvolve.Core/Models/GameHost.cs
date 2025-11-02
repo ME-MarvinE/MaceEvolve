@@ -121,14 +121,12 @@ namespace MaceEvolve.Core.Models
         public List<T>[,] CreatePartitionedGrid<T>(IEnumerable<T> gameObjects, int gridRowCount, int gridColumnCount, double cellSize) where T : IGameObject
         {
             List<T>[,] gameObjectsGrid = new List<T>[gridRowCount, gridColumnCount];
-            List<T>[,] gameObjectsGrid2 = new List<T>[gridRowCount, gridColumnCount];
 
             for (int cellRow = 0; cellRow < gridRowCount; cellRow++)
             {
                 for (int cellColumn = 0; cellColumn < gridColumnCount; cellColumn++)
                 {
                     gameObjectsGrid[cellRow, cellColumn] = new List<T>();
-                    gameObjectsGrid2[cellRow, cellColumn] = new List<T>();
                 }
             }
 
