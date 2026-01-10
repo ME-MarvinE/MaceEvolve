@@ -493,7 +493,7 @@ namespace MaceEvolve.Core.Models
                 }
 
                 //Identify the best creature in the step.
-                if (newBestCreature == null || (creature.TimesReproduced > newBestCreature.TimesReproduced))
+                if (newBestCreature == null || GetCreatureFitness(creature) > GetCreatureFitness(newBestCreature))
                 {
                     newBestCreature = creature;
                 }
@@ -881,6 +881,19 @@ namespace MaceEvolve.Core.Models
             });
 
             return result;
+        }
+        public float GetCreatureFitness(TCreature creature)
+        {
+            float fitness = 0;
+
+            fitness += creature.Age * 0.1f;
+            fitness += creature.Energy * 0.2f;
+            fitness += creature.Nutrients * 0.2f;
+            fitness += creature.Mass * 0.1f;
+            fitness += creature.HealthPoints * 0.3f;
+            fitness *= Math.Max(1, creature.TimesReproduced);
+
+            return fitness;
         }
         #endregion
     }
