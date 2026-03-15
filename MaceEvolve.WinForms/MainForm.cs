@@ -1,5 +1,6 @@
 using MaceEvolve.Core;
 using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using MaceEvolve.WinForms.Controls;
 using MaceEvolve.WinForms.JsonContractResolvers;
@@ -135,8 +136,9 @@ namespace MaceEvolve.WinForms
         public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
         protected static JsonSerializerSettings SaveStepSerializerSettings { get; }
         protected static JsonSerializerSettings LoadStepSerializerSettings { get; }
-        Pen FieldOfViewPen { get; set; } = new Pen(Color.FromArgb(255, 20, 20, 255), 1);
-        SolidBrush FieldOfViewBrush { get; set; } = new SolidBrush(Color.FromArgb(50, 20, 175, 200));
+        protected Pen FieldOfViewPen { get; set; } = new Pen(Color.FromArgb(255, 20, 20, 255), 1);
+        protected SolidBrush FieldOfViewBrush { get; set; } = new SolidBrush(Color.FromArgb(50, 20, 175, 200));
+        protected SolidBrush SuccessBoundsBrush = new SolidBrush(Color.FromArgb(64, 0, 255, 0));
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool LinkFPSAndTPS
         {
@@ -178,6 +180,75 @@ namespace MaceEvolve.WinForms
                 ToggleUI(_isUIVisible);
             }
         }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool UseGenerations
+        {
+            get
+            {
+                return MainGameHost.UseGenerations;
+            }
+            set
+            {
+                MainGameHost.UseGenerations = value;
+                chkUseGenerations.Checked = value;
+                ToggleGenerationsUI(value && IsUIVisible);
+            }
+        }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool UseSuccessBounds
+        {
+            get
+            {
+                return MainGameHost.UseSuccessBounds;
+            }
+            set
+            {
+                MainGameHost.UseSuccessBounds = value;
+                chkUseSuccessBounds.Checked = value;
+            }
+        }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IRectangle SuccessBounds
+        {
+            get
+            {
+                return MainGameHost.SuccessBounds;
+            }
+            set
+            {
+                MainGameHost.SuccessBounds = value;
+                nudSuccessBoundsX.Value = (decimal)value.X;
+                nudSuccessBoundsY.Value = (decimal)value.Y;
+                nudSuccessBoundsWidth.Value = (decimal)value.Width;
+                nudSuccessBoundsHeight.Value = (decimal)value.Height;
+            }
+        }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public int StepsPerGeneration
+        {
+            get
+            {
+                return MainGameHost.StepsPerGeneration;
+            }
+            set
+            {
+                MainGameHost.StepsPerGeneration = value;
+                nudStepsPerGeneration.Value = value;
+            }
+        }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public float MinSuccessfulCreatureFitness
+        {
+            get
+            {
+                return MainGameHost.MinimumSuccessfulCreatureFitness;
+            }
+            set
+            {
+                MainGameHost.MinimumSuccessfulCreatureFitness = value;
+                nudMinSuccessfulCreatureFitness.Value = (decimal)value;
+            }
+        }
         #endregion
 
         #region Constructors
@@ -191,7 +262,6 @@ namespace MaceEvolve.WinForms
         public MainForm()
         {
             InitializeComponent();
-
             DoubleBuffered = true;
         }
         #endregion
@@ -245,7 +315,7 @@ namespace MaceEvolve.WinForms
         public void Reset()
         {
             MainGameHost.WorldBounds = new Core.Models.Rectangle(ClientRectangle.X, ClientRectangle.Y, ClientRectangle.Width, ClientRectangle.Height);
-
+            SuccessBounds = MainGameHost.SuccessBounds;
             BestCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = null;
             BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
@@ -253,78 +323,39 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
 
             PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
+
+            if (UseGenerations)
+            {
+                MainGameHost.FailGeneration();
+            }
+            else
+            {
+                MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood(), MainGameHost.GenerateTrees());
+            }
 
             FailedRunsUptimes.Clear();
             CurrentRunTicksElapsed = 0;
         }
+        public static Core.Models.Rectangle GetCenteredRectangle(IRectangle rectangle, IRectangle rectangleToCenterIn)
+        {
+            float MiddleWorldBoundsX = Globals.MiddleX(rectangleToCenterIn.X, rectangleToCenterIn.Width);
+            float MiddleWorldBoundsY = Globals.MiddleX(rectangleToCenterIn.Y, rectangleToCenterIn.Height);
+
+            return new Core.Models.Rectangle(MiddleWorldBoundsX - rectangle.Width / 2, MiddleWorldBoundsY - rectangle.Height / 2, rectangle.Width, rectangle.Height);
+        }
         public void FailRun()
         {
-            BestCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = null;
-            BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
-
-            SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = null;
-            SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
-
-            PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
-
+            CleanForNewRunOrGeneration();
+            MainGameHost.ResetStep(MainGameHost.GenerateCreatures
+                (), MainGameHost.GenerateFood(), MainGameHost.GenerateTrees());
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
         }
-        public IEnumerable<GraphicalFood> GenerateFood(IEnumerable<GraphicalFood> foodToConvert = null)
+        private void CenterSuccessBounds()
         {
-            IEnumerable<GraphicalFood> foodList = foodToConvert ?? MainGameHost.GenerateFood();
-
-            foreach (var food in foodList)
-            {
-                int foodG = (int)Globals.Map(food.Nutrients, MainGameHost.FoodNutrientsMinMax.Min, MainGameHost.FoodNutrientsMinMax.Max, 32, 255);
-
-                food.Color = Color.FromArgb(0, foodG, 0);
-            }
-
-            return foodList;
-        }
-        public IEnumerable<GraphicalTree> GenerateTrees(IEnumerable<GraphicalTree> treesToConvert = null)
-        {
-            IEnumerable<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
-
-            foreach (var tree in treeList)
-            {
-                tree.Color = Color.FromArgb(50, 30, 170, 0);
-            }
-
-            return treeList;
-        }
-        public IEnumerable<GraphicalCreature> GenerateCreatures(IEnumerable<GraphicalCreature> creaturesToCovert = null)
-        {
-            IEnumerable<GraphicalCreature> creatures = creaturesToCovert ?? MainGameHost.GenerateCreatures();
-
-            foreach (var creature in creatures)
-            {
-                creature.Color = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
-
-                if (creature.Genetics == null)
-                {
-                    byte[] genetics = new byte[MainGameHost.CreatureGeneticDepthBytes];
-                    MaceRandom.Current.NextBytes(genetics);
-                    creature.Genetics = genetics;
-                }
-            }
-
-            return creatures;
-        }
-        public static Point Middle(int x, int y, int width, int height)
-        {
-            return new Point(x + width / 2, y + height / 2);
-        }
-        public static Point Middle(double x, double y, double width, double height)
-        {
-            return new Point((int)(x + width / 2), (int)(y + height / 2));
-        }
-        public static Point Middle(float x, float y, float width, float height)
-        {
-            return new Point((int)(x + width / 2), (int)(y + height / 2));
+            Core.Models.Rectangle newSuccessBounds = GetCenteredRectangle(MainGameHost.SuccessBounds, MainGameHost.WorldBounds);
+            SuccessBounds = newSuccessBounds;
+            //MainGameHost.CurrentStep.SuccessBounds = newSuccessBounds;
         }
         private void MainGameHost_SelectedCreatureChanged(object sender, ValueChangedEventArgs<GraphicalCreature> e)
         {
@@ -376,6 +407,11 @@ namespace MaceEvolve.WinForms
 
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
             e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+            if (UseSuccessBounds)
+            {
+                e.Graphics.FillRectangle(SuccessBoundsBrush, SuccessBounds.X, SuccessBounds.Y, SuccessBounds.Width, SuccessBounds.Height);
+            }
 
             foreach (var creature in MainGameHost.CurrentStep.Creatures)
             {
@@ -510,17 +546,51 @@ namespace MaceEvolve.WinForms
         public void UpdateSimulation()
         {
             MainGameHost.CreatureOffspringColor = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
+            int generationCount = MainGameHost.GenerationCount;
+
             PreviousStepResult = MainGameHost.NextStep(PreviousStepResult.CalculatedActions, true, true, GatherStepInfoForAllCreatures, GatherStepInfoForAllCreatures);
+
+            if (generationCount != MainGameHost.GenerationCount)
+            {
+                if (generationCount == 0)
+                {
+                    GenerationFailed();
+                }
+                else
+                {
+                    GenerationEnded();
+                }
+            }
 
             SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = PreviousStepResult.CreaturesBrainOutputs;
             BestCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = PreviousStepResult.CreaturesBrainOutputs;
 
             CurrentRunTicksElapsed += 1;
 
-            if (CurrentRunTicksElapsed % 500 == 0 && MainGameHost.CurrentStep.Creatures.All(x => x.IsDead))
+            if (!UseGenerations && CurrentRunTicksElapsed % 500 == 0 && MainGameHost.CurrentStep.Creatures.All(x => x.IsDead))
             {
                 FailRun();
             }
+        }
+        public void GenerationEnded()
+        {
+            CleanForNewRunOrGeneration();
+            CurrentRunTicksElapsed = 0;
+        }
+        public void GenerationFailed()
+        {
+            CleanForNewRunOrGeneration();
+            CurrentRunTicksElapsed = 0;
+        }
+        private void CleanForNewRunOrGeneration()
+        {
+            BestCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = null;
+            BestCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
+
+            SelectedCreatureNetworkViewerForm.NetworkViewer.CreaturesBrainOutput = null;
+            SelectedCreatureNetworkViewerForm.NetworkViewer.NeuralNetwork = null;
+
+            PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
         }
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -554,6 +624,7 @@ namespace MaceEvolve.WinForms
 
             InitDefaults();
             Reset();
+            CenterSuccessBounds();
         }
         private void InitDefaults()
         {
@@ -576,6 +647,19 @@ namespace MaceEvolve.WinForms
             int oldFPS = SimulationFPS;
             SimulationFPS = 5;
             SimulationFPS = oldFPS;
+
+            UseSuccessBounds = !UseSuccessBounds;
+            UseSuccessBounds = !UseSuccessBounds;
+            UseGenerations = !UseGenerations;
+            UseGenerations = !UseGenerations;
+
+            float oldMinSuccessfulCreatureFitness = MinSuccessfulCreatureFitness;
+            MinSuccessfulCreatureFitness = 1;
+            MinSuccessfulCreatureFitness = oldMinSuccessfulCreatureFitness;
+
+            int oldStepsPerGeneration = StepsPerGeneration;
+            StepsPerGeneration = 5;
+            StepsPerGeneration = oldStepsPerGeneration;
         }
         private void ToggleUI(bool isVisible)
         {
@@ -588,13 +672,30 @@ namespace MaceEvolve.WinForms
             btnBenchmark.Visible = isVisible;
             btnSaveCurrentStep.Visible = isVisible;
             btnLoadStep.Visible = isVisible;
-            nudSimulationTPS.Visible = isVisible;
             lblSimulationTPS.Visible = isVisible;
+            nudSimulationTPS.Visible = isVisible;
             lblSimulationFPS.Visible = isVisible;
             nudSimulationFPS.Visible = isVisible;
             chkLinkFpsAndTps.Visible = isVisible;
             btnUpdateWorldBounds.Visible = isVisible;
             chkShowTreeColorByAge.Visible = isVisible;
+            chkUseGenerations.Visible = isVisible;
+            ToggleGenerationsUI(isVisible && chkUseGenerations.Checked);
+        }
+        private void ToggleGenerationsUI(bool isVisible)
+        {
+            chkUseSuccessBounds.Visible = isVisible;
+            lblSuccessBoundsX.Visible = isVisible;
+            nudSuccessBoundsX.Visible = isVisible;
+            lblSuccessBoundsY.Visible = isVisible;
+            nudSuccessBoundsY.Visible = isVisible;
+            lblSuccessBoundsWidth.Visible = isVisible;
+            nudSuccessBoundsWidth.Visible = isVisible;
+            lblSuccessBoundsHeight.Visible = isVisible;
+            nudSuccessBoundsHeight.Visible = isVisible;
+            btnCenterSuccessBounds.Visible = isVisible;
+            lblStepsPerGeneration.Visible = isVisible;
+            nudStepsPerGeneration.Visible = isVisible;
         }
         private void UpdateUIText()
         {
@@ -610,7 +711,7 @@ namespace MaceEvolve.WinForms
             TimeSpan timeInAllRuns = timeInFailedRuns.Add(timeInCurrentRun);
             TimeSpan averageTimePerRun = TimeSpan.FromMilliseconds(FailedRunsUptimes.Count == 0 ? 0 : FailedRunsUptimes.Average(x => x.TotalMilliseconds));
 
-            lblGenerationCount.Text = $"Run {FailedRunsUptimes.Count + 1}";
+            lblGenerationCount.Text = $"{(UseGenerations ? "Gen" : "Run")} {FailedRunsUptimes.Count + 1}";
             lblGenEndsIn.Text = $"Uptime: {timeInAllRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Failed: {timeInFailedRuns:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}" +
                 $"\nRun {FailedRunsUptimes.Count + 1}, {timeInCurrentRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}, Average: {averageTimePerRun:d\\d' 'h\\h' 'm\\m' 's\\.ff\\s}";
         }
@@ -630,7 +731,7 @@ namespace MaceEvolve.WinForms
                 MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                 MainGameHost.WorldBounds = savedStep.WorldBounds;
                 MainGameHost.CreatureOffspringColor = savedStep.CreatureOffspringColor;
-                MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures), GenerateFood(savedStep.Food), GenerateTrees(savedStep.Trees == null || savedStep.Trees.IsEmpty ? Enumerable.Empty<GraphicalTree>() : savedStep.Trees));
+                MainGameHost.ResetStep(MainGameHost.GenerateCreatures(savedStep.Creatures), MainGameHost.GenerateFood(savedStep.Food), MainGameHost.GenerateTrees(savedStep.Trees == null || savedStep.Trees.IsEmpty ? Enumerable.Empty<GraphicalTree>() : savedStep.Trees));
                 MessageBox.Show("Step Loaded Successfully.");
             }
         }
@@ -702,11 +803,46 @@ namespace MaceEvolve.WinForms
             MainGameHost.WorldBounds = newWorldBounds;
             MainGameHost.CurrentStep.WorldBounds = newWorldBounds;
         }
-        #endregion
-
         private void chkShowTreeColorByAge_CheckedChanged(object sender, EventArgs e)
         {
             ShowTreeColorByAge = chkShowTreeColorByAge.Checked;
         }
+        private void chkUseGenerations_CheckedChanged(object sender, EventArgs e)
+        {
+            UseGenerations = chkUseGenerations.Checked;
+        }
+        private void btnCenterSuccessBounds_Click(object sender, EventArgs e)
+        {
+            CenterSuccessBounds();
+        }
+        private void chkUseSuccessBounds_CheckedChanged(object sender, EventArgs e)
+        {
+            UseSuccessBounds = chkUseSuccessBounds.Checked;
+        }
+        private void nudSuccessBoundsX_ValueChanged(object sender, EventArgs e)
+        {
+            SuccessBounds.X = (float)nudSuccessBoundsX.Value;
+        }
+        private void nudSuccessBoundsY_ValueChanged(object sender, EventArgs e)
+        {
+            SuccessBounds.Y = (float)nudSuccessBoundsY.Value;
+        }
+        private void nudSuccessBoundsWidth_ValueChanged(object sender, EventArgs e)
+        {
+            SuccessBounds.Width = (float)nudSuccessBoundsWidth.Value;
+        }
+        private void nudSuccessBoundsHeight_ValueChanged(object sender, EventArgs e)
+        {
+            SuccessBounds.Height = (float)nudSuccessBoundsHeight.Value;
+        }
+        private void nudStepsPerGeneration_ValueChanged(object sender, EventArgs e)
+        {
+            StepsPerGeneration = (int)nudStepsPerGeneration.Value;
+        }
+        private void nudMinSuccessfulCreatureFitness_ValueChanged(object sender, EventArgs e)
+        {
+            MinSuccessfulCreatureFitness = (float)nudMinSuccessfulCreatureFitness.Value;
+        }
+        #endregion
     }
 }

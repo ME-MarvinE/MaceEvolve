@@ -124,6 +124,18 @@ namespace MaceEvolve.Core
         {
             return y + height / 2;
         }
+        public static Point Middle(int x, int y, int width, int height)
+        {
+            return new Point(x + width / 2, y + height / 2);
+        }
+        public static Point Middle(double x, double y, double width, double height)
+        {
+            return new Point((int)(x + width / 2), (int)(y + height / 2));
+        }
+        public static Point Middle(float x, float y, float width, float height)
+        {
+            return new Point((int)(x + width / 2), (int)(y + height / 2));
+        }
         public static bool ShouldLivingGameObjectBeDead(ILivingGameObject livingGameObject)
         {
             return livingGameObject.Energy <= 0 || livingGameObject.HealthPoints <= 0 || livingGameObject.Age > livingGameObject.MaxAge || !ShouldGameObjectExist(livingGameObject);

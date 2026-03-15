@@ -41,6 +41,8 @@ namespace MaceEvolve.Core.Interfaces
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
         void UpdateTrees(int maxTreeAmount, int maxFoodAmount);
         IDictionary<TCreature, IDictionary<CreatureInput, float>> GenerateCreaturesInputValues(IDictionary<TCreature, IEnumerable<CreatureInput>> creatureToCreatureInputsDict);
+        int GetNumberOfChildrenThatCanBeCreated(TCreature creature, IEnumerable<TCreature> otherParents = null);
+        IList<TCreature> CreateChildren(TCreature mainParent, int? numberOfChildrenToCreate = null, IEnumerable<TCreature> otherParents = null);
         #endregion
     }
 }

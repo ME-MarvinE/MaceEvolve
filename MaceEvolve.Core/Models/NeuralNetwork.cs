@@ -53,8 +53,8 @@ namespace MaceEvolve.Core.Models
             List<int> possibleSourceNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Input || node.NodeType == NodeType.Process);
             List<int> possibleTargetNodesIds = GetNodeIds((_, node) => node.NodeType == NodeType.Output || node.NodeType == NodeType.Process);
 
-            if (possibleSourceNodesIds.Count == 0) { throw new InvalidOperationException("No possible source nodes."); }
-            if (possibleTargetNodesIds.Count == 0) { throw new InvalidOperationException("No possible target nodes."); }
+            if (possibleSourceNodesIds.Count == 0) { return Array.Empty<Connection>(); }
+            if (possibleTargetNodesIds.Count == 0) { return Array.Empty<Connection>(); }
 
             Connection[] generatedConnections = new Connection[targetConnectionAmount];
 
@@ -323,7 +323,7 @@ namespace MaceEvolve.Core.Models
             //Connections should be added after nodes are added so that there is a chance the newly created node gets a connection.
 
             //Remove an existing node. Input nodes should not be removed. 
-            if (MaceRandom.Current.NextFloat() <= removeRandomNodeChance)
+            if (NodeIdsToNodesDict.Count > 0 && MaceRandom.Current.NextFloat() <= removeRandomNodeChance)
             {
                 mutationAttempted = true;
 
@@ -347,7 +347,7 @@ namespace MaceEvolve.Core.Models
             }
 
             //Change a random node's bias.
-            if (MaceRandom.Current.NextFloat() <= mutateRandomNodeBiasChance)
+            if (NodeIdsToNodesDict.Count > 0 && MaceRandom.Current.NextFloat() <= mutateRandomNodeBiasChance)
             {
                 mutationAttempted = true;
 
@@ -430,7 +430,7 @@ namespace MaceEvolve.Core.Models
             }
 
             //Remove a random connection.
-            if (Connections.Count > minCreatureConnections && MaceRandom.Current.NextFloat() <= removeRandomConnectionChance)
+            if (Connections.Count > 0 && Connections.Count > minCreatureConnections && MaceRandom.Current.NextFloat() <= removeRandomConnectionChance)
             {
                 mutationAttempted = true;
 
@@ -483,11 +483,11 @@ namespace MaceEvolve.Core.Models
             }
 
             //Create a new connection.
-            if (Connections.Count < maxCreatureConnections && MaceRandom.Current.NextDouble() <= createRandomConnectionChance)
+            if (NodeIdsToNodesDict.Count > 0 && Connections.Count < maxCreatureConnections && MaceRandom.Current.NextDouble() <= createRandomConnectionChance)
             {
                 mutationAttempted = true;
 
-                Connection? newConnection = GenerateRandomConnections(1, 1, connectionWeightBound).FirstOrDefault();
+                Connection? newConnection = GenerateRandomConnections(1, 1, connectionWeightBound).Cast<Connection?>().FirstOrDefault(); //Casted to nullable since it returns an empty connection due to it being a struct and causes an invalid connection to be added.
 
                 if (newConnection != null)
                 {

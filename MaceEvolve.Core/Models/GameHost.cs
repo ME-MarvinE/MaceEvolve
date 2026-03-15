@@ -14,14 +14,18 @@ namespace MaceEvolve.Core.Models
         #region Fields
         protected TCreature bestCreature;
         protected TCreature selectedCreature;
+        protected IRectangle successBounds = new Rectangle(0, 0, 192, 192);
         #endregion
 
         #region Properties
         public TStep CurrentStep { get; set; }
-        public int MaxCreatureAmount { get; set; } = 1000;
+        public int MaxCreatureAmount { get; set; } = 350;
         public int MaxFoodAmount { get; set; } = 400;
         public int MaxTreeAmount { get; set; } = 50;
         public IRectangle WorldBounds { get; set; } = new Rectangle(0, 0, 512, 512);
+        public IRectangle SuccessBounds { 
+            get => successBounds; 
+            set => successBounds = value; }
         public MinMaxVal<int> CreatureConnectionsMinMax { get; set; } = MinMaxVal.Create(0, 64);
         public int MaxCreatureProcessNodes { get; set; } = 5;
         public float CreatureOffspringBrainMutationChance { get; set; } = 1 / 3f;
@@ -55,6 +59,11 @@ namespace MaceEvolve.Core.Models
         public int CreatureNaturalHealInterval { get; set; } = 100;
         public float CreatureMassRequiredToReproduce { get; set; } = 50;
         public int CreatureGeneticDepthBytes { get; set; } = 8;
+        public bool UseGenerations { get; set; }
+        public bool UseSuccessBounds { get; set; }
+        public int StepsPerGeneration { get; set; } = 200;
+        public int GenerationCount { get; set; }
+        public int StepsInCurrentGeneration { get; set; }
 
         public ReadOnlyCollection<CreatureInput> PossibleCreatureInputs { get; } = Globals.AllCreatureInputs;
         public ReadOnlyCollection<CreatureAction> PossibleCreatureActions { get; } = Globals.AllCreatureActions;
@@ -117,6 +126,8 @@ namespace MaceEvolve.Core.Models
                 TreeSizeMinMax = TreeSizeMinMax,
                 MaxTreeAmount = MaxTreeAmount
             };
+
+            RecalculateCachedValues();
         }
         public List<T>[,] CreatePartitionedGrid<T>(IEnumerable<T> gameObjects, int gridRowCount, int gridColumnCount, double cellSize) where T : IGameObject
         {
@@ -343,53 +354,8 @@ namespace MaceEvolve.Core.Models
             CurrentStep.Food = new ConcurrentBag<TFood>(CurrentStep.Food.Where(x => Globals.ShouldGameObjectExist(x)));
             CurrentStep.Creatures = new ConcurrentBag<TCreature>(CurrentStep.Creatures.Where(x => Globals.ShouldGameObjectExist(x)));
             CurrentStep.Trees = new ConcurrentBag<TTree>(CurrentStep.Trees.Where(x => Globals.ShouldGameObjectExist(x)));
-            CurrentStep.VisibleCreaturesDict.Clear();
-            CurrentStep.VisibleFoodDict.Clear();
-            CurrentStep.CreatureToCachedAreaDict.Clear();
-            CurrentStep.FoodToCachedAreaDict.Clear();
 
-            double sightRangeSum = 0;
-            double? highestSightRange = null;
-            double? sightRangeAverage = 100;
-            double iterations = 0;
-
-            foreach (var creature in CurrentStep.Creatures)
-            {
-                if (!creature.IsDead)
-                {
-                    sightRangeSum += creature.SightRange;
-
-                    if (creature.SightRange > highestSightRange || highestSightRange == null)
-                    {
-                        highestSightRange = creature.SightRange;
-                    }
-
-                    iterations += 1;
-
-                    if (iterations >= 100 || sightRangeSum >= 2000000000)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            sightRangeAverage ??= sightRangeSum / iterations;
-
-            double partitionSize;
-
-            if (highestSightRange == 0 || highestSightRange == null)
-            {
-                partitionSize = MinCreatureVisibilityPartitionSize;
-            }
-            else
-            {
-                partitionSize = Math.Max(sightRangeAverage.Value, highestSightRange.Value);
-            }
-
-            int gridColumnCount = (int)Math.Ceiling(WorldBounds.Width / partitionSize);
-            int gridRowCount = (int)Math.Ceiling(WorldBounds.Height / partitionSize);
-
-            CalculateCreaturesVisibleGameObjects(gridRowCount, gridColumnCount, partitionSize);
+            RecalculateCachedValues();
 
             StepResult<TCreature> stepResult = new StepResult<TCreature>(new ConcurrentQueue<StepAction<TCreature>>(), new ConcurrentDictionary<TCreature, List<NeuralNetworkStepNodeInfo>>());
 
@@ -493,9 +459,19 @@ namespace MaceEvolve.Core.Models
                 }
 
                 //Identify the best creature in the step.
-                if (newBestCreature == null || GetCreatureFitness(creature) > GetCreatureFitness(newBestCreature))
+                if (newBestCreature == null)
                 {
                     newBestCreature = creature;
+                }
+                else
+                {
+                    float creatureFitness = UseGenerations ? GetCreaturesGenerationalFitnesses(new List<TCreature> { creature }).First().Value : GetCreaturesFitnesses(new List<TCreature> { creature }).First().Value;
+                    float newBestCreatureFitness = UseGenerations ? GetCreaturesGenerationalFitnesses(new List<TCreature> { newBestCreature }).First().Value : GetCreaturesFitnesses(new List<TCreature> { newBestCreature }).First().Value;
+
+                    if (creatureFitness > newBestCreatureFitness)
+                    {
+                        newBestCreature = creature;
+                    }
                 }
             });
 
@@ -509,6 +485,20 @@ namespace MaceEvolve.Core.Models
             if (MaceRandom.Current.NextFloat() <= TreeSpawnChance && CurrentStep.Trees.Count < MaxTreeAmount)
             {
                 CurrentStep.Trees.Add(CreateTreeWithRandomLocation());
+            }
+
+            if (UseGenerations)
+            {
+                StepsInCurrentGeneration += 1;
+
+                if (CurrentStep.Creatures.All(x => x.IsDead))
+                {
+                    FailGeneration();
+                }
+                else if (StepsInCurrentGeneration >= StepsPerGeneration)
+                {
+                    NextGeneration();
+                }
             }
 
             return stepResult;
@@ -585,7 +575,6 @@ namespace MaceEvolve.Core.Models
 
                 newCreature.Brain.Connections.Clear();
                 newCreature.Brain.Connections.AddRange(newCreature.Brain.GenerateRandomConnections(CreatureConnectionsMinMax.Min, CreatureConnectionsMinMax.Max, ConnectionWeightBound));
-
                 creatures.Add(newCreature);
             }
 
@@ -631,48 +620,6 @@ namespace MaceEvolve.Core.Models
         {
             SelectedCreatureChanged?.Invoke(this, e);
         }
-        //public void RunSimulation(long ticksToRunFor, int ticksPerGeneration = 15000)
-        //{
-        //    if (ticksPerGeneration < 1)
-        //    {
-        //        throw new ArgumentOutOfRangeException($"{nameof(ticksPerGeneration)} must be greater than 0");
-        //    }
-
-        //    long ticks = 0;
-        //    int ticksInCurrentGeneration = 0;
-
-        //    while (ticks < ticksToRunFor)
-        //    {
-        //        Update();
-        //        ticks += 1;
-        //        ticksInCurrentGeneration += 1;
-
-        //        if (ticksInCurrentGeneration >= ticksPerGeneration)
-        //        {
-        //            ticksInCurrentGeneration = 0;
-
-        //            List<TCreature> newGenerationCreatures = NewGenerationAsexual();
-
-        //            if (newGenerationCreatures.Count > 0)
-        //            {
-        //                Reset();
-        //                Food.AddRange(GenerateFood());
-        //                Creatures = newGenerationCreatures;
-        //            }
-        //            else
-        //            {
-        //                Reset();
-        //            }
-        //        }
-        //    }
-        //}
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="defaultNodeOutputValue">The value to use when the output of a node is dependent on a connection with a circular reference or the previous step info is not present.</param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        /// <exception cref="NotImplementedException"></exception>
         public virtual Dictionary<int, float> GenerateNodeOutputs(IDictionary<CreatureInput, float> inputsToInputValuesDict, IDictionary<int, Node> nodeIdToNodeDict, IList<Connection> connections, float defaultNodeOutputValue = 0)
         {
             Dictionary<int, float> cachedNodeOutputs = new Dictionary<int, float>();
@@ -882,19 +829,192 @@ namespace MaceEvolve.Core.Models
 
             return result;
         }
-        public float GetCreatureFitness(TCreature creature)
+        public Dictionary<TCreature, float> GetCreaturesFitnesses(IEnumerable<TCreature> creatures)
         {
-            float fitness = 0;
+            Dictionary<TCreature, float> creaturesFitnesses = new Dictionary<TCreature, float>();
 
-            fitness += creature.Age * 0.1f;
-            fitness += creature.Energy * 0.2f;
-            fitness += creature.Nutrients * 0.2f;
-            fitness += creature.Mass * 0.1f;
-            fitness += creature.HealthPoints * 0.3f;
-            fitness *= Math.Max(1, creature.TimesReproduced);
+            foreach (var creature in creatures)
+            {
+                float fitness = 0;
 
-            return fitness;
+                fitness += creature.Age * 0.1f;
+                fitness += creature.Energy * 0.2f;
+                fitness += creature.Nutrients * 0.2f;
+                fitness += creature.Mass * 0.1f;
+                fitness += creature.HealthPoints * 0.3f;
+                fitness *= Math.Max(1, creature.TimesReproduced);
+
+                creaturesFitnesses.Add(creature, fitness);
+            }
+
+            return creaturesFitnesses;
         }
-        #endregion
+        public virtual Dictionary<TCreature, float> GetCreaturesGenerationalFitnesses(IEnumerable<TCreature> creatures)
+        {
+            if (creatures == null) { throw new ArgumentNullException(); }
+
+            if (!creatures.Any())
+            {
+                return new Dictionary<TCreature, float>();
+            }
+
+            Dictionary<TCreature, float> creaturesFitnesses = new Dictionary<TCreature, float>();
+
+            if (UseSuccessBounds)
+            {
+                float successBoundsMiddleX = Globals.MiddleX(SuccessBounds.X, SuccessBounds.Width);
+                float successBoundsMiddleY = Globals.MiddleY(SuccessBounds.Y, SuccessBounds.Height);
+
+                foreach (var creature in creatures)
+                {
+                    float distanceFromMiddle = Globals.GetDistanceFrom(creature.MX, creature.MY, successBoundsMiddleX, successBoundsMiddleY);
+                    float successBoundsHypotenuse = Globals.Hypotenuse(SuccessBounds.Width, SuccessBounds.Height);
+
+                    creaturesFitnesses.Add(creature, Globals.Map(distanceFromMiddle, 0, successBoundsHypotenuse, 1, 0));
+                }
+            }
+            else
+            {
+                float mostEnergy = CurrentStep.Creatures.Max(x => x.Energy);
+                float mostNutrients = CurrentStep.Creatures.Max(x => x.Nutrients);
+                float mostTimesReproduced = CurrentStep.Creatures.Max(x => x.TimesReproduced);
+
+                if (mostEnergy == 0 && mostNutrients == 0 && mostTimesReproduced == 0)
+                {
+                    return new Dictionary<TCreature, float>();
+                }
+
+                foreach (var creature in creatures)
+                {
+                    float energyFitness = mostEnergy == 0 ? 0 : creature.Energy / mostEnergy;
+                    float nutrientsFitness = mostNutrients == 0 ? 0 : creature.Nutrients / mostNutrients;
+                    float timesReproducedFitness = mostTimesReproduced == 0 ? 0 : creature.TimesReproduced / mostTimesReproduced;
+                    float fitness = Globals.Map(energyFitness + nutrientsFitness + timesReproducedFitness, 0, 3, 0, 1);
+
+                    creaturesFitnesses.Add(creature, fitness);
+                }
+            }
+
+            return creaturesFitnesses;
+        }
+        public virtual void NextGeneration()
+        {
+            IRectangle previousSuccessBounds = SuccessBounds;
+            ResetStep(CreateNewGenerationCreatures(CurrentStep.Creatures.ToList()), GenerateFood(), GenerateTrees());
+            SuccessBounds = previousSuccessBounds;
+            StepsInCurrentGeneration = 0;
+            GenerationCount += 1;
+        }
+        public virtual void FailGeneration()
+        {
+            ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
+            StepsInCurrentGeneration = 0;
+            GenerationCount = 0;
+        }
+        //public List<GraphicalCreature> NewGenerationAsexual()
+        //{
+        //    List<GraphicalCreature> newGenerationCreatures = MainGameHost.CreateNewGenerationAsexual(MainGameHost.CurrentStep.Creatures);
+
+        //    foreach (var creature in newGenerationCreatures)
+        //    {
+        //        creature.Color = new Color(64, 64, _random.Next(256));
+        //    }
+
+        //    return newGenerationCreatures;
+
+        //}
+        public virtual List<TCreature> CreateNewGenerationCreatures(IEnumerable<TCreature> sourceCreatures, bool sexual = false)
+        {
+            Dictionary<TCreature, float> creaturesFitnesses = GetCreaturesGenerationalFitnesses(sourceCreatures);
+            Dictionary<TCreature, float> topPercentileCreatureFitnessesOrderedDescending = creaturesFitnesses
+                .Where(x => x.Value >= MinimumSuccessfulCreatureFitness)
+                .OrderByDescending(x => x.Value)
+                .ToDictionary(x => x.Key, x => x.Value);
+
+            if (topPercentileCreatureFitnessesOrderedDescending.Count == 0)
+            {
+                return new List<TCreature>();
+            }
+
+            List<TCreature> newCreatures = new List<TCreature>();
+
+            while (newCreatures.Count < MaxCreatureAmount)
+            {
+                foreach (var keyValuePair in topPercentileCreatureFitnessesOrderedDescending)
+                {
+                    TCreature successfulCreature = keyValuePair.Key;
+                    float successfulCreatureFitness = keyValuePair.Value;
+
+                    if (MaceRandom.Current.NextFloat() <= successfulCreatureFitness)
+                    {
+                        int numberOfChildrenToCreate = SuccessBounds == null ? CurrentStep.GetNumberOfChildrenThatCanBeCreated(successfulCreature, sexual ? topPercentileCreatureFitnessesOrderedDescending.Keys : null) : (int)Globals.Map(successfulCreatureFitness, 0, 1, 0, MaxCreatureAmount / 10);
+                        IList<TCreature> offSpring = CurrentStep.CreateChildren(successfulCreature, numberOfChildrenToCreate, sexual ? topPercentileCreatureFitnessesOrderedDescending.Keys : null);
+
+                        for (int i = 0; i < offSpring.Count && newCreatures.Count < MaxCreatureAmount; i++)
+                        {
+                            TCreature creature = offSpring[i];
+
+                            creature.X = MaceRandom.Current.NextFloat(0, WorldBounds.X + WorldBounds.Width);
+                            creature.Y = MaceRandom.Current.NextFloat(0, WorldBounds.Y + WorldBounds.Height);
+                            newCreatures.Add(creature);
+                        }
+                    }
+                }
+            }
+
+            return newCreatures;
+        }
+
+        private void RecalculateCachedValues()
+        {
+            CurrentStep.VisibleCreaturesDict.Clear();
+            CurrentStep.VisibleFoodDict.Clear();
+            CurrentStep.CreatureToCachedAreaDict.Clear();
+            CurrentStep.FoodToCachedAreaDict.Clear();
+
+            double sightRangeSum = 0;
+            double? highestSightRange = null;
+            double? sightRangeAverage = 100;
+            double iterations = 0;
+
+            foreach (var creature in CurrentStep.Creatures)
+            {
+                if (!creature.IsDead)
+                {
+                    sightRangeSum += creature.SightRange;
+
+                    if (creature.SightRange > highestSightRange || highestSightRange == null)
+                    {
+                        highestSightRange = creature.SightRange;
+                    }
+
+                    iterations += 1;
+
+                    if (iterations >= 100 || sightRangeSum >= 2000000000)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            sightRangeAverage ??= sightRangeSum / iterations;
+
+            double partitionSize;
+
+            if (highestSightRange == 0 || highestSightRange == null)
+            {
+                partitionSize = MinCreatureVisibilityPartitionSize;
+            }
+            else
+            {
+                partitionSize = Math.Max(sightRangeAverage.Value, highestSightRange.Value);
+            }
+
+            int gridColumnCount = (int)Math.Ceiling(WorldBounds.Width / partitionSize);
+            int gridRowCount = (int)Math.Ceiling(WorldBounds.Height / partitionSize);
+
+            CalculateCreaturesVisibleGameObjects(gridRowCount, gridColumnCount, partitionSize);
+        }
     }
+    #endregion
 }

@@ -2,6 +2,7 @@
 using MaceEvolve.Core.Models;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace MaceEvolve.WinForms.Models
 {
@@ -28,6 +29,64 @@ namespace MaceEvolve.WinForms.Models
             tree.Color = Color.FromArgb(50, 30, 170, 0);
 
             return tree;
+        }
+        public override List<TCreature> GenerateCreatures()
+        {
+            return GenerateCreatures(base.GenerateCreatures()).ToList();
+        }
+        public IEnumerable<TCreature> GenerateCreatures(IEnumerable<TCreature> creaturesToCovert)
+        {
+            IEnumerable<TCreature> creatures = creaturesToCovert ?? GenerateCreatures();
+
+            foreach (var creature in creatures)
+            {
+                creature.Color = Color.FromArgb(255, 64, 64, MaceRandom.Current.Next(256));
+
+                if (creature.Genetics == null)
+                {
+                    byte[] genetics = new byte[CreatureGeneticDepthBytes];
+                    MaceRandom.Current.NextBytes(genetics);
+                    creature.Genetics = genetics;
+                }
+            }
+
+            return creatures;
+        }
+        public override List<TFood> GenerateFood()
+        {
+            return GenerateFood(base.GenerateFood()).ToList();
+        }
+        public IEnumerable<TFood> GenerateFood(IEnumerable<TFood> foodToConvert)
+        {
+            IEnumerable<TFood> foodList = foodToConvert ?? GenerateFood();
+
+            foreach (var food in foodList)
+            {
+                int foodG = (int)Globals.Map(food.Nutrients, FoodNutrientsMinMax.Min, FoodNutrientsMinMax.Max, 32, 255);
+
+                food.Color = Color.FromArgb(0, foodG, 0);
+            }
+
+            return foodList;
+        }
+        public override List<TTree> GenerateTrees()
+        {
+            return GenerateTrees(base.GenerateTrees()).ToList();
+        }
+        public IEnumerable<TTree> GenerateTrees(IEnumerable<TTree> treesToConvert)
+        {
+            IEnumerable<TTree> treeList = treesToConvert ?? GenerateTrees();
+
+            foreach (var tree in treeList)
+            {
+                tree.Color = Color.FromArgb(50, 30, 170, 0);
+            }
+
+            return treeList;
+        }
+        public override List<TCreature> CreateNewGenerationCreatures(IEnumerable<TCreature> sourceCreatures, bool sexual = false)
+        {
+            return GenerateCreatures(base.CreateNewGenerationCreatures(sourceCreatures, sexual)).ToList();
         }
     }
 }

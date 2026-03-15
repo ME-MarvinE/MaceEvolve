@@ -71,9 +71,18 @@ namespace MaceEvolve.Core.Models
                 return null;
             }
         }
+        public virtual int GetNumberOfChildrenThatCanBeCreated(TCreature creature, IEnumerable<TCreature> otherParents = null)
+        {
+            otherParents ??= Enumerable.Empty<TCreature>();
+            IEnumerable<int> possibleChildrenCounts = new List<TCreature>() { creature }
+            .Concat(otherParents)
+            .Select(x => (int)MathF.Floor(MathF.Min(creature.Energy / creature.EnergyRequiredToReproduce, creature.Nutrients / creature.NutrientsRequiredToReproduce)));
+            
+            return possibleChildrenCounts.Min();
+        }
         public virtual IList<TCreature> CreatureTryReproduce(TCreature creature)
         {
-            int numberOfChildrenThatCanBeCreated = (int)MathF.Floor(MathF.Min(creature.Energy / creature.EnergyRequiredToReproduce, creature.Nutrients / creature.NutrientsRequiredToReproduce));
+            int numberOfChildrenThatCanBeCreated = GetNumberOfChildrenThatCanBeCreated(creature);
 
             if (numberOfChildrenThatCanBeCreated == 0)
             {
@@ -86,39 +95,12 @@ namespace MaceEvolve.Core.Models
             float maxXDistanceOfOffspring = creature.Size * 2;
             float maxYDistanceOfOffspring = creature.Size * 2;
 
-            for (int i = 0; i < childrenToCreate; i++)
+            offSpring.AddRange(CreateChildren(creature, childrenToCreate));
+
+            foreach (var newCreature in offSpring)
             {
-                TCreature newCreature = new TCreature();
-                newCreature.Brain = NeuralNetwork.CombineNetworks(new List<NeuralNetwork>() { creature.Brain });
-                newCreature.Mass = creature.MassRequiredToReproduce;
-                newCreature.MassRequiredToReproduce = creature.MassRequiredToReproduce;
-                newCreature.MaxEnergy = creature.MaxEnergy;
-                newCreature.Size = Math.Min(15, MaceRandom.Current.NextFloatVariance(creature.Size, ParentAttributesVariance));
-                newCreature.MaxAge = creature.MaxAge;
-                newCreature.SightRange = creature.SightRange;
-                newCreature.MaxOffspringPerReproduction = creature.MaxOffspringPerReproduction;
-                newCreature.Energy = creature.EnergyRequiredToReproduce;
-                newCreature.MaxNutrients = creature.MaxNutrients;
-                newCreature.Nutrients = creature.NutrientsRequiredToReproduce;
-                newCreature.NutrientsRequiredToReproduce = creature.NutrientsRequiredToReproduce;
-                newCreature.EnergyRequiredToReproduce = creature.EnergyRequiredToReproduce;
-                newCreature.OffspringBrainMutationAttempts = creature.OffspringBrainMutationAttempts;
-                newCreature.EnergyPerEat = creature.EnergyPerEat;
-                newCreature.NutrientsPerEat = creature.NutrientsPerEat;
-                newCreature.MaxHealthPoints = creature.MaxHealthPoints;
-                newCreature.HealthPoints = newCreature.MaxHealthPoints * 0.9f;
-                newCreature.NaturalHealHealthPoints = newCreature.MaxHealthPoints * 0.05f;
-                newCreature.NaturalHealInterval = creature.NaturalHealInterval;
-                newCreature.MoveEffort = 1f;
                 newCreature.X = creature.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
                 newCreature.Y = creature.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
-                newCreature.Genetics = creature.Genetics.ToArray();
-
-                int geneticMutationIndex = MaceRandom.Current.Next(newCreature.Genetics.Length - 1);
-                BitArray geneticsByteArray = new BitArray(newCreature.Genetics);
-
-                geneticsByteArray[geneticMutationIndex] = !new BitArray(newCreature.Genetics)[geneticMutationIndex];
-                geneticsByteArray.CopyTo(newCreature.Genetics, 0);
 
                 if (newCreature.MX < WorldBounds.X)
                 {
@@ -165,18 +147,64 @@ namespace MaceEvolve.Core.Models
                         newCreature.Y = (WorldBounds.Y + WorldBounds.Height) - newCreature.Size / 2;
                     }
                 }
+            }
 
-                for (int j = 0; j < creature.OffspringBrainMutationAttempts; j++)
+            creature.Energy -= creature.EnergyRequiredToReproduce * offSpring.Count;
+            creature.Nutrients -= creature.NutrientsRequiredToReproduce * offSpring.Count;
+            creature.Mass -= creature.MassRequiredToReproduce * offSpring.Count;
+            creature.TimesReproduced += offSpring.Count;
+
+            return offSpring;
+        }
+        public virtual IList<TCreature> CreateChildren(TCreature mainParent, int? numberOfChildrenToCreate = null, IEnumerable<TCreature> otherParents = null)
+        {
+            numberOfChildrenToCreate ??= GetNumberOfChildrenThatCanBeCreated(mainParent);
+            otherParents ??= Enumerable.Empty<TCreature>();
+            List<TCreature> offSpring = new List<TCreature>();
+
+            for (int i = 0; i < numberOfChildrenToCreate; i++)
+            {
+                TCreature newCreature = new TCreature();
+                newCreature.Brain = NeuralNetwork.CombineNetworks(new List<TCreature>() { mainParent }.Concat(otherParents).Select(x => x.Brain));
+                newCreature.Mass = mainParent.MassRequiredToReproduce;
+                newCreature.MassRequiredToReproduce = mainParent.MassRequiredToReproduce;
+                newCreature.MaxEnergy = mainParent.MaxEnergy;
+                newCreature.Size = Math.Min(15, MaceRandom.Current.NextFloatVariance(mainParent.Size, ParentAttributesVariance));
+                newCreature.MaxAge = mainParent.MaxAge;
+                newCreature.SightRange = mainParent.SightRange;
+                newCreature.MaxOffspringPerReproduction = mainParent.MaxOffspringPerReproduction;
+                newCreature.Energy = mainParent.EnergyRequiredToReproduce;
+                newCreature.MaxNutrients = mainParent.MaxNutrients;
+                newCreature.Nutrients = mainParent.NutrientsRequiredToReproduce;
+                newCreature.NutrientsRequiredToReproduce = mainParent.NutrientsRequiredToReproduce;
+                newCreature.EnergyRequiredToReproduce = mainParent.EnergyRequiredToReproduce;
+                newCreature.OffspringBrainMutationAttempts = mainParent.OffspringBrainMutationAttempts;
+                newCreature.EnergyPerEat = mainParent.EnergyPerEat;
+                newCreature.NutrientsPerEat = mainParent.NutrientsPerEat;
+                newCreature.MaxHealthPoints = mainParent.MaxHealthPoints;
+                newCreature.HealthPoints = newCreature.MaxHealthPoints * 0.9f;
+                newCreature.NaturalHealHealthPoints = newCreature.MaxHealthPoints * 0.05f;
+                newCreature.NaturalHealInterval = mainParent.NaturalHealInterval;
+                newCreature.MoveEffort = 1f;
+                newCreature.Genetics = mainParent.Genetics.ToArray();
+
+                int geneticMutationIndex = MaceRandom.Current.Next(newCreature.Genetics.Length - 1);
+                BitArray geneticsByteArray = new BitArray(newCreature.Genetics);
+
+                geneticsByteArray[geneticMutationIndex] = !new BitArray(newCreature.Genetics)[geneticMutationIndex];
+                geneticsByteArray.CopyTo(newCreature.Genetics, 0);
+
+                for (int j = 0; j < mainParent.OffspringBrainMutationAttempts; j++)
                 {
                     bool mutated = newCreature.Brain.MutateNetwork(
-                        createRandomNodeChance: creature.OffspringBrainMutationChance,
-                        removeRandomNodeChance: creature.OffspringBrainMutationChance,
-                        mutateRandomNodeBiasChance: creature.OffspringBrainMutationChance,
-                        createRandomConnectionChance: creature.OffspringBrainMutationChance,
-                        removeRandomConnectionChance: creature.OffspringBrainMutationChance,
-                        mutateRandomConnectionSourceChance: creature.OffspringBrainMutationChance,
-                        mutateRandomConnectionTargetChance: creature.OffspringBrainMutationChance,
-                        mutateRandomConnectionWeightChance: creature.OffspringBrainMutationChance,
+                        createRandomNodeChance: mainParent.OffspringBrainMutationChance,
+                        removeRandomNodeChance: mainParent.OffspringBrainMutationChance,
+                        mutateRandomNodeBiasChance: mainParent.OffspringBrainMutationChance,
+                        createRandomConnectionChance: mainParent.OffspringBrainMutationChance,
+                        removeRandomConnectionChance: mainParent.OffspringBrainMutationChance,
+                        mutateRandomConnectionSourceChance: mainParent.OffspringBrainMutationChance,
+                        mutateRandomConnectionTargetChance: mainParent.OffspringBrainMutationChance,
+                        mutateRandomConnectionWeightChance: mainParent.OffspringBrainMutationChance,
                         possibleInputs: Globals.AllCreatureInputs,
                         possibleOutputs: Globals.AllCreatureActions,
                         minCreatureConnections: CreatureConnectionsMinMax.Min,
@@ -184,11 +212,6 @@ namespace MaceEvolve.Core.Models
                         maxCreatureProcessNodes: MaxCreatureProcessNodes,
                         connectionWeightBound: ConnectionWeightBound);
                 }
-
-                creature.Energy -= creature.EnergyRequiredToReproduce;
-                creature.Nutrients -= creature.NutrientsRequiredToReproduce;
-                creature.Mass -= creature.MassRequiredToReproduce;
-                creature.TimesReproduced += 1;
 
                 offSpring.Add(newCreature);
             }
@@ -996,7 +1019,7 @@ namespace MaceEvolve.Core.Models
 
                                     creatureInputValue = (geneticDifference.Count - differences) / (float)geneticDifference.Count;
                                 }
-                                    
+
                                 break;
 
                             default:

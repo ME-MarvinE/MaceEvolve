@@ -53,8 +53,29 @@ namespace MaceEvolve.WinForms
             chkShowUI = new CheckBox();
             btnUpdateWorldBounds = new Button();
             chkShowTreeColorByAge = new CheckBox();
+            chkUseGenerations = new CheckBox();
+            nudSuccessBoundsX = new NumericUpDown();
+            nudSuccessBoundsY = new NumericUpDown();
+            chkUseSuccessBounds = new CheckBox();
+            btnCenterSuccessBounds = new Button();
+            lblSuccessBoundsX = new Label();
+            lblSuccessBoundsY = new Label();
+            lblSuccessBoundsWidth = new Label();
+            lblSuccessBoundsHeight = new Label();
+            nudSuccessBoundsWidth = new NumericUpDown();
+            nudSuccessBoundsHeight = new NumericUpDown();
+            nudStepsPerGeneration = new NumericUpDown();
+            lblStepsPerGeneration = new Label();
+            nudMinSuccessfulCreatureFitness = new NumericUpDown();
+            lblMinSuccessfulCreatureFitness = new Label();
             ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).BeginInit();
             ((System.ComponentModel.ISupportInitialize)nudSimulationFPS).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsX).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsY).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsWidth).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsHeight).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudStepsPerGeneration).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)nudMinSuccessfulCreatureFitness).BeginInit();
             SuspendLayout();
             // 
             // StartButton
@@ -343,6 +364,196 @@ namespace MaceEvolve.WinForms
             chkShowTreeColorByAge.UseVisualStyleBackColor = false;
             chkShowTreeColorByAge.CheckedChanged += chkShowTreeColorByAge_CheckedChanged;
             // 
+            // chkUseGenerations
+            // 
+            chkUseGenerations.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            chkUseGenerations.AutoSize = true;
+            chkUseGenerations.BackColor = System.Drawing.Color.Transparent;
+            chkUseGenerations.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
+            chkUseGenerations.ForeColor = System.Drawing.Color.White;
+            chkUseGenerations.Location = new System.Drawing.Point(683, 530);
+            chkUseGenerations.Name = "chkUseGenerations";
+            chkUseGenerations.RightToLeft = RightToLeft.Yes;
+            chkUseGenerations.Size = new System.Drawing.Size(93, 19);
+            chkUseGenerations.TabIndex = 11;
+            chkUseGenerations.Text = "Generational";
+            chkUseGenerations.UseVisualStyleBackColor = false;
+            chkUseGenerations.CheckedChanged += chkUseGenerations_CheckedChanged;
+            // 
+            // nudSuccessBoundsX
+            // 
+            nudSuccessBoundsX.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudSuccessBoundsX.Location = new System.Drawing.Point(622, 409);
+            nudSuccessBoundsX.Maximum = new decimal(new int[] { 65536, 0, 0, 0 });
+            nudSuccessBoundsX.Name = "nudSuccessBoundsX";
+            nudSuccessBoundsX.Size = new System.Drawing.Size(48, 23);
+            nudSuccessBoundsX.TabIndex = 7;
+            nudSuccessBoundsX.ValueChanged += nudSuccessBoundsX_ValueChanged;
+            // 
+            // nudSuccessBoundsY
+            // 
+            nudSuccessBoundsY.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudSuccessBoundsY.Location = new System.Drawing.Point(730, 409);
+            nudSuccessBoundsY.Maximum = new decimal(new int[] { 65536, 0, 0, 0 });
+            nudSuccessBoundsY.Name = "nudSuccessBoundsY";
+            nudSuccessBoundsY.Size = new System.Drawing.Size(48, 23);
+            nudSuccessBoundsY.TabIndex = 9;
+            nudSuccessBoundsY.ValueChanged += nudSuccessBoundsY_ValueChanged;
+            // 
+            // chkUseSuccessBounds
+            // 
+            chkUseSuccessBounds.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            chkUseSuccessBounds.AutoSize = true;
+            chkUseSuccessBounds.BackColor = System.Drawing.Color.Transparent;
+            chkUseSuccessBounds.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
+            chkUseSuccessBounds.ForeColor = System.Drawing.Color.White;
+            chkUseSuccessBounds.Location = new System.Drawing.Point(644, 505);
+            chkUseSuccessBounds.Name = "chkUseSuccessBounds";
+            chkUseSuccessBounds.RightToLeft = RightToLeft.Yes;
+            chkUseSuccessBounds.Size = new System.Drawing.Size(132, 19);
+            chkUseSuccessBounds.TabIndex = 11;
+            chkUseSuccessBounds.Text = "Use Success Bounds";
+            chkUseSuccessBounds.UseVisualStyleBackColor = false;
+            chkUseSuccessBounds.CheckedChanged += chkUseSuccessBounds_CheckedChanged;
+            // 
+            // btnCenterSuccessBounds
+            // 
+            btnCenterSuccessBounds.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnCenterSuccessBounds.BackColor = System.Drawing.Color.FromArgb(64, 64, 64);
+            btnCenterSuccessBounds.Cursor = Cursors.Hand;
+            btnCenterSuccessBounds.FlatStyle = FlatStyle.Flat;
+            btnCenterSuccessBounds.Location = new System.Drawing.Point(622, 467);
+            btnCenterSuccessBounds.Name = "btnCenterSuccessBounds";
+            btnCenterSuccessBounds.Size = new System.Drawing.Size(156, 32);
+            btnCenterSuccessBounds.TabIndex = 1;
+            btnCenterSuccessBounds.Text = "Center Success Bounds";
+            btnCenterSuccessBounds.UseVisualStyleBackColor = false;
+            btnCenterSuccessBounds.Click += btnCenterSuccessBounds_Click;
+            // 
+            // lblSuccessBoundsX
+            // 
+            lblSuccessBoundsX.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblSuccessBoundsX.AutoSize = true;
+            lblSuccessBoundsX.BackColor = System.Drawing.Color.Transparent;
+            lblSuccessBoundsX.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            lblSuccessBoundsX.ForeColor = System.Drawing.Color.White;
+            lblSuccessBoundsX.Location = new System.Drawing.Point(604, 411);
+            lblSuccessBoundsX.Name = "lblSuccessBoundsX";
+            lblSuccessBoundsX.Size = new System.Drawing.Size(14, 15);
+            lblSuccessBoundsX.TabIndex = 4;
+            lblSuccessBoundsX.Text = "X";
+            // 
+            // lblSuccessBoundsY
+            // 
+            lblSuccessBoundsY.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblSuccessBoundsY.AutoSize = true;
+            lblSuccessBoundsY.BackColor = System.Drawing.Color.Transparent;
+            lblSuccessBoundsY.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            lblSuccessBoundsY.ForeColor = System.Drawing.Color.White;
+            lblSuccessBoundsY.Location = new System.Drawing.Point(710, 411);
+            lblSuccessBoundsY.Name = "lblSuccessBoundsY";
+            lblSuccessBoundsY.Size = new System.Drawing.Size(14, 15);
+            lblSuccessBoundsY.TabIndex = 8;
+            lblSuccessBoundsY.Text = "Y";
+            // 
+            // lblSuccessBoundsWidth
+            // 
+            lblSuccessBoundsWidth.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblSuccessBoundsWidth.AutoSize = true;
+            lblSuccessBoundsWidth.BackColor = System.Drawing.Color.Transparent;
+            lblSuccessBoundsWidth.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            lblSuccessBoundsWidth.ForeColor = System.Drawing.Color.White;
+            lblSuccessBoundsWidth.Location = new System.Drawing.Point(578, 440);
+            lblSuccessBoundsWidth.Name = "lblSuccessBoundsWidth";
+            lblSuccessBoundsWidth.Size = new System.Drawing.Size(39, 15);
+            lblSuccessBoundsWidth.TabIndex = 4;
+            lblSuccessBoundsWidth.Text = "Width";
+            // 
+            // lblSuccessBoundsHeight
+            // 
+            lblSuccessBoundsHeight.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblSuccessBoundsHeight.AutoSize = true;
+            lblSuccessBoundsHeight.BackColor = System.Drawing.Color.Transparent;
+            lblSuccessBoundsHeight.Font = new System.Drawing.Font("Yu Gothic UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+            lblSuccessBoundsHeight.ForeColor = System.Drawing.Color.White;
+            lblSuccessBoundsHeight.Location = new System.Drawing.Point(681, 440);
+            lblSuccessBoundsHeight.Name = "lblSuccessBoundsHeight";
+            lblSuccessBoundsHeight.Size = new System.Drawing.Size(43, 15);
+            lblSuccessBoundsHeight.TabIndex = 8;
+            lblSuccessBoundsHeight.Text = "Height";
+            // 
+            // nudSuccessBoundsWidth
+            // 
+            nudSuccessBoundsWidth.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudSuccessBoundsWidth.Location = new System.Drawing.Point(622, 438);
+            nudSuccessBoundsWidth.Maximum = new decimal(new int[] { 65536, 0, 0, 0 });
+            nudSuccessBoundsWidth.Name = "nudSuccessBoundsWidth";
+            nudSuccessBoundsWidth.Size = new System.Drawing.Size(48, 23);
+            nudSuccessBoundsWidth.TabIndex = 7;
+            nudSuccessBoundsWidth.ValueChanged += nudSuccessBoundsWidth_ValueChanged;
+            // 
+            // nudSuccessBoundsHeight
+            // 
+            nudSuccessBoundsHeight.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudSuccessBoundsHeight.Location = new System.Drawing.Point(730, 438);
+            nudSuccessBoundsHeight.Maximum = new decimal(new int[] { 65536, 0, 0, 0 });
+            nudSuccessBoundsHeight.Name = "nudSuccessBoundsHeight";
+            nudSuccessBoundsHeight.Size = new System.Drawing.Size(48, 23);
+            nudSuccessBoundsHeight.TabIndex = 9;
+            nudSuccessBoundsHeight.ValueChanged += nudSuccessBoundsHeight_ValueChanged;
+            // 
+            // nudStepsPerGeneration
+            // 
+            nudStepsPerGeneration.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudStepsPerGeneration.Location = new System.Drawing.Point(726, 271);
+            nudStepsPerGeneration.Maximum = new decimal(new int[] { 8192, 0, 0, 0 });
+            nudStepsPerGeneration.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            nudStepsPerGeneration.Name = "nudStepsPerGeneration";
+            nudStepsPerGeneration.Size = new System.Drawing.Size(48, 23);
+            nudStepsPerGeneration.TabIndex = 9;
+            nudStepsPerGeneration.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            nudStepsPerGeneration.ValueChanged += nudStepsPerGeneration_ValueChanged;
+            // 
+            // lblStepsPerGeneration
+            // 
+            lblStepsPerGeneration.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblStepsPerGeneration.AutoSize = true;
+            lblStepsPerGeneration.BackColor = System.Drawing.Color.Transparent;
+            lblStepsPerGeneration.Font = new System.Drawing.Font("Yu Gothic UI", 12F);
+            lblStepsPerGeneration.ForeColor = System.Drawing.Color.White;
+            lblStepsPerGeneration.Location = new System.Drawing.Point(613, 271);
+            lblStepsPerGeneration.Name = "lblStepsPerGeneration";
+            lblStepsPerGeneration.Size = new System.Drawing.Size(107, 21);
+            lblStepsPerGeneration.TabIndex = 8;
+            lblStepsPerGeneration.Text = "Steps Per Gen";
+            // 
+            // nudMinSuccessfulCreatureFitness
+            // 
+            nudMinSuccessfulCreatureFitness.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            nudMinSuccessfulCreatureFitness.DecimalPlaces = 2;
+            nudMinSuccessfulCreatureFitness.ImeMode = ImeMode.Katakana;
+            nudMinSuccessfulCreatureFitness.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
+            nudMinSuccessfulCreatureFitness.Location = new System.Drawing.Point(726, 300);
+            nudMinSuccessfulCreatureFitness.Maximum = new decimal(new int[] { 1, 0, 0, 0 });
+            nudMinSuccessfulCreatureFitness.Name = "nudMinSuccessfulCreatureFitness";
+            nudMinSuccessfulCreatureFitness.Size = new System.Drawing.Size(48, 23);
+            nudMinSuccessfulCreatureFitness.TabIndex = 9;
+            nudMinSuccessfulCreatureFitness.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            nudMinSuccessfulCreatureFitness.ValueChanged += nudMinSuccessfulCreatureFitness_ValueChanged;
+            // 
+            // lblMinSuccessfulCreatureFitness
+            // 
+            lblMinSuccessfulCreatureFitness.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblMinSuccessfulCreatureFitness.AutoSize = true;
+            lblMinSuccessfulCreatureFitness.BackColor = System.Drawing.Color.Transparent;
+            lblMinSuccessfulCreatureFitness.Font = new System.Drawing.Font("Yu Gothic UI", 12F);
+            lblMinSuccessfulCreatureFitness.ForeColor = System.Drawing.Color.White;
+            lblMinSuccessfulCreatureFitness.Location = new System.Drawing.Point(498, 302);
+            lblMinSuccessfulCreatureFitness.Name = "lblMinSuccessfulCreatureFitness";
+            lblMinSuccessfulCreatureFitness.Size = new System.Drawing.Size(229, 21);
+            lblMinSuccessfulCreatureFitness.TabIndex = 8;
+            lblMinSuccessfulCreatureFitness.Text = "Min Successful Creature Fitness";
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -351,16 +562,31 @@ namespace MaceEvolve.WinForms
             ClientSize = new System.Drawing.Size(784, 661);
             Controls.Add(chkShowUI);
             Controls.Add(chkGatherStepInfoForAllCreatures);
+            Controls.Add(chkUseSuccessBounds);
+            Controls.Add(chkUseGenerations);
             Controls.Add(chkShowTreeColorByAge);
             Controls.Add(chkLinkFpsAndTps);
+            Controls.Add(nudSuccessBoundsHeight);
+            Controls.Add(nudSuccessBoundsY);
+            Controls.Add(nudMinSuccessfulCreatureFitness);
+            Controls.Add(nudStepsPerGeneration);
             Controls.Add(nudSimulationFPS);
+            Controls.Add(nudSuccessBoundsWidth);
+            Controls.Add(nudSuccessBoundsX);
+            Controls.Add(lblSuccessBoundsHeight);
+            Controls.Add(lblSuccessBoundsY);
+            Controls.Add(lblMinSuccessfulCreatureFitness);
+            Controls.Add(lblStepsPerGeneration);
             Controls.Add(lblSimulationFPS);
             Controls.Add(nudSimulationTPS);
             Controls.Add(lblSimulationRunning);
+            Controls.Add(lblSuccessBoundsWidth);
+            Controls.Add(lblSuccessBoundsX);
             Controls.Add(lblSimulationTPS);
             Controls.Add(lblGenEndsIn);
             Controls.Add(lblGenerationCount);
             Controls.Add(btnTrackBestCreature);
+            Controls.Add(btnCenterSuccessBounds);
             Controls.Add(btnUpdateWorldBounds);
             Controls.Add(ResetButton);
             Controls.Add(StopButton);
@@ -378,6 +604,12 @@ namespace MaceEvolve.WinForms
             MouseClick += MainForm_MouseClick;
             ((System.ComponentModel.ISupportInitialize)nudSimulationTPS).EndInit();
             ((System.ComponentModel.ISupportInitialize)nudSimulationFPS).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsX).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsY).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsWidth).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudSuccessBoundsHeight).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudStepsPerGeneration).EndInit();
+            ((System.ComponentModel.ISupportInitialize)nudMinSuccessfulCreatureFitness).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -406,5 +638,21 @@ namespace MaceEvolve.WinForms
         private CheckBox chkShowUI;
         private Button btnUpdateWorldBounds;
         private CheckBox chkShowTreeColorByAge;
+        private CheckBox chkUseGenerations;
+        private NumericUpDown nudSuccessBoundsX;
+        private NumericUpDown nudSuccessBoundsY;
+        private CheckBox chkUseSuccessBounds;
+        private Button btnCenterSuccessBounds;
+        private Label lblSuccessBoundsX;
+        private Label lblSuccessBoundsY;
+        private Label lblSuccessBoundsWidth;
+        private Label lblSuccessBoundsHeight;
+        private NumericUpDown nudSuccessBoundsWidth;
+        private NumericUpDown nudSuccessBoundsHeight;
+        private NumericUpDown nudStepsPerGeneration;
+        private Label lblStepsPerGeneration;
+        private Label label1;
+        private NumericUpDown nudMinSuccessfulCreatureFitness;
+        private Label lblMinSuccessfulCreatureFitness;
     }
 }
