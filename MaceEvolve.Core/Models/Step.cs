@@ -367,13 +367,13 @@ namespace MaceEvolve.Core.Models
                 winningCreature.Mass += massToTake;
                 losingCreature.HealthPoints -= healthToTake;
 
-                winningCreature.Energy -= winningCreature.AttackCost * winningCreatureEffort;
-                losingCreature.Energy -= losingCreature.DefendCost * losingCreatureEffort;
+                winningCreature.Energy -= winningCreature.AttackCost;
+                losingCreature.Energy -= losingCreature.DefendCost;
             }
             else
             {
-                winningCreature.Energy -= winningCreature.DefendCost * winningCreatureEffort;
-                losingCreature.Energy -= losingCreature.AttackCost * losingCreatureEffort;
+                winningCreature.Energy -= winningCreature.DefendCost;
+                losingCreature.Energy -= losingCreature.AttackCost;
             }
         }
         public void CreatureTurnLeft(TCreature creature)
