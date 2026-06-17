@@ -4,10 +4,10 @@ using System.Drawing;
 
 namespace MaceEvolve.WinForms.Models
 {
-    public class GraphicalTree : GraphicalTree<GraphicalFood>
+    public class GraphicalPlant : GraphicalPlant<GraphicalFood>
     {
     }
-    public class GraphicalTree<TFood> : Tree<TFood> where TFood : IFood, new()
+    public class GraphicalPlant<TFood> : Plant<TFood> where TFood : IFood, new()
     {
         public Color Color { get; set; }
     }

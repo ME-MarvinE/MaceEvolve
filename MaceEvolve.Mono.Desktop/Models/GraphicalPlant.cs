@@ -4,10 +4,10 @@ using Microsoft.Xna.Framework;
 
 namespace MaceEvolve.Mono.Desktop.Models
 {
-    public class GraphicalTree : GraphicalTree<GraphicalFood>
+    public class GraphicalPlant : GraphicalPlant<GraphicalFood>
     {
     }
-    public class GraphicalTree<TFood> : Tree<TFood> where TFood : IFood, new()
+    public class GraphicalPlant<TFood> : Plant<TFood> where TFood : IFood, new()
     {
         public Color Color { get; set; }
     }

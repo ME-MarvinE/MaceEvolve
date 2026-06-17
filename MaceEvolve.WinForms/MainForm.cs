@@ -30,7 +30,7 @@ namespace MaceEvolve.WinForms
         private bool _gatherStepInfoForAllCreatures;
         private bool _simulationRunning;
         private bool _isUIVisible = true;
-        private bool _showTreeColorByAge = true;
+        private bool _showPlantColorByAge = true;
         #endregion
 
         #region Properties
@@ -118,7 +118,7 @@ namespace MaceEvolve.WinForms
             }
         }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree> MainGameHost { get; set; }
+        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>, GraphicalCreature, GraphicalFood, GraphicalPlant> MainGameHost { get; set; }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NetworkViewerForm SelectedCreatureNetworkViewerForm { get; set; }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -154,16 +154,16 @@ namespace MaceEvolve.WinForms
             }
         }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool ShowTreeColorByAge
+        public bool ShowPlantColorByAge
         {
             get
             {
-                return _showTreeColorByAge;
+                return _showPlantColorByAge;
             }
             set
             {
-                _showTreeColorByAge = value;
-                chkShowTreeColorByAge.Checked = _showTreeColorByAge;
+                _showPlantColorByAge = value;
+                chkShowPlantColorByAge.Checked = _showPlantColorByAge;
             }
         }
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -254,7 +254,7 @@ namespace MaceEvolve.WinForms
         #region Constructors
         static MainForm()
         {
-            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.VisibleFoodDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.CreatureToCachedAreaDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.FoodToCachedAreaDict));
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.VisibleFoodDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.CreatureToCachedAreaDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.FoodToCachedAreaDict));
 
             SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
             LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
@@ -286,10 +286,10 @@ namespace MaceEvolve.WinForms
 
             MessageBox.Show($"Time taken for {numberOfStepsToBenchmark} steps: {stopWatch.ElapsedMilliseconds / 1000d}s");
         }
-        public GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> LoadSavedStep(string filePath)
+        public GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant> LoadSavedStep(string filePath)
         {
             string serializedStep = File.ReadAllText(filePath);
-            GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>>(serializedStep, LoadStepSerializerSettings);
+            GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>>(serializedStep, LoadStepSerializerSettings);
 
             foreach (var creature in savedStep.Creatures)
             {
@@ -330,7 +330,7 @@ namespace MaceEvolve.WinForms
             }
             else
             {
-                MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood(), MainGameHost.GenerateTrees());
+                MainGameHost.ResetStep(MainGameHost.GenerateCreatures(), MainGameHost.GenerateFood(), MainGameHost.GeneratePlants());
             }
 
             FailedRunsUptimes.Clear();
@@ -347,7 +347,7 @@ namespace MaceEvolve.WinForms
         {
             CleanForNewRunOrGeneration();
             MainGameHost.ResetStep(MainGameHost.GenerateCreatures
-                (), MainGameHost.GenerateFood(), MainGameHost.GenerateTrees());
+                (), MainGameHost.GenerateFood(), MainGameHost.GeneratePlants());
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
         }
@@ -445,26 +445,26 @@ namespace MaceEvolve.WinForms
                 }
             }
 
-            foreach (var tree in MainGameHost.CurrentStep.Trees)
+            foreach (var plant in MainGameHost.CurrentStep.Plants)
             {
-                Color treeColorToUse;
+                Color plantColorToUse;
 
-                if (ShowTreeColorByAge)
+                if (ShowPlantColorByAge)
                 {
-                    int treeR = (int)(80 * ((float)tree.Age / tree.MaxAge));
-                    int treeG = (int)Globals.Map(170 * ((float)tree.Age / tree.MaxAge), 0, 170, 170, 40);
-                    int treeB = (int)(10 * ((float)tree.Age / tree.MaxAge));
+                    int plantR = (int)(80 * ((float)plant.Age / plant.MaxAge));
+                    int plantG = (int)Globals.Map(170 * ((float)plant.Age / plant.MaxAge), 0, 170, 170, 40);
+                    int plantB = (int)(10 * ((float)plant.Age / plant.MaxAge));
 
-                    treeColorToUse = Color.FromArgb(tree.Color.A, treeR, treeG, treeB);
+                    plantColorToUse = Color.FromArgb(plant.Color.A, plantR, plantG, plantB);
                 }
                 else
                 {
-                    treeColorToUse = tree.Color;
+                    plantColorToUse = plant.Color;
                 }
 
-                using (SolidBrush brush = new SolidBrush(treeColorToUse))
+                using (SolidBrush brush = new SolidBrush(plantColorToUse))
                 {
-                    e.Graphics.FillEllipse(brush, tree.X, tree.Y, tree.Size, tree.Size);
+                    e.Graphics.FillEllipse(brush, plant.X, plant.Y, plant.Size, plant.Size);
                 }
             }
 
@@ -618,7 +618,7 @@ namespace MaceEvolve.WinForms
             SelectedCreatureNetworkViewerForm.NetworkViewer.lblNodeInputOrAction.ForeColor = Color.White;
             SelectedCreatureNetworkViewerForm.NetworkViewer.DrawTimer.Interval = DrawTimer.Interval;
 
-            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree>();
+            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>, GraphicalCreature, GraphicalFood, GraphicalPlant>();
             MainGameHost.BestCreatureChanged += MainGameHost_BestCreatureChanged;
             MainGameHost.SelectedCreatureChanged += MainGameHost_SelectedCreatureChanged;
 
@@ -637,8 +637,8 @@ namespace MaceEvolve.WinForms
             IsUIVisible = !IsUIVisible;
             IsUIVisible = !IsUIVisible;
 
-            ShowTreeColorByAge = !ShowTreeColorByAge;
-            ShowTreeColorByAge = !ShowTreeColorByAge;
+            ShowPlantColorByAge = !ShowPlantColorByAge;
+            ShowPlantColorByAge = !ShowPlantColorByAge;
 
             int oldTPS = SimulationTPS;
             SimulationTPS = 5;
@@ -678,7 +678,7 @@ namespace MaceEvolve.WinForms
             nudSimulationFPS.Visible = isVisible;
             chkLinkFpsAndTps.Visible = isVisible;
             btnUpdateWorldBounds.Visible = isVisible;
-            chkShowTreeColorByAge.Visible = isVisible;
+            chkShowPlantColorByAge.Visible = isVisible;
             chkUseGenerations.Visible = isVisible;
             ToggleGenerationsUI(isVisible && chkUseGenerations.Checked);
         }
@@ -721,7 +721,7 @@ namespace MaceEvolve.WinForms
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> savedStep = LoadSavedStep(openFileDialog.FileName);
+                GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant> savedStep = LoadSavedStep(openFileDialog.FileName);
 
                 PreviousStepResult.CreaturesBrainOutputs.Clear();
                 PreviousStepResult.CalculatedActions.Clear();
@@ -731,7 +731,7 @@ namespace MaceEvolve.WinForms
                 MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                 MainGameHost.WorldBounds = savedStep.WorldBounds;
                 MainGameHost.CreatureOffspringColor = savedStep.CreatureOffspringColor;
-                MainGameHost.ResetStep(MainGameHost.GenerateCreatures(savedStep.Creatures), MainGameHost.GenerateFood(savedStep.Food), MainGameHost.GenerateTrees(savedStep.Trees == null || savedStep.Trees.IsEmpty ? Enumerable.Empty<GraphicalTree>() : savedStep.Trees));
+                MainGameHost.ResetStep(MainGameHost.GenerateCreatures(savedStep.Creatures), MainGameHost.GenerateFood(savedStep.Food), MainGameHost.GeneratePlants(savedStep.Plants == null || savedStep.Plants.IsEmpty ? Enumerable.Empty<GraphicalPlant>() : savedStep.Plants));
                 MessageBox.Show("Step Loaded Successfully.");
             }
         }
@@ -803,9 +803,9 @@ namespace MaceEvolve.WinForms
             MainGameHost.WorldBounds = newWorldBounds;
             MainGameHost.CurrentStep.WorldBounds = newWorldBounds;
         }
-        private void chkShowTreeColorByAge_CheckedChanged(object sender, EventArgs e)
+        private void chkShowPlantColorByAge_CheckedChanged(object sender, EventArgs e)
         {
-            ShowTreeColorByAge = chkShowTreeColorByAge.Checked;
+            ShowPlantColorByAge = chkShowPlantColorByAge.Checked;
         }
         private void chkUseGenerations_CheckedChanged(object sender, EventArgs e)
         {

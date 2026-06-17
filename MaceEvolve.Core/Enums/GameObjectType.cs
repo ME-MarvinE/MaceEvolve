@@ -5,6 +5,6 @@
         Unknown,
         Creature,
         Food,
-        Tree
+        Plant
     }
 }

@@ -69,7 +69,7 @@ namespace MaceEvolve.SilkGL
         public bool GatherStepInfoForAllCreatures { get; set; }
         public bool IsInFastMode { get; set; }
         public Color BackgroundColor { get; set; }
-        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree> MainGameHost { get; set; }
+        public GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>, GraphicalCreature, GraphicalFood, GraphicalPlant> MainGameHost { get; set; }
         public IWindow BestCreatureNetworkViewerWindow { get; set; }
         public float SimulationMspt
         {
@@ -82,20 +82,20 @@ namespace MaceEvolve.SilkGL
         public StepResult<GraphicalCreature> PreviousStepResult { get; set; }
         public double LastUpdateDeltaTime { get; set; }
         public double LastRenderDeltaTime { get; set; }
-        public bool ShowTreeColorByAge { get; set; } = true;
+        public bool ShowPlantColorByAge { get; set; } = true;
         #endregion
 
         #region Constructors
         static MaceEvolveApp()
         {
-            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.VisibleFoodDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.CreatureToCachedAreaDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>.FoodToCachedAreaDict));
+            IgnorePropertiesContractResolver ignorePropertiesContractResolver = new IgnorePropertiesContractResolver(nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.VisibleCreaturesDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.VisibleFoodDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.CreatureToCachedAreaDict), nameof(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>.FoodToCachedAreaDict));
 
             SaveStepSerializerSettings = new JsonSerializerSettings() { Formatting = Formatting.Indented, ContractResolver = ignorePropertiesContractResolver };
             LoadStepSerializerSettings = new JsonSerializerSettings() { ContractResolver = ignorePropertiesContractResolver };
         }
         public MaceEvolveApp()
         {
-            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>, GraphicalCreature, GraphicalFood, GraphicalTree>();
+            MainGameHost = new GraphicalGameHost<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>, GraphicalCreature, GraphicalFood, GraphicalPlant>();
 
             SimulationTPS = 60;
             PeriodicInfoTimer = new Timer(1000) { Enabled = PeriodicInfo };
@@ -210,26 +210,26 @@ namespace MaceEvolve.SilkGL
             TimeSpan timeInAllRuns = timeInFailedRuns.Add(timeInCurrentRun);
             TimeSpan averageTimePerRun = TimeSpan.FromMilliseconds(FailedRunsUptimes.Count == 0 ? 0 : FailedRunsUptimes.Average(x => x.TotalMilliseconds));
 
-            foreach (var tree in MainGameHost.CurrentStep.Trees)
+            foreach (var plant in MainGameHost.CurrentStep.Plants)
             {
-                Color treeColorToUse;
+                Color plantColorToUse;
 
-                if (ShowTreeColorByAge)
+                if (ShowPlantColorByAge)
                 {
-                    int treeR = (int)(80 * ((float)tree.Age / tree.MaxAge));
-                    int treeG = (int)CoreGlobals.Map(170 * ((float)tree.Age / tree.MaxAge), 0, 170, 170, 40);
-                    int treeB = (int)(10 * ((float)tree.Age / tree.MaxAge));
+                    int plantR = (int)(80 * ((float)plant.Age / plant.MaxAge));
+                    int plantG = (int)CoreGlobals.Map(170 * ((float)plant.Age / plant.MaxAge), 0, 170, 170, 40);
+                    int plantB = (int)(10 * ((float)plant.Age / plant.MaxAge));
 
-                    treeColorToUse = Color.FromArgb(tree.Color.A, treeR, treeG, treeB);
+                    plantColorToUse = Color.FromArgb(plant.Color.A, plantR, plantG, plantB);
                 }
                 else
                 {
-                    treeColorToUse = tree.Color;
+                    plantColorToUse = plant.Color;
                 }
 
-                float[] bodyVertices = GenerateLocationalCircleVertices(tree.MX, tree.MY, tree.Size, _verticesPerCircle);
+                float[] bodyVertices = GenerateLocationalCircleVertices(plant.MX, plant.MY, plant.Size, _verticesPerCircle);
 
-                SetShaderColor(treeColorToUse, _program);
+                SetShaderColor(plantColorToUse, _program);
                 _gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(bodyVertices.Length * sizeof(float)), [.. bodyVertices], BufferUsageARB.DynamicDraw);
                 _gl.DrawArrays(PrimitiveType.TriangleFan, 1, (uint)bodyVertices.Length);
             }
@@ -309,16 +309,16 @@ namespace MaceEvolve.SilkGL
 
             return foodList;
         }
-        public IEnumerable<GraphicalTree> GenerateTrees(IEnumerable<GraphicalTree> treesToConvert = null)
+        public IEnumerable<GraphicalPlant> GeneratePlants(IEnumerable<GraphicalPlant> plantsToConvert = null)
         {
-            IEnumerable<GraphicalTree> treeList = treesToConvert ?? MainGameHost.GenerateTrees();
+            IEnumerable<GraphicalPlant> plantList = plantsToConvert ?? MainGameHost.GeneratePlants();
 
-            foreach (var tree in treeList)
+            foreach (var plant in plantList)
             {
-                tree.Color = Color.FromArgb(50, 30, 170, 0);
+                plant.Color = Color.FromArgb(50, 30, 170, 0);
             }
 
-            return treeList;
+            return plantList;
         }
         public IEnumerable<GraphicalCreature> GenerateCreatures(IEnumerable<GraphicalCreature> creaturesToConvert = null)
         {
@@ -343,7 +343,7 @@ namespace MaceEvolve.SilkGL
             MainGameHost.WorldBounds = new Core.Models.Rectangle(0, 0, MainWindow.Size.X, MainWindow.Size.Y);
 
             PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GeneratePlants());
 
             FailedRunsUptimes.Clear();
             CurrentRunTicksElapsed = 0;
@@ -351,7 +351,7 @@ namespace MaceEvolve.SilkGL
         public void FailRun()
         {
             PreviousStepResult = new StepResult<GraphicalCreature>(new ConcurrentQueue<StepAction<GraphicalCreature>>());
-            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GenerateTrees());
+            MainGameHost.ResetStep(GenerateCreatures(), GenerateFood(), GeneratePlants());
 
             FailedRunsUptimes.Add(TimeSpan.FromMilliseconds(CurrentRunTicksElapsed * SimulationMspt));
             CurrentRunTicksElapsed = 0;
@@ -434,7 +434,7 @@ namespace MaceEvolve.SilkGL
                         if (Path.Exists(savedStepFilePath))
                         {
                             Console.WriteLine("Loading Step...");
-                            GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> savedStep = LoadSavedStep(savedStepFilePath);
+                            GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant> savedStep = LoadSavedStep(savedStepFilePath);
 
                             PreviousStepResult.CreaturesBrainOutputs.Clear();
                             PreviousStepResult.CalculatedActions.Clear();
@@ -443,7 +443,7 @@ namespace MaceEvolve.SilkGL
                             MainGameHost.MaxCreatureProcessNodes = savedStep.MaxCreatureProcessNodes;
                             MainGameHost.LoopWorldBounds = savedStep.LoopWorldBounds;
                             MainGameHost.WorldBounds = savedStep.WorldBounds;
-                            MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures), GenerateFood(savedStep.Food), GenerateTrees(savedStep.Trees == null || savedStep.Trees.IsEmpty ? Enumerable.Empty<GraphicalTree>() : savedStep.Trees));
+                            MainGameHost.ResetStep(GenerateCreatures(savedStep.Creatures), GenerateFood(savedStep.Food), GeneratePlants(savedStep.Plants == null || savedStep.Plants.IsEmpty ? Enumerable.Empty<GraphicalPlant>() : savedStep.Plants));
 
                             Console.WriteLine("Step Loaded Successfully.");
                         }
@@ -511,7 +511,7 @@ namespace MaceEvolve.SilkGL
             Console.WriteLine($"Frames Per Second: {1 / LastRenderDeltaTime:0.#}");
             Console.WriteLine("---------------------------------------------------------");
         }
-        public void SaveStep(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> step, string filePath)
+        public void SaveStep(GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant> step, string filePath)
         {
             string directoryName = Path.GetDirectoryName(filePath);
 
@@ -523,10 +523,10 @@ namespace MaceEvolve.SilkGL
             string serializedStep = JsonConvert.SerializeObject(step, SaveStepSerializerSettings);
             File.WriteAllText(filePath, serializedStep);
         }
-        public GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> LoadSavedStep(string filePath)
+        public GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant> LoadSavedStep(string filePath)
         {
             string serializedStep = File.ReadAllText(filePath);
-            GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalTree>>(serializedStep, LoadStepSerializerSettings);
+            GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant> savedStep = JsonConvert.DeserializeObject<GraphicalStep<GraphicalCreature, GraphicalFood, GraphicalPlant>>(serializedStep, LoadStepSerializerSettings);
             return savedStep;
         }
         private void PeriodicInfoTimer_Elapsed(object? sender, ElapsedEventArgs e)

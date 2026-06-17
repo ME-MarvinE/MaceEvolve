@@ -19,6 +19,9 @@ namespace MaceEvolve.Core.Models
         public float MaxNutrients { get; set; }
         public int Servings { get; set; } = 1;
         public float ServingDigestionCost { get; set; } = 0.05f;
+        public float DecayPercentage { get; set; }
+        public float DecayRate { get; set; } = 0.001f;
+        public int Seeds { get; set; }
         #endregion
     }
 }

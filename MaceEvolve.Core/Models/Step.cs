@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MaceEvolve.Core.Models
 {
-    public class Step<TCreature, TFood, TTree> : IStep<TCreature, TFood, TTree> where TCreature : class, ICreature, new() where TFood : class, IFood, new() where TTree : class, ITree<TFood>, new()
+    public class Step<TCreature, TFood, TPlant> : IStep<TCreature, TFood, TPlant> where TCreature : class, ICreature, new() where TFood : class, IFood, new() where TPlant : class, IPlant<TFood>, new()
     {
         #region Fields
         private static float _creatureTurnSpeed = 25;
@@ -21,11 +21,10 @@ namespace MaceEvolve.Core.Models
         #region Properties
         public ConcurrentBag<TCreature> Creatures { get; set; }
         public ConcurrentBag<TFood> Food { get; set; }
-        public ConcurrentBag<TTree> Trees { get; set; }
+        public ConcurrentBag<TPlant> Plants { get; set; }
         public Rectangle WorldBounds { get; set; }
         public MinMaxVal<int> CreatureConnectionsMinMax { get; set; } = MinMaxVal.Create(4, 128);
-        public MinMaxVal<int> TreeSizeMinMax { get; set; } = MinMaxVal.Create(50, 150);
-        public int MaxTreeAmount { get; set; } = 50;
+        public MinMaxVal<int> PlantSizeMinMax { get; set; } = MinMaxVal.Create(20, 40);
         public int MaxCreatureProcessNodes { get; set; } = 3;
         public float ConnectionWeightBound { get; set; } = 4;
         public bool LoopWorldBounds { get; set; }
@@ -437,21 +436,22 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public virtual TFood TreeGrowFood(TTree tree)
+        public virtual TFood PlantGrowFood(TPlant plant)
         {
             TFood newFood = new TFood();
-            newFood.Mass = MaceRandom.Current.NextFloat(tree.FoodMassMinMax.Min, tree.FoodMassMinMax.Max);
-            newFood.Energy = MaceRandom.Current.NextFloat(tree.FoodEnergyMinMax.Min, tree.FoodEnergyMinMax.Max);
-            newFood.Nutrients = MaceRandom.Current.NextFloat(tree.FoodNutrientsMinMax.Min, tree.FoodNutrientsMinMax.Max);
+            newFood.Mass = MaceRandom.Current.NextFloat(plant.FoodMassMinMax.Min, plant.FoodMassMinMax.Max);
+            newFood.Energy = MaceRandom.Current.NextFloat(plant.FoodEnergyMinMax.Min, plant.FoodEnergyMinMax.Max);
+            newFood.Nutrients = MaceRandom.Current.NextFloat(plant.FoodNutrientsMinMax.Min, plant.FoodNutrientsMinMax.Max);
+            newFood.Seeds = MaceRandom.Current.Next(plant.FoodSeedsMinMax.Min, plant.FoodSeedsMinMax.Max + 1);
 
-            if (newFood.Mass > tree.Mass || newFood.Energy > tree.Energy)
+            if (newFood.Mass > plant.Mass || newFood.Energy > plant.Energy)
             {
                 return null;
             }
 
-            newFood.Size = Globals.Map(newFood.Mass, tree.FoodMassMinMax.Min, tree.FoodMassMinMax.Max, tree.FoodSizeMinMax.Min, tree.FoodSizeMinMax.Max);
+            newFood.Size = Globals.Map(newFood.Mass, plant.FoodMassMinMax.Min, plant.FoodMassMinMax.Max, plant.FoodSizeMinMax.Min, plant.FoodSizeMinMax.Max);
 
-            PointF newFoodRandomLocation = Globals.GetAngledLineTarget(tree.MX, tree.MY, (tree.Size / 2) * MaceRandom.Current.NextFloat(), MaceRandom.Current.Next(360));
+            PointF newFoodRandomLocation = Globals.GetAngledLineTarget(plant.MX, plant.MY, (plant.Size / 2) * MaceRandom.Current.NextFloat(), MaceRandom.Current.Next(360));
             newFood.X = newFoodRandomLocation.X - newFood.Size / 2;
             newFood.Y = newFoodRandomLocation.Y - newFood.Size / 2;
 
@@ -501,80 +501,80 @@ namespace MaceEvolve.Core.Models
                 }
             }
 
-            tree.Energy -= newFood.Energy;
-            tree.Mass -= newFood.Mass;
-            tree.Nutrients -= newFood.Nutrients;
+            plant.Energy -= newFood.Energy;
+            plant.Mass -= newFood.Mass;
+            plant.Nutrients -= newFood.Nutrients;
 
-            int newFoodKey = tree.IdToFoodDict.Count == 0 ? 1 : tree.IdToFoodDict.Max(x => x.Key);
-            tree.IdToFoodDict.TryAdd(newFoodKey, newFood);
-            tree.FoodIdToAgeDict.AddOrUpdate(newFoodKey, 0, (x, y) => 0);
+            int newFoodKey = plant.IdToFoodDict.Count == 0 ? 1 : plant.IdToFoodDict.Max(x => x.Key);
+            plant.IdToFoodDict.TryAdd(newFoodKey, newFood);
+            plant.FoodIdToAgeDict.AddOrUpdate(newFoodKey, 0, (x, y) => 0);
 
             return newFood;
         }
-        public virtual TTree TreeReproduce(TTree tree)
+        public virtual TPlant PlantReproduce(TPlant plant)
         {
-            TTree newTree = CreateTree();
-            newTree.Mass = tree.MassRequiredToReproduce;
-            newTree.Energy = tree.EnergyRequiredToReproduce;
-            newTree.Nutrients = tree.NutrientsRequiredToReproduce;
-            newTree.Age = 0;
+            TPlant newPlant = CreatePlant();
+            newPlant.Mass = plant.MassRequiredToReproduce;
+            newPlant.Energy = plant.EnergyRequiredToReproduce;
+            newPlant.Nutrients = plant.NutrientsRequiredToReproduce;
+            newPlant.Age = 0;
 
             float maxXDistanceOfOffspring = 50;
             float maxYDistanceOfOffspring = 50;
-            newTree.X = tree.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
-            newTree.Y = tree.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
+            newPlant.X = plant.X + MaceRandom.Current.NextFloat(-maxXDistanceOfOffspring, maxXDistanceOfOffspring + 1);
+            newPlant.Y = plant.Y + MaceRandom.Current.NextFloat(-maxYDistanceOfOffspring, maxYDistanceOfOffspring + 1);
 
-            if (newTree.MX < WorldBounds.X)
+            if (newPlant.MX < WorldBounds.X)
             {
                 if (LoopWorldBounds)
                 {
-                    newTree.X = (WorldBounds.X + WorldBounds.Width) - newTree.Size / 2;
+                    newPlant.X = (WorldBounds.X + WorldBounds.Width) - newPlant.Size / 2;
                 }
                 else
                 {
-                    newTree.X = WorldBounds.X - newTree.Size / 2;
+                    newPlant.X = WorldBounds.X - newPlant.Size / 2;
                 }
             }
-            else if (newTree.MX > WorldBounds.X + WorldBounds.Width)
+            else if (newPlant.MX > WorldBounds.X + WorldBounds.Width)
             {
                 if (LoopWorldBounds)
                 {
-                    newTree.X = WorldBounds.X - newTree.Size / 2;
+                    newPlant.X = WorldBounds.X - newPlant.Size / 2;
                 }
                 else
                 {
-                    newTree.X = (WorldBounds.X + WorldBounds.Width) - newTree.Size / 2;
+                    newPlant.X = (WorldBounds.X + WorldBounds.Width) - newPlant.Size / 2;
                 }
             }
 
-            if (newTree.MY < WorldBounds.Y)
+            if (newPlant.MY < WorldBounds.Y)
             {
                 if (LoopWorldBounds)
                 {
-                    newTree.Y = (WorldBounds.Y + WorldBounds.Height) - newTree.Size / 2;
+                    newPlant.Y = (WorldBounds.Y + WorldBounds.Height) - newPlant.Size / 2;
                 }
                 else
                 {
-                    newTree.Y = WorldBounds.Y - newTree.Size / 2;
+                    newPlant.Y = WorldBounds.Y - newPlant.Size / 2;
                 }
             }
-            else if (newTree.MY > WorldBounds.Y + WorldBounds.Height)
+            else if (newPlant.MY > WorldBounds.Y + WorldBounds.Height)
             {
                 if (LoopWorldBounds)
                 {
-                    newTree.Y = WorldBounds.Y - newTree.Size / 2;
+                    newPlant.Y = WorldBounds.Y - newPlant.Size / 2;
                 }
                 else
                 {
-                    newTree.Y = (WorldBounds.Y + WorldBounds.Height) - newTree.Size / 2;
+                    newPlant.Y = (WorldBounds.Y + WorldBounds.Height) - newPlant.Size / 2;
                 }
             }
 
-            tree.Mass -= tree.MassRequiredToReproduce;
-            tree.Energy -= tree.EnergyRequiredToReproduce;
-            tree.Nutrients -= tree.NutrientsRequiredToReproduce;
+            plant.Mass -= plant.MassRequiredToReproduce;
+            plant.Energy -= plant.EnergyRequiredToReproduce;
+            plant.Nutrients -= plant.NutrientsRequiredToReproduce;
 
-            return newTree;
+            return newPlant;
         }
         public static float GetAttackScore(TCreature creature, bool isInitiator)
         {
@@ -662,24 +662,24 @@ namespace MaceEvolve.Core.Models
                 }
             }
         }
-        public void UpdateTrees(int maxTreeAmount, int maxFoodAmount)
+        public void UpdatePlants()
         {
-            Parallel.ForEach(Trees, tree =>
+            Parallel.ForEach(Plants, plant =>
             {
-                if (tree.IdToFoodDict.Count > 0)
+                if (plant.IdToFoodDict.Count > 0)
                 {
-                    if (MaceRandom.Current.NextFloat() <= tree.ChanceToDropFood)
+                    if (MaceRandom.Current.NextFloat() <= plant.ChanceToDropFood)
                     {
-                        tree.IdToFoodDict.TryRemove(tree.IdToFoodDict.First().Key, out TFood foodToDrop);
+                        plant.IdToFoodDict.TryRemove(plant.IdToFoodDict.First().Key, out TFood foodToDrop);
                         Food.Add(foodToDrop);
-                        tree.TimesDroppedFood += 1;
+                        plant.TimesDroppedFood += 1;
                     }
                     else
                     {
-                        foreach (var foodId in tree.IdToFoodDict.Keys)
+                        foreach (var foodId in plant.IdToFoodDict.Keys)
                         {
-                            TFood food = tree.IdToFoodDict[foodId];
-                            if (tree.FoodIdToAgeDict[foodId] <= tree.MaxFoodAge)
+                            TFood food = plant.IdToFoodDict[foodId];
+                            if (plant.FoodIdToAgeDict[foodId] <= plant.MaxFoodAge)
                             {
                                 food.Energy += 1;
                                 food.Nutrients += 0.5f;
@@ -687,21 +687,21 @@ namespace MaceEvolve.Core.Models
                             }
                             else
                             {
-                                tree.IdToFoodDict.TryRemove(tree.IdToFoodDict.First().Key, out TFood foodToWither);
-                                tree.TimesFoodWithered += 1;
+                                plant.IdToFoodDict.TryRemove(plant.IdToFoodDict.First().Key, out TFood foodToWither);
+                                plant.TimesFoodWithered += 1;
                             }
                         }
                     }
                 }
 
-                if (tree.IdToFoodDict.Count < tree.MaxFoodAmount && tree.Age >= tree.AgeRequiredToCreateFood && Food.Count < maxFoodAmount && MaceRandom.Current.NextFloat() <= tree.ChanceToGrowFood)
+                if ((plant.PlantStage == PlantStage.MaturePlant || plant.PlantStage == PlantStage.VeryMaturePlant) && plant.Age >= plant.AgeRequiredToCreateFood && MaceRandom.Current.NextFloat() <= plant.ChanceToGrowFood)
                 {
-                    TreeGrowFood(tree);
+                    PlantGrowFood(plant);
                 }
 
-                if (Trees.Count < MaxTreeAmount && tree.Mass >= tree.MassRequiredToReproduce && tree.Energy >= tree.EnergyRequiredToReproduce && tree.Nutrients >= tree.NutrientsRequiredToReproduce && MaceRandom.Current.NextFloat() <= (tree.ChanceToReproduce * (tree.HealthPoints / tree.MaxHealthPoints)))
+                if (plant.PlantStage == PlantStage.VeryMaturePlant && plant.Mass >= plant.MassRequiredToReproduce && plant.Energy >= plant.EnergyRequiredToReproduce && plant.Nutrients >= plant.NutrientsRequiredToReproduce && MaceRandom.Current.NextFloat() <= (plant.ChanceToReproduce * (plant.HealthPoints / plant.MaxHealthPoints)))
                 {
-                    Trees.Add(TreeReproduce(tree));
+                    Plants.Add(PlantReproduce(plant));
                 }
             });
         }
@@ -785,7 +785,7 @@ namespace MaceEvolve.Core.Models
 
                                     foreach (var visibleCreature in visibleCreatures)
                                     {
-                                        float visibleCreatureArea = CreatureToCachedAreaDict.GetOrAdd(visibleCreature, (x) => GetCircleArea(x.Size / 2));
+                                        float visibleCreatureArea = CreatureToCachedAreaDict.GetOrAdd(visibleCreature, (x) => Globals.GetCircleArea(x.Size / 2));
                                         creaturesArea += visibleCreatureArea;
                                     }
 
@@ -806,7 +806,7 @@ namespace MaceEvolve.Core.Models
 
                                     foreach (var vFood in visibleFood)
                                     {
-                                        float visibleFoodArea = FoodToCachedAreaDict.GetOrAdd(vFood, (x) => GetCircleArea(x.Size / 2));
+                                        float visibleFoodArea = FoodToCachedAreaDict.GetOrAdd(vFood, (x) => Globals.GetCircleArea(x.Size / 2));
                                         foodArea += visibleFoodArea;
                                     }
 
@@ -1049,13 +1049,9 @@ namespace MaceEvolve.Core.Models
         {
             return (MathF.PI * creature.SightRange * creature.SightRange) * (creature.FieldOfView / 360);
         }
-        private float GetCircleArea(float radius)
+        public virtual TPlant CreatePlant()
         {
-            return MathF.PI * radius * radius;
-        }
-        public virtual TTree CreateTree()
-        {
-            TTree newTree = new TTree()
+            TPlant newPlant = new TPlant()
             {
                 Age = 8000,
                 AgeRequiredToReproduce = 8000,
@@ -1063,11 +1059,11 @@ namespace MaceEvolve.Core.Models
                 MaxAge = 32000,
                 MaxFoodAge = 300,
                 PhotosynthesisEfficency = MaceRandom.Current.NextFloat(),
-                Size = MaceRandom.Current.NextFloat(TreeSizeMinMax.Min, TreeSizeMinMax.Max),
+                Size = MaceRandom.Current.NextFloat(PlantSizeMinMax.Min, PlantSizeMinMax.Max),
                 ChanceToReproduce = 0.01f
             };
 
-            return newTree;
+            return newPlant;
         }
         #endregion
     }

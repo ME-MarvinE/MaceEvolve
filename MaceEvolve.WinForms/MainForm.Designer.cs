@@ -52,7 +52,7 @@ namespace MaceEvolve.WinForms
             chkGatherStepInfoForAllCreatures = new CheckBox();
             chkShowUI = new CheckBox();
             btnUpdateWorldBounds = new Button();
-            chkShowTreeColorByAge = new CheckBox();
+            chkShowPlantColorByAge = new CheckBox();
             chkUseGenerations = new CheckBox();
             nudSuccessBoundsX = new NumericUpDown();
             nudSuccessBoundsY = new NumericUpDown();
@@ -348,21 +348,21 @@ namespace MaceEvolve.WinForms
             btnUpdateWorldBounds.UseVisualStyleBackColor = false;
             btnUpdateWorldBounds.Click += btnUpdateWorldBounds_Click;
             // 
-            // chkShowTreeColorByAge
+            // chkShowPlantColorByAge
             // 
-            chkShowTreeColorByAge.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            chkShowTreeColorByAge.AutoSize = true;
-            chkShowTreeColorByAge.BackColor = System.Drawing.Color.Transparent;
-            chkShowTreeColorByAge.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
-            chkShowTreeColorByAge.ForeColor = System.Drawing.Color.White;
-            chkShowTreeColorByAge.Location = new System.Drawing.Point(626, 555);
-            chkShowTreeColorByAge.Name = "chkShowTreeColorByAge";
-            chkShowTreeColorByAge.RightToLeft = RightToLeft.Yes;
-            chkShowTreeColorByAge.Size = new System.Drawing.Size(150, 19);
-            chkShowTreeColorByAge.TabIndex = 11;
-            chkShowTreeColorByAge.Text = "Show Tree Color By Age";
-            chkShowTreeColorByAge.UseVisualStyleBackColor = false;
-            chkShowTreeColorByAge.CheckedChanged += chkShowTreeColorByAge_CheckedChanged;
+            chkShowPlantColorByAge.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            chkShowPlantColorByAge.AutoSize = true;
+            chkShowPlantColorByAge.BackColor = System.Drawing.Color.Transparent;
+            chkShowPlantColorByAge.Font = new System.Drawing.Font("Yu Gothic UI", 9F);
+            chkShowPlantColorByAge.ForeColor = System.Drawing.Color.White;
+            chkShowPlantColorByAge.Location = new System.Drawing.Point(626, 555);
+            chkShowPlantColorByAge.Name = "chkShowPlantColorByAge";
+            chkShowPlantColorByAge.RightToLeft = RightToLeft.Yes;
+            chkShowPlantColorByAge.Size = new System.Drawing.Size(150, 19);
+            chkShowPlantColorByAge.TabIndex = 11;
+            chkShowPlantColorByAge.Text = "Show Plant Color By Age";
+            chkShowPlantColorByAge.UseVisualStyleBackColor = false;
+            chkShowPlantColorByAge.CheckedChanged += chkShowPlantColorByAge_CheckedChanged;
             // 
             // chkUseGenerations
             // 
@@ -564,7 +564,7 @@ namespace MaceEvolve.WinForms
             Controls.Add(chkGatherStepInfoForAllCreatures);
             Controls.Add(chkUseSuccessBounds);
             Controls.Add(chkUseGenerations);
-            Controls.Add(chkShowTreeColorByAge);
+            Controls.Add(chkShowPlantColorByAge);
             Controls.Add(chkLinkFpsAndTps);
             Controls.Add(nudSuccessBoundsHeight);
             Controls.Add(nudSuccessBoundsY);
@@ -637,7 +637,7 @@ namespace MaceEvolve.WinForms
         private CheckBox chkGatherStepInfoForAllCreatures;
         private CheckBox chkShowUI;
         private Button btnUpdateWorldBounds;
-        private CheckBox chkShowTreeColorByAge;
+        private CheckBox chkShowPlantColorByAge;
         private CheckBox chkUseGenerations;
         private NumericUpDown nudSuccessBoundsX;
         private NumericUpDown nudSuccessBoundsY;

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace MaceEvolve.WinForms.Models
 {
-    public class GraphicalGameHost<TStep, TCreature, TFood, TTree> : GameHost<TStep, TCreature, TFood, TTree> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TStep : GraphicalStep<TCreature, TFood, TTree>, new() where TTree : GraphicalTree<TFood>, new()
+    public class GraphicalGameHost<TStep, TCreature, TFood, TPlant> : GameHost<TStep, TCreature, TFood, TPlant> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TStep : GraphicalStep<TCreature, TFood, TPlant>, new() where TPlant : GraphicalPlant<TFood>, new()
     {
         public Color CreatureOffspringColor { get; set; } = Color.Yellow;
         public override StepResult<TCreature> NextStep(IEnumerable<StepAction<TCreature>> actionsToExecute, bool gatherBestCreatureInfo, bool gatherSelectedCreatureInfo, bool gatherAliveCreatureInfo, bool gatherDeadCreatureInfo)
@@ -23,12 +23,12 @@ namespace MaceEvolve.WinForms.Models
 
             return food;
         }
-        public override TTree CreateTreeWithRandomLocation()
+        public override TPlant CreatePlantWithRandomLocation()
         {
-            TTree tree = base.CreateTreeWithRandomLocation();
-            tree.Color = Color.FromArgb(50, 30, 170, 0);
+            TPlant plant = base.CreatePlantWithRandomLocation();
+            plant.Color = Color.FromArgb(50, 30, 170, 0);
 
-            return tree;
+            return plant;
         }
         public override List<TCreature> GenerateCreatures()
         {
@@ -69,20 +69,20 @@ namespace MaceEvolve.WinForms.Models
 
             return foodList;
         }
-        public override List<TTree> GenerateTrees()
+        public override List<TPlant> GeneratePlants()
         {
-            return GenerateTrees(base.GenerateTrees()).ToList();
+            return GeneratePlants(base.GeneratePlants()).ToList();
         }
-        public IEnumerable<TTree> GenerateTrees(IEnumerable<TTree> treesToConvert)
+        public IEnumerable<TPlant> GeneratePlants(IEnumerable<TPlant> plantsToConvert)
         {
-            IEnumerable<TTree> treeList = treesToConvert ?? GenerateTrees();
+            IEnumerable<TPlant> plantList = plantsToConvert ?? GeneratePlants();
 
-            foreach (var tree in treeList)
+            foreach (var plant in plantList)
             {
-                tree.Color = Color.FromArgb(50, 30, 170, 0);
+                plant.Color = Color.FromArgb(50, 30, 170, 0);
             }
 
-            return treeList;
+            return plantList;
         }
         public override List<TCreature> CreateNewGenerationCreatures(IEnumerable<TCreature> sourceCreatures, bool sexual = false)
         {

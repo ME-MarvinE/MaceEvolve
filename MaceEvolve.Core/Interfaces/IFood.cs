@@ -6,5 +6,7 @@
         float MaxEnergy { get; set; }
         float Nutrients { get; set; }
         float MaxNutrients { get; set; }
+        float DecayPercentage { get; set; }
+        public int Seeds { get; set; }
     }
 }

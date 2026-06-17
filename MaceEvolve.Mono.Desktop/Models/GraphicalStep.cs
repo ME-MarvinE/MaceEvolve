@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace MaceEvolve.Mono.Desktop.Models
 {
-    public class GraphicalStep<TCreature, TFood, TTree> : Step<TCreature, TFood, TTree> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TTree : GraphicalTree<TFood>, new()
+    public class GraphicalStep<TCreature, TFood, TPlant> : Step<TCreature, TFood, TPlant> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TPlant : GraphicalPlant<TFood>, new()
     {
         #region Properties
         public Color CreatureOffspringColor { get; set; }
@@ -27,9 +27,9 @@ namespace MaceEvolve.Mono.Desktop.Models
 
             return offspring;
         }
-        public override TFood TreeGrowFood(TTree tree)
+        public override TFood PlantGrowFood(TPlant plant)
         {
-            TFood food = base.TreeGrowFood(tree);
+            TFood food = base.PlantGrowFood(plant);
 
             if (food == null)
             {
@@ -42,13 +42,13 @@ namespace MaceEvolve.Mono.Desktop.Models
 
             return food;
         }
-        public override TTree CreateTree()
+        public override TPlant CreatePlant()
         {
-            TTree newTree = base.CreateTree();
+            TPlant newPlant = base.CreatePlant();
 
-            newTree.Color = new Color(30, 170, 0, 50);
+            newPlant.Color = new Color(30, 170, 0, 50);
 
-            return newTree;
+            return newPlant;
         }
         #endregion
     }

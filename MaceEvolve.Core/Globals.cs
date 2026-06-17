@@ -144,6 +144,10 @@ namespace MaceEvolve.Core
         {
             return gameObject.Mass > 0 && gameObject.Size > 0;
         }
+        public static bool ShouldGameObjectExist(IFood gameObject)
+        {
+            return ShouldGameObjectExist((IGameObject)gameObject) && gameObject.DecayPercentage < 1f;
+        }
         public static double AngleToRadians(double angle)
         {
             return Deg2Rad * angle;
@@ -242,6 +246,10 @@ namespace MaceEvolve.Core
         public static PointF GetAngledLineTarget(float locationX, float locationY, float distance, float angle)
         {
             return new PointF(locationX + MathF.Cos(Globals.AngleToRadians(angle)) * distance, locationY + MathF.Sin(Globals.AngleToRadians(angle)) * distance);
+        }
+        public static float GetCircleArea(float radius)
+        {
+            return MathF.PI * radius * radius;
         }
         #endregion
     }

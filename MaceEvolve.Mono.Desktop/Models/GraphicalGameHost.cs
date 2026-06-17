@@ -1,12 +1,10 @@
 ﻿using MaceEvolve.Core;
-using MaceEvolve.Core.Interfaces;
 using MaceEvolve.Core.Models;
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
 
 namespace MaceEvolve.Mono.Desktop.Models
 {
-    public class GraphicalGameHost<TStep, TCreature, TFood, TTree> : GameHost<TStep, TCreature, TFood, TTree> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TStep : GraphicalStep<TCreature, TFood, TTree>, new() where TTree : GraphicalTree<TFood>, new()
+    public class GraphicalGameHost<TStep, TCreature, TFood, TPlant> : GameHost<TStep, TCreature, TFood, TPlant> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TStep : GraphicalStep<TCreature, TFood, TPlant>, new() where TPlant : GraphicalPlant<TFood>, new()
     {
         public Color CreatureOffspringColor { get; set; } = Color.Yellow;
         public override TFood CreateFoodWithRandomLocation()
@@ -18,12 +16,12 @@ namespace MaceEvolve.Mono.Desktop.Models
 
             return food;
         }
-        public override TTree CreateTreeWithRandomLocation()
+        public override TPlant CreatePlantWithRandomLocation()
         {
-            TTree tree = base.CreateTreeWithRandomLocation();
-            tree.Color = new Color(30, 170, 0, 50);
+            TPlant plant = base.CreatePlantWithRandomLocation();
+            plant.Color = new Color(30, 170, 0, 50);
 
-            return tree;
+            return plant;
         }
     }
 }

@@ -5,17 +5,16 @@ using System.Collections.Generic;
 
 namespace MaceEvolve.Core.Interfaces
 {
-    public interface IStep<TCreature, TFood, TTree>  where TCreature : ICreature where TFood : IFood, new() where TTree : ITree<TFood>
+    public interface IStep<TCreature, TFood, TPlant>  where TCreature : ICreature where TFood : IFood, new() where TPlant : IPlant<TFood>
     {
         #region Properties
         ConcurrentBag<TCreature> Creatures { get; set; }
         ConcurrentBag<TFood> Food { get; set; }
-        ConcurrentBag<TTree> Trees { get; set; }
+        ConcurrentBag<TPlant> Plants { get; set; }
         Rectangle WorldBounds { get; set; }
         float ConnectionWeightBound { get; set; }
         MinMaxVal<int> CreatureConnectionsMinMax { get; set; }
-        MinMaxVal<int> TreeSizeMinMax { get; set; }
-        int MaxTreeAmount { get; set; }
+        MinMaxVal<int> PlantSizeMinMax { get; set; }
         int MaxCreatureProcessNodes { get; set; }
         bool LoopWorldBounds { get; set; }
         ConcurrentDictionary<TCreature, List<TCreature>> VisibleCreaturesDict { get; }
@@ -35,11 +34,11 @@ namespace MaceEvolve.Core.Interfaces
         void CreatureTurnRight(TCreature creature);
         IList<TCreature> CreatureTryReproduce(TCreature creature);
         void CreatureDoNothing();
-        TFood TreeGrowFood(TTree tree);
-        TTree TreeReproduce(TTree tree);
+        TFood PlantGrowFood(TPlant plant);
+        TPlant PlantReproduce(TPlant plant);
 
         void ExecuteActions(IEnumerable<StepAction<TCreature>> stepActions);
-        void UpdateTrees(int maxTreeAmount, int maxFoodAmount);
+        void UpdatePlants();
         IDictionary<TCreature, IDictionary<CreatureInput, float>> GenerateCreaturesInputValues(IDictionary<TCreature, IEnumerable<CreatureInput>> creatureToCreatureInputsDict);
         int GetNumberOfChildrenThatCanBeCreated(TCreature creature, IEnumerable<TCreature> otherParents = null);
         IList<TCreature> CreateChildren(TCreature mainParent, int? numberOfChildrenToCreate = null, IEnumerable<TCreature> otherParents = null);

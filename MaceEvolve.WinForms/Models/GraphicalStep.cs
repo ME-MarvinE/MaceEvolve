@@ -5,7 +5,7 @@ using System.Drawing;
 
 namespace MaceEvolve.WinForms.Models
 {
-    public class GraphicalStep<TCreature, TFood, TTree> : Step<TCreature, TFood, TTree> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TTree : GraphicalTree<TFood>, new()
+    public class GraphicalStep<TCreature, TFood, TPlant> : Step<TCreature, TFood, TPlant> where TCreature : GraphicalCreature, new() where TFood : GraphicalFood, new() where TPlant : GraphicalPlant<TFood>, new()
     {
         #region Properties
         public Color CreatureOffspringColor { get; set; }
@@ -26,9 +26,9 @@ namespace MaceEvolve.WinForms.Models
 
             return offspring;
         }
-        public override TFood TreeGrowFood(TTree tree)
+        public override TFood PlantGrowFood(TPlant plant)
         {
-            TFood food = base.TreeGrowFood(tree);
+            TFood food = base.PlantGrowFood(plant);
 
             if (food == null)
             {
@@ -41,13 +41,13 @@ namespace MaceEvolve.WinForms.Models
 
             return food;
         }
-        public override TTree CreateTree()
+        public override TPlant CreatePlant()
         {
-            TTree newTree = base.CreateTree();
+            TPlant newPlant = base.CreatePlant();
 
-            newTree.Color = Color.FromArgb(50, 30, 170, 0);
+            newPlant.Color = Color.FromArgb(50, 30, 170, 0);
 
-            return newTree;
+            return newPlant;
         }
         #endregion
     }

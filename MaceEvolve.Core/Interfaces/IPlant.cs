@@ -1,10 +1,10 @@
-﻿using MaceEvolve.Core.Models;
+﻿using MaceEvolve.Core.Enums;
+using MaceEvolve.Core.Models;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace MaceEvolve.Core.Interfaces
 {
-    public interface ITree<TFood> : ILivingGameObject where TFood : IFood, new()
+    public interface IPlant<TFood> : ILivingGameObject where TFood : IFood, new()
     {
         float AgeRequiredToReproduce { get; set; }
         float EnergyRequiredToReproduce { get; set; }
@@ -20,13 +20,22 @@ namespace MaceEvolve.Core.Interfaces
         MinMaxVal<float> FoodMassMinMax { get; set; }
         MinMaxVal<float> FoodNutrientsMinMax { get; set; }
         MinMaxVal<float> FoodSizeMinMax { get; set; }
+        MinMaxVal<int> FoodSeedsMinMax { get; set; }
         ConcurrentDictionary<int, TFood> IdToFoodDict { get; }
         int MaxFoodAge { get; set; }
-        int MaxFoodAmount { get; set; }
         float NutrientsPerEat { get; set; }
         float PhotosynthesisEfficency { get; set; }
+        float ChanceToGrow { get; set; }
         int TimesDroppedFood { get; set; }
         int TimesFoodWithered { get; set; }
-        void Die();
+        PlantStage PlantStage { get; set; }
+        bool HasRoots { get; set; }
+        bool IsSeed { get; set; }
+        bool HasStem { get; set; }
+        bool HasLeaves { get; set; }
+        bool HasSeedlingLeaves { get; set; }
+        bool HasSideShoots { get; set; }
+        bool HasBranches { get; set; }
+        void Grow();
     }
 }

@@ -47,6 +47,18 @@ namespace MaceEvolve.Core.Models
         }
         public float Size { get; set; }
         public float Mass { get; set; }
+
+        // Sets Size while keeping the visual center (MX, MY) unchanged.
+        public void SetSizeCentered(float newSize)
+        {
+            float centerX = MX;
+            float centerY = MY;
+
+            Size = newSize;
+
+            X = centerX - (Size * 0.5f);
+            Y = centerY - (Size * 0.5f);
+        }
         #endregion
     }
 }
